@@ -5,6 +5,7 @@
   "uiConfigJsonPath": "assets/tenants/copacabana_palace/ui_config.json",
   "themeConfigJsonPath": "assets/tenants/copacabana_palace/theme_config.json",
   "servicesJsonPath": "assets/tenants/copacabana_palace/services.json",
+  "preCheckInServicesJsonPath": "assets/tenants/copacabana_palace/pre_check_in_services.json",
   "spaJsonPath": "assets/tenants/copacabana_palace/spa.json",
   "restaurantsJsonPath": "assets/tenants/copacabana_palace/restaurants.json",
   "eventsJsonPath": "assets/tenants/copacabana_palace/events.json",
@@ -26,7 +27,10 @@
   "headerTitleType": "text",
   "logoPath": "assets/tenants/copacabana_palace/images/logos/copacabana_logo.png",
   "checkInConfig": {
+    "welcomeMessageAwaiting": "Seu check-in está aguardando aprovação. Nossa equipe já foi notificada. Por favor, entre em contato com a recepção para agilizar o processo.",
     "successfulCheckInId": "12345",
     "awaitingCheckInId": "67890"
-  }
+  },
+  "mapJsonPath": "assets/tenants/copacabana_palace/map.json", 
+  "mapImagePath": "assets/tenants/copacabana_palace/images/mapa/mapa_do_hotel.png"
 }

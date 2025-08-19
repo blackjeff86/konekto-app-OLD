@@ -20,6 +20,11 @@ class AppThemeData {
   final Color buttonText;
   final String splashScreenIconPath;
 
+  // Novo grupo para variantes transparentes
+  final Color cardTransparent;
+  final Color cardWhite70;
+  final Color cardBlack50;
+
   const AppThemeData({
     required this.primary,
     required this.onPrimary,
@@ -37,12 +42,15 @@ class AppThemeData {
     required this.shadowColor,
     required this.buttonText,
     required this.splashScreenIconPath,
+    required this.cardTransparent,
+    required this.cardWhite70,
+    required this.cardBlack50,
   });
 
   factory AppThemeData.fromJson(Map<String, dynamic> json) {
     Color hexToColor(String? hexCode) {
       if (hexCode == null) {
-        return Colors.black;
+        return Colors.transparent; // padrão para valores ausentes
       }
 
       String formattedHex = hexCode.toUpperCase();
@@ -61,6 +69,8 @@ class AppThemeData {
       return Color(hexValue);
     }
 
+    final transparentVariants = json['transparentVariants'] ?? {};
+
     return AppThemeData(
       primary: hexToColor(json['primary']),
       onPrimary: hexToColor(json['onPrimary'] ?? '0xFFFFFFFF'),
@@ -78,6 +88,9 @@ class AppThemeData {
       shadowColor: hexToColor(json['shadowColor']),
       buttonText: hexToColor(json['buttonText']),
       splashScreenIconPath: json['splashScreenIconPath'] ?? 'assets/images/icons/default_icon.png',
+      cardTransparent: hexToColor(transparentVariants['cardTransparent']),
+      cardWhite70: hexToColor(transparentVariants['cardWhite70']),
+      cardBlack50: hexToColor(transparentVariants['cardBlack50']),
     );
   }
 }

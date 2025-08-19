@@ -1,3 +1,5 @@
+// lib/screens/home_content_screen.dart
+
 import 'package:flutter/material.dart';
 import '../utils/app_theme_data.dart';
 import '../widgets/image_banner.dart';
@@ -94,7 +96,11 @@ class HomeContentScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 28, color: appColors.primary),
+            Icon(
+              icon,
+              size: 28,
+              color: appColors.primaryText, // CORREÇÃO: Usa a cor de texto principal para o ícone
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "restaurant_preview",
+    "title": "Conheça Nossos Restaurantes",
+    "description": "Descubra as opções gastronômicas antes mesmo de fazer o check-in.",
+    "bannerPath": "assets/tenants/copacabana_palace/images/banners/restaurant_pre_check_in_banner.png",
+    "action": "restaurants"
+  },
+  {
+    "id": "spa_preview",
+    "title": "Serviços de Spa e Bem-estar",
+    "description": "Relaxe com nossa seleção de tratamentos de spa, reserve agora e garanta seu horário.",
+    "bannerPath": "assets/tenants/copacabana_palace/images/banners/spa_pre_check_in_banner.png",
+    "action": "spa"
+  }
+]

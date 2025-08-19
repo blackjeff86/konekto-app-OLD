@@ -1,3 +1,4 @@
+// lib/screens/home_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -44,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final String _guestEmail = "lucas.silva@email.com";
   final String _guestRoom = "305";
 
-  bool _hasNewNotifications = true; // Variável de estado para o ponto vermelho
+  bool _hasNewNotifications = true;
 
   @override
   void initState() {
@@ -291,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 icon: Icon(
                   _hasNewNotifications ? Icons.notifications : Icons.notifications_outlined,
-                  color: _hasNewNotifications ? widget.appColors.primary : widget.appColors.secondaryText,
+                  color: _hasNewNotifications ? widget.appColors.primaryText : widget.appColors.secondaryText,
                   size: 28,
                 ),
                 onPressed: _navigateToNotificationsScreen,
@@ -303,7 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     width: 10,
                     height: 10,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.red,
                       shape: BoxShape.circle,
                     ),
@@ -312,6 +313,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           appColors: widget.appColors,
+          titleFontSize: (widget.tenantConfig['uiConfig']?['homeScreen']?['headerTitleFontSize'] ?? 24.0) as double,
+          headerTitleType: widget.tenantConfig['headerTitleType'] ?? 'text',
+          logoPath: widget.tenantConfig['logoPath'] ?? '',
         ),
       ),
       body: Padding(
@@ -328,7 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return BottomNavigationBar(
       backgroundColor: widget.appColors.background,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: widget.appColors.primary,
+      selectedItemColor: widget.appColors.accent, 
       unselectedItemColor: widget.appColors.secondaryText,
       showSelectedLabels: true,
       showUnselectedLabels: true,

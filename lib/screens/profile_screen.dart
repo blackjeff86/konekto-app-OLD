@@ -1,13 +1,8 @@
 // lib/screens/profile_screen.dart
-
 import 'package:flutter/material.dart';
 import '../utils/app_theme_data.dart';
-// Removida a importação de custom_header.dart se não for usada,
-// já que o AppBar da ProfileScreen será removido.
-// import '../widgets/custom_header.dart'; 
+import 'check_in_status_screen.dart';
 
-// Classe de modelo para os dados do usuário.
-// Em um aplicativo real, isso viria de uma API.
 class User {
   final String name;
   final String role;
@@ -39,16 +34,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
     name: 'Lucas',
     role: 'Hóspede',
     id: '123456',
-    profileImagePath: 'assets/tenants/konekto_app_default/images/profile/lucas_profile.jpg',
+    profileImagePath:
+        'assets/tenants/konekto_app_default/images/profile/lucas_profile.jpg',
   );
 
   void _onTapProfilePhoto() {
-    print('Tocou na foto de perfil. Lógica para alterar a foto seria implementada aqui.');
+    print(
+        'Tocou na foto de perfil. Lógica para alterar a foto seria implementada aqui.');
+  }
+
+  void _logout() {
+    print('Realizando logout do usuário...');
+
+    final AppThemeData konektoDefaultColors = AppThemeData(
+      primary: Colors.white,
+      onPrimary: const Color(0xFF0F172A),
+      accent: const Color(0xFF3B82F6),
+      primaryText: const Color(0xFF111416),
+      secondaryText: const Color(0xFF637287),
+      background: Colors.grey[50]!,
+      cardBackground: Colors.white,
+      buttonBackground: const Color(0xFF0F172A),
+      buttonText: Colors.white,
+      borderColor: const Color(0xFFE5E8EA),
+      success: Colors.green,
+      warning: Colors.orange,
+      error: Colors.red,
+      onError: Colors.white,
+      shadowColor: Colors.black.withOpacity(0.08),
+      splashScreenIconPath: 'assets/images/icons/default_icon.png',
+      // Novos campos transparentVariants
+      cardTransparent: Colors.transparent,
+      cardWhite70: const Color(0xB3FFFFFF),
+      cardBlack50: const Color(0x80000000),
+    );
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CheckInStatusScreen(
+          tenantConfig: const {},
+          appColors: konektoDefaultColors,
+        ),
+      ),
+      (Route<dynamic> route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // REMOVIDO: Scaffold e AppBar
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -81,7 +115,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 128,
                     height: 128,
                     color: widget.appColors.borderColor,
-                    child: Icon(Icons.person, color: widget.appColors.secondaryText, size: 60),
+                    child: Icon(Icons.person,
+                        color: widget.appColors.secondaryText, size: 60),
                   );
                 },
               ),
@@ -93,7 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               color: widget.appColors.primaryText,
               fontSize: 22,
-              fontFamily: 'Plus Jakarta Sans',
+              fontFamily: 'Manrope',
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -103,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               color: widget.appColors.secondaryText,
               fontSize: 16,
-              fontFamily: 'Plus Jakarta Sans',
+              fontFamily: 'Manrope',
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -112,7 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               color: widget.appColors.secondaryText,
               fontSize: 16,
-              fontFamily: 'Plus Jakarta Sans',
+              fontFamily: 'Manrope',
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -158,9 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _buildProfileOption(
           title: 'Sair',
           icon: Icons.logout,
-          onTap: () {
-            print('Lógica de logout do usuário');
-          },
+          onTap: _logout,
         ),
       ],
     );
@@ -169,21 +202,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildSectionTitle(String title) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 8),
+      padding:
+          const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 8),
       color: widget.appColors.background,
       child: Text(
         title,
         style: TextStyle(
           color: widget.appColors.primaryText,
           fontSize: 18,
-          fontFamily: 'Plus Jakarta Sans',
+          fontFamily: 'Manrope',
           fontWeight: FontWeight.w700,
         ),
       ),
     );
   }
 
-  Widget _buildProfileOption({required String title, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildProfileOption({
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -209,12 +247,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(
                   color: widget.appColors.primaryText,
                   fontSize: 16,
-                  fontFamily: 'Plus Jakarta Sans',
+                  fontFamily: 'Manrope',
                   fontWeight: FontWeight.w400,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, color: widget.appColors.secondaryText),
+            Icon(Icons.chevron_right,
+                color: widget.appColors.secondaryText),
           ],
         ),
       ),

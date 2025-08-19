@@ -1,0 +1,24 @@
+{
+  "primary": "0xFF0F172A",
+  "onPrimary": "0xFFFFFFFF",
+  "accent": "0xFF3B82F6",
+  "primaryText": "0xFF1E293B",
+  "secondaryText": "0xFF64748B",
+  "background": "0xFFF8FAFC",
+  "cardBackground": "0xFFFFFFFF",
+  "buttonBackground": "0xFF0F172A",
+  "buttonText": "0xFFFFFFFF",
+  "borderColor": "0xFFE2E8F0",
+  "success": "0xFF22C55E",
+  "warning": "0xFFF59E0B",
+  "error": "0xFFEF4444",
+  "onError": "0xFFFFFFFF",
+  "shadowColor": "0x1A000000",
+  "transparentVariants": {
+    "cardTransparent": "0x00000000",
+    "cardWhite70": "0xB3FFFFFF",
+    "cardBlack50": "0x80000000"
+  },
+  "splashScreenIconPath": "assets/images/icons/default_icon.png",
+  "mainBannerPath": "assets/images/banner/konekto_banner.png"
+}

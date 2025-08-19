@@ -5,6 +5,7 @@
   "uiConfigJsonPath": "assets/tenants/beach_park/ui_config.json",
   "themeConfigJsonPath": "assets/tenants/beach_park/theme_config.json",
   "servicesJsonPath": "assets/tenants/beach_park/services.json",
+  "preCheckInServicesJsonPath": "assets/tenants/beach_park/pre_check_in_services.json",
   "spaJsonPath": "assets/tenants/beach_park/spa.json",
   "restaurantsJsonPath": "assets/tenants/beach_park/restaurants.json",
   "eventsJsonPath": "assets/tenants/beach_park/events.json",
@@ -26,7 +27,11 @@
   "headerTitleType": "text",
   "logoPath": "assets/tenants/beach_park/images/logos/beach_park_logo.png",
   "checkInConfig": {
+    "welcomeMessageAwaiting": "Seu check-in está aguardando aprovação. Nossa equipe já foi notificada. Por favor, entre em contato com a recepção para agilizar o processo.",
     "successfulCheckInId": "12345",
     "awaitingCheckInId": "67890"
-  }
+  },
+  "mapJsonPath": "assets/tenants/beach_park/map.json",
+  "mapImagePath": "assets/tenants/beach_park/images/mapa/mapa_do_hotel.png",
+  "homeScreenLayoutConfigPath": "assets/tenants/beach_park/home_layout_config.json"
 }

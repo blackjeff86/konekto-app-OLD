@@ -34,7 +34,7 @@ class CustomHeader extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: appColors.primary,
+                  color: appColors.primaryText, // CORREÇÃO: Usa a cor de texto principal
                   fontWeight: FontWeight.w700,
                   fontSize: titleFontSize,
                 ),
