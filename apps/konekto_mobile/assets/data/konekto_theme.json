@@ -1,0 +1,27 @@
+{
+  "theme": {
+    "colors": {
+      "primary": "#FAFFF8",
+      "accent": "#005a9c",
+      "background_secondary": "#FFFFFF",
+      "text_primary": "#0F172A",
+      "text_secondary": "#4B5563",
+      "status": {
+        "success": "#22C55E",
+        "warning": "#F97316",
+        "error": "#EF4444"
+      }
+    },
+    "typography": {
+      "font_family": "Inter",
+      "sizes": {
+        "display": 28.0,
+        "headline": 24.0,
+        "title": 20.0,
+        "subtitle": 16.0,
+        "body": 14.0,
+        "caption": 12.0
+      }
+    }
+  }
+}

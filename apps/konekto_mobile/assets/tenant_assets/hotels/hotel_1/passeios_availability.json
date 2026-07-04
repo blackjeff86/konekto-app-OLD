@@ -1,0 +1,41 @@
+{
+  "passeiosAvailability": [
+    {
+      "slug": "mergulho-recifes-corais",
+      "availableTimes": [
+        "08:30",
+        "10:00",
+        "12:00"
+      ]
+    },
+    {
+      "slug": "passeio-buggy",
+      "availableTimes": [
+        "09:00",
+        "14:00",
+        "16:00"
+      ]
+    },
+    {
+      "slug": "tour-historico-cidade",
+      "availableTimes": [
+        "10:00",
+        "15:00"
+      ]
+    },
+    {
+      "slug": "passeio-catamara",
+      "availableTimes": [
+        "09:30",
+        "14:30"
+      ]
+    },
+    {
+      "slug": "trilha-ecologica",
+      "availableTimes": [
+        "07:00",
+        "13:00"
+      ]
+    }
+  ]
+}

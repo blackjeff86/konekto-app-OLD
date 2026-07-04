@@ -1,0 +1,105 @@
+{
+  "pageConfig": {
+    "title": "Mapa do Hotel",
+    "pinIconUrl": "assets/icons/pin.png",
+    "styles": {
+      "backgroundColor": "#FFFFFF",
+      "appBarTitleColor": "#111416"
+    },
+    "textStyles": {
+      "pageTitle": {
+        "fontSize": 24,
+        "fontWeight": "w700",
+        "color": "#111416"
+      },
+      "servicesSectionTitle": {
+        "fontSize": 18,
+        "fontWeight": "w700",
+        "color": "#111416"
+      },
+      "carouselLabel": {
+        "fontSize": 16,
+        "fontWeight": "w500",
+        "color": "#111416"
+      }
+    },
+    "sections": [
+      {
+        "type": "carousel",
+        "dataKey": "promoImages",
+        "layout": {
+          "height": 160,
+          "imageHeight": 120,
+          "itemSpacing": 12,
+          "verticalPadding": 24
+        }
+      },
+      {
+        "type": "services_list",
+        "dataKey": "serviceItems",
+        "layout": {
+          "titleSpacing": 12,
+          "itemSpacing": 1,
+          "verticalPadding": 12
+        }
+      },
+      {
+        "type": "map_view",
+        "dataKey": "pageConfig",
+        "layout": {
+          "aspectRatio": 1.0,
+          "verticalPadding": 20,
+          "borderRadius": 12
+        }
+      }
+    ],
+    "fixedSection": {},
+    "layout": {
+      "screenHorizontalPadding": 16,
+      "pageTopPadding": 16
+    }
+  },
+  "promoImages": [
+    {
+      "id": "1",
+      "label": "Hotel 1",
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/hotel_1_view_1.png",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_1/images/mapa/planta_baixa.png"
+    },
+    {
+      "id": "2",
+      "label": "Piscinas",
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/hotel_1_view_2.png",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_1/images/mapa/piscina_destacada.png"
+    },
+    {
+      "id": "3",
+      "label": "Quadra de Tênis",
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/hotel_1_promo.png",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_1/images/mapa/quadra_destacada.png"
+    }
+  ],
+  "serviceItems": [
+    {
+      "id": "2",
+      "label": "Piscina 1",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_1/images/mapa/piscina_destacada.png"
+    },
+    {
+      "id": "4",
+      "label": "Piscina 2",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_1/images/mapa/piscina_2_destacada.png"
+    },
+    {
+      "id": "3",
+      "label": "Quadra de Tênis",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_1/images/mapa/quadra_destacada.png"
+    },
+    {
+      "id": "4",
+      "label": "SPA",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_1/images/mapa/spa_destacado.png"
+    }
+  ],
+  "pointsOfInterest": []
+}

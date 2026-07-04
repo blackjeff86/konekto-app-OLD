@@ -1,0 +1,11 @@
+{
+  "status": "checkin_ok",
+  "guest": {
+    "name": "Jeff Brito",
+    "room_number": "305"
+  },
+  "wifi": {
+    "network_name": "HotelKonekto_Guest",
+    "password": "Senha_Secreta_123"
+  }
+}

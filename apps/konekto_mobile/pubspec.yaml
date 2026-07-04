@@ -1,0 +1,58 @@
+name: konekto
+description: "App mobile Konekto para hóspedes de hotel (pacote Dart chamado 'konekto', pasta apps/konekto_mobile)."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.9.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_fonts: ^6.1.0
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter 
+  table_calendar: ^3.0.9
+  
+
+  cupertino_icons: ^1.0.8
+  firebase_core: ^4.0.0
+  cloud_firestore: ^6.0.0
+  mobile_scanner: ^7.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Adiciona os assets de acordo com a nossa estrutura de pastas
+  assets:
+    - assets/app_assets/images/promotions/
+    - assets/app_assets/images/
+    - assets/app_assets/icons/
+    - assets/data/
+    - assets/tenant_assets/hotels/hotel_1/
+    - assets/tenant_assets/hotels/hotel_1/images/
+    - assets/tenant_assets/hotels/hotel_1/images/room_service/
+    - assets/tenant_assets/hotels/hotel_1/images/spa/
+    - assets/tenant_assets/hotels/hotel_1/images/restaurants/
+    - assets/tenant_assets/hotels/hotel_1/images/passeios/
+    - assets/tenant_assets/hotels/hotel_1/images/eventos/
+    - assets/tenant_assets/hotels/hotel_1/images/mapa/
+
+    - assets/tenant_assets/hotels/hotel_2/
+
+
+
+  # Configura a fonte Inter
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/app_assets/fonts/Inter-Regular.ttf
+        - asset: assets/app_assets/fonts/Inter-Bold.ttf
+          weight: 700

@@ -1,20 +1,15 @@
-<<<<<<< HEAD
-# konekto-app
-=======
-# konekto_app
+# Konekto
 
-A new Flutter project.
+Monorepo do ecossistema Konekto.
 
-## Getting Started
+- [`apps/konekto_mobile`](apps/konekto_mobile) — app mobile multi-tenant usado pelo hóspede do hotel (login, check-in, eventos, spa, restaurantes, passeios, room service, mapa, promoções, etc). É a implementação mais madura da experiência de hóspede; versões anteriores desse mesmo conceito foram descontinuadas. Obs: o pacote Dart interno se chama `konekto` (declarado em `pubspec.yaml`), então os imports no código usam `package:konekto/...` mesmo a pasta se chamando `konekto_mobile`.
 
-This project is a starting point for a Flutter application.
+Próximos apps planejados (ainda não implementados): site institucional e painel de staff/gestão do hotel.
 
-A few resources to get you started if this is your first Flutter project:
+## Rodando o app
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
->>>>>>> 7af0574 (Initial commit do projeto Konekto App)
+```bash
+cd apps/konekto_mobile
+flutter pub get
+flutter run
+```

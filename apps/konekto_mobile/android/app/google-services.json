@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "108078243563",
+    "project_id": "konekto-4ff14",
+    "storage_bucket": "konekto-4ff14.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:108078243563:android:17eae581c8e7eff0d2e8ae",
+        "android_client_info": {
+          "package_name": "com.example.konekto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJApGLMwBv4vMmpKSe74DFYNbOrQBBEbY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

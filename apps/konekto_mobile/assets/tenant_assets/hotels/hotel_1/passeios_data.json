@@ -1,0 +1,100 @@
+{
+  "pageConfig": {
+    "title": "Passeios",
+    "bannerImageUrl": "assets/tenant_assets/hotels/hotel_1/images/passeios/banner_passeios.png",
+    "styles": {
+      "backgroundColor": "#FFFFFF",
+      "cardBackgroundColor": "#F5F5F5",
+      "cardShadowColor": "#E6EBF0",
+      "buttonColor": "#EFF2F4",
+      "buttonTextColor": "#111416"
+    },
+    "textStyles": {
+      "pageTitle": {
+        "fontSize": 24,
+        "fontWeight": "w700",
+        "color": "#111416"
+      },
+      "passeioText": {
+        "fontSize": 14,
+        "fontWeight": "w400",
+        "color": "#637287"
+      },
+      "passeioTitle": {
+        "fontSize": 16,
+        "fontWeight": "w700",
+        "color": "#111416"
+      },
+      "passeioDescription": {
+        "fontSize": 14,
+        "fontWeight": "w400",
+        "color": "#637287"
+      },
+      "buttonText": {
+        "fontSize": 14,
+        "fontWeight": "w500",
+        "color": "#111416"
+      }
+    },
+    "layoutStyles": {
+      "screenPadding": 16,
+      "card": {
+        "padding": 16,
+        "borderRadius": 12,
+        "elevation": 4
+      },
+      "passeioImage": {
+        "width": 130,
+        "height": 160,
+        "borderRadius": 12
+      },
+      "itemSpacing": 16,
+      "textSpacing": 4,
+      "buttonHeight": 32,
+      "buttonPadding": 16,
+      "buttonBorderRadius": 16
+    }
+  },
+  "passeios": [
+    {
+      "passeioTitle": "Mergulho em Recifes de Corais",
+      "description": "Explore a rica vida marinha em uma aventura de mergulho guiada por instrutores especializados.",
+      "buttonText": "Reservar",
+      "imageFileName": "mergulho.png",
+      "location": "Piscina Natural de Japaratinga",
+      "slug": "mergulho-recifes-corais"
+    },
+    {
+      "passeioTitle": "Passeio de Buggy pelas Dunas",
+      "description": "Aventura emocionante em buggy, explorando as belas dunas e paisagens intocadas da região.",
+      "buttonText": "Reservar",
+      "imageFileName": "buggy.png",
+      "location": "Dunas de Marapé",
+      "slug": "passeio-buggy"
+    },
+    {
+      "passeioTitle": "Tour Histórico pela Cidade",
+      "description": "Descubra os segredos da cidade com um tour guiado pelos principais pontos históricos e culturais.",
+      "buttonText": "Reservar",
+      "imageFileName": "tour_historico.png",
+      "location": "Centro Histórico",
+      "slug": "tour-historico-cidade"
+    },
+    {
+      "passeioTitle": "Passeio de Catamarã",
+      "description": "Relaxe em um passeio de catamarã pelo rio, com paradas para banho e vistas panorâmicas.",
+      "buttonText": "Reservar",
+      "imageFileName": "catamara.png",
+      "location": "Foz do Rio Tatuamunha",
+      "slug": "passeio-catamara"
+    },
+    {
+      "passeioTitle": "Trilha Ecológica",
+      "description": "Conecte-se com a natureza em uma trilha por paisagens de tirar o fôlego e cachoeiras escondidas.",
+      "buttonText": "Reservar",
+      "imageFileName": "trilha.png",
+      "location": "Reserva da Mata Atlântica",
+      "slug": "trilha-ecologica"
+    }
+  ]
+}

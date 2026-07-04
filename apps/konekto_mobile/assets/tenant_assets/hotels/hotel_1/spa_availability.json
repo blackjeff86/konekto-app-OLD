@@ -1,0 +1,56 @@
+{
+  "spaAvailability": [
+    {
+      "slug": "massagem-relaxante",
+      "availableDates": [
+        {
+          "date": "2025-08-29",
+          "availableTimes": ["10:00", "11:00", "14:00", "15:00"]
+        },
+        {
+          "date": "2025-08-26",
+          "availableTimes": ["10:00", "12:00", "16:00"]
+        }
+      ]
+    },
+    {
+      "slug": "limpeza-de-pele-profunda",
+      "availableDates": [
+        {
+          "date": "2025-08-25",
+          "availableTimes": ["10:00", "13:00", "15:00"]
+        },
+        {
+          "date": "2025-08-26",
+          "availableTimes": ["09:00", "11:00", "14:00"]
+        }
+      ]
+    },
+    {
+      "slug": "drenagem-linfatica",
+      "availableDates": [
+        {
+          "date": "2025-08-25",
+          "availableTimes": ["11:00", "14:00"]
+        },
+        {
+          "date": "2025-08-26",
+          "availableTimes": ["10:00", "11:00", "12:00"]
+        }
+      ]
+    },
+    {
+      "slug": "pacote-dia-de-spa",
+      "availableDates": [
+        {
+          "date": "2025-08-26",
+          "availableTimes": ["09:00", "14:00"]
+        },
+        {
+          "date": "2025-08-27",
+          "availableTimes": ["10:00", "12:00"]
+        }
+      ]
+    }
+  ]
+}

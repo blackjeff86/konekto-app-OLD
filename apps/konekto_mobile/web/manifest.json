@@ -1,0 +1,35 @@
+{
+    "name": "Konekto",
+    "short_name": "Konekto",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#14181F",
+    "theme_color": "#14181F",
+    "description": "Konekto — a experiência do seu hotel, sem precisar baixar um app.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

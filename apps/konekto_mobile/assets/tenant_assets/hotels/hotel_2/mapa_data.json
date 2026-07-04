@@ -1,0 +1,94 @@
+{
+  "pageConfig": {
+    "title": "Mapa Interativo",
+    "pinIconUrl": "assets/icons/pin_hotel2.png",
+    "styles": {
+      "backgroundColor": "#F6F6F6",
+      "appBarTitleColor": "#3A86FF"
+    },
+    "textStyles": {
+      "pageTitle": {
+        "fontSize": 20,
+        "fontWeight": "w700",
+        "color": "#333333"
+      },
+      "servicesSectionTitle": {
+        "fontSize": 16,
+        "fontWeight": "w600",
+        "color": "#333333"
+      },
+      "carouselLabel": {
+        "fontSize": 14,
+        "fontWeight": "w500",
+        "color": "#3A86FF"
+      }
+    },
+    "sections": [
+      {
+        "type": "carousel",
+        "dataKey": "promoImages",
+        "layout": {
+          "height": 140,
+          "imageHeight": 100,
+          "itemSpacing": 10,
+          "verticalPadding": 20
+        }
+      },
+      {
+        "type": "services_list",
+        "dataKey": "serviceItems",
+        "layout": {
+          "titleSpacing": 8,
+          "itemSpacing": 2,
+          "verticalPadding": 10
+        }
+      },
+      {
+        "type": "map_view",
+        "dataKey": "pageConfig",
+        "layout": {
+          "aspectRatio": 1.5,
+          "verticalPadding": 15,
+          "borderRadius": 20
+        }
+      }
+    ],
+    "fixedSection": {},
+    "layout": {
+      "screenHorizontalPadding": 20,
+      "pageTopPadding": 20
+    }
+  },
+  "promoImages": [
+    {
+      "id": "1",
+      "label": "Vista do Mar",
+      "imageUrl": "assets/tenant_assets/hotels/hotel_2/images/view_1.png",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_2/images/mapa/planta_baixa.png"
+    },
+    {
+      "id": "2",
+      "label": "Piscinas Incríveis",
+      "imageUrl": "assets/tenant_assets/hotels/hotel_2/images/view_2.png",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_2/images/mapa/piscina_destacada.png"
+    }
+  ],
+  "serviceItems": [
+    {
+      "id": "2",
+      "label": "Piscina Principal",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_2/images/mapa/piscina_destacada.png"
+    },
+    {
+      "id": "4",
+      "label": "Restaurante",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_2/images/mapa/restaurante_destacado.png"
+    },
+    {
+      "id": "3",
+      "label": "Área Fitness",
+      "mapImageUrl": "assets/tenant_assets/hotels/hotel_2/images/mapa/academia_destacada.png"
+    }
+  ],
+  "pointsOfInterest": []
+}
