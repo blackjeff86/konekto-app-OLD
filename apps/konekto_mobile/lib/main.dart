@@ -7,14 +7,9 @@ import 'package:konekto/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e) {
-    // Firebase ainda não foi configurado para Web (só Android/iOS) e não é
-    // usado por nenhuma tela ainda — segue sem travar o app nessa plataforma.
-  }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 

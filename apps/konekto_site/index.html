@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konekto — A experiência digital do seu hotel</title>
+<meta name="description" content="Konekto é o app de hóspedes com a marca do seu hotel. Check-in por QR Code, serviços, pedidos e mensagens — sem instalar nada.">
+<link rel="icon" href="assets/logo/app-icon-dark-bg.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0D12;
+    --surface: #12151C;
+    --surface-2: #171B23;
+    --border: rgba(255,255,255,0.09);
+    --border-strong: rgba(255,255,255,0.16);
+    --gold: #B8935F;
+    --gold-light: #E4CFA6;
+    --cream: #F5F3EE;
+    --slate: #9099A6;
+    --slate-soft: #6B7280;
+
+    --font-body: 'Inter', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SFMono-Regular', monospace;
+
+    --space-xl: clamp(5rem, 3.5rem + 6vw, 9rem);
+    --radius-lg: 28px;
+
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--cream);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img, svg { max-width: 100%; display: block; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; color: var(--cream); font-weight: 700; letter-spacing: -0.01em; }
+  a { color: inherit; }
+
+  .container { max-width: 1180px; margin: 0 auto; padding-inline: clamp(1.25rem, 4vw, 2.5rem); }
+
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-light);
+  }
+
+  /* ---------- Nav ---------- */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 1.1rem 0; background: rgba(11,13,18,0);
+    border-bottom: 1px solid transparent;
+    transition: background 0.35s ease, border-color 0.35s ease, padding 0.35s ease;
+  }
+  .nav.scrolled {
+    background: rgba(11,13,18,0.86); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border); padding: 0.75rem 0;
+  }
+  .nav .container { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
+  .brand { display: flex; align-items: center; gap: 0.75rem; font-size: 1.5rem; font-weight: 800; color: var(--cream); text-decoration: none; }
+  .brand-mark { width: 42px; height: 42px; flex: none; }
+  .brand-mark rect:first-child { stroke: var(--gold-light); }
+  .brand-mark rect:last-child { fill: var(--gold); }
+  .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; margin: 0; padding: 0; }
+  .nav-links a { color: var(--slate); text-decoration: none; font-size: 0.92rem; font-weight: 500; transition: color 0.2s ease; }
+  .nav-links a:hover, .nav-links a:focus-visible { color: var(--gold-light); }
+  .nav-cta {
+    font-weight: 600; font-size: 0.88rem; color: var(--bg); background: var(--gold-light);
+    padding: 0.6rem 1.3rem; border-radius: 999px; text-decoration: none;
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .nav-cta:hover, .nav-cta:focus-visible { background: var(--gold); transform: translateY(-1px); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: clamp(7rem, 5rem + 8vw, 10rem) 0 clamp(4rem, 3rem + 4vw, 7rem); position: relative; overflow: clip; }
+  .hero::after {
+    content: ""; position: absolute; inset: auto 0 0 0; height: 55%;
+    background: radial-gradient(60% 100% at 80% 100%, rgba(184,147,95,0.12), transparent 70%);
+    pointer-events: none;
+  }
+  .hero .container { display: grid; grid-template-columns: 1.05fr 0.85fr; gap: clamp(2rem, 4vw, 4rem); align-items: center; position: relative; z-index: 1; }
+  .hero h1 { font-size: clamp(2.4rem, 1.7rem + 3vw, 3.6rem); line-height: 1.08; margin-top: 0.9rem; }
+  .hero h1 .accent { color: var(--gold-light); }
+  .hero p.lede { color: var(--slate); font-size: clamp(1rem, 0.94rem + 0.3vw, 1.15rem); max-width: 46ch; margin-top: 1.3rem; }
+  .hero-actions { display: flex; gap: 0.9rem; margin-top: 2.2rem; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.95rem;
+    padding: 0.9rem 1.6rem; border-radius: 999px; text-decoration: none;
+    border: 1px solid transparent; cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn-primary { background: var(--gold); color: var(--bg); }
+  .btn-primary:hover, .btn-primary:focus-visible { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(184,147,95,0.4); }
+  .btn-ghost { color: var(--cream); border-color: var(--border-strong); }
+  .btn-ghost:hover, .btn-ghost:focus-visible { border-color: var(--gold); color: var(--gold-light); }
+
+  .hero-stats { display: flex; gap: clamp(1.5rem, 4vw, 3rem); margin-top: clamp(2.5rem, 3vw, 3.5rem); }
+  .hero-stat .num { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 600; color: var(--gold-light); font-variant-numeric: tabular-nums; }
+  .hero-stat .label { font-size: 0.8rem; color: var(--slate-soft); margin-top: 0.2rem; }
+
+  /* Phone mockup — titânio + Dynamic Island */
+  .phone-wrap { display: flex; justify-content: center; perspective: 1600px; }
+  .phone-frame {
+    position: relative; width: min(272px, 100%); aspect-ratio: 272 / 560;
+    border-radius: 58px; padding: 12px;
+    background: linear-gradient(155deg, #9a9b9e 0%, #dcdde0 16%, #7d7f82 34%, #cfd0d3 58%, #67696c 80%, #97999c 100%);
+    box-shadow: 0 50px 90px -24px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.4), inset 0 0 0 1.5px rgba(255,255,255,0.35);
+    transform: rotate3d(0.3, -1, 0, 8deg) rotateZ(-1.2deg);
+    animation: float 7s ease-in-out infinite;
+  }
+  @keyframes float { 0%, 100% { transform: rotate3d(0.3, -1, 0, 8deg) rotateZ(-1.2deg) translateY(0); } 50% { transform: rotate3d(0.3, -1, 0, 8deg) rotateZ(-1.2deg) translateY(-14px); } }
+  @media (prefers-reduced-motion: reduce) { .phone-frame { animation: none; } }
+
+  .phone-side { position: absolute; background: linear-gradient(90deg, #5c5e61, #a3a5a8); border-radius: 3px; box-shadow: -1px 0 2px rgba(0,0,0,0.4); }
+  .phone-side-action { left: -3px; top: 15%; width: 3px; height: 3.5%; }
+  .phone-side-vol-up { left: -3px; top: 21%; width: 3px; height: 6%; }
+  .phone-side-vol-down { left: -3px; top: 29%; width: 3px; height: 6%; }
+  .phone-side-power { right: -3px; top: 22%; width: 3px; height: 9%; border-radius: 3px; box-shadow: 1px 0 2px rgba(0,0,0,0.4); }
+
+  .phone-screen { position: relative; width: 100%; height: 100%; background: var(--cream); border-radius: 46px; overflow: hidden; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.55); }
+  .dynamic-island { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 34%; height: 22px; background: #000; border-radius: 999px; z-index: 5; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06); }
+
+  .phone-panel { background: linear-gradient(160deg, var(--bg), var(--surface-2)); padding: 3rem 1.2rem 2.2rem; text-align: center; }
+  .phone-eyebrow { font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.16em; color: var(--gold-light); text-transform: uppercase; }
+  .phone-logo { width: 60px; height: 60px; margin: 0.9rem auto 0; }
+  .phone-logo rect:first-child { stroke: var(--gold-light); }
+  .phone-logo rect:last-child { fill: var(--gold); }
+  .phone-body { margin-top: -1.6rem; background: var(--cream); border-radius: 22px 22px 0 0; padding: 2rem 1.2rem 1.4rem; }
+  .phone-body h3 { font-size: 1.05rem; color: #14181F; }
+  .phone-tag { font-size: 0.78rem; color: var(--gold); font-weight: 600; margin-top: 0.15rem; }
+  .phone-desc { font-size: 0.7rem; color: #5B6472; margin-top: 0.6rem; line-height: 1.5; }
+  .phone-input { margin-top: 1.1rem; text-align: left; background: #fff; border: 1px solid #E2D5C0; border-radius: 12px; padding: 0.55rem 0.7rem; font-size: 0.66rem; color: #8A94A3; display: flex; align-items: center; gap: 0.4rem; }
+  .phone-btn { margin-top: 0.7rem; background: #14181F; color: var(--cream); text-align: center; padding: 0.6rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; }
+  .phone-scan { margin-top: 0.5rem; text-align: center; padding: 0.55rem; border-radius: 999px; font-size: 0.66rem; font-weight: 600; color: #14181F; border: 1px solid #E2D5C0; }
+  .phone-home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 34%; height: 4px; border-radius: 999px; background: #14181F; opacity: 0.55; }
+
+  /* ---------- Sections generic ---------- */
+  section { padding: var(--space-xl) 0; }
+  .section-alt { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .section-head { max-width: 640px; margin-bottom: clamp(2.5rem, 3vw, 3.5rem); }
+  .section-head h2 { font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.6rem); margin-top: 0.7rem; }
+  .section-head p { color: var(--slate); margin-top: 0.9rem; font-size: 1.05rem; max-width: 58ch; }
+  .section-head.center { margin-inline: auto; text-align: center; }
+  .section-head.center p { margin-inline: auto; }
+
+  /* ---------- Value strip ---------- */
+  .value-strip { padding: clamp(2.2rem, 2vw, 2.8rem) 0; }
+  .value-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+  .value-item { display: flex; gap: 0.9rem; align-items: flex-start; }
+  .value-item .icon { flex: none; width: 42px; height: 42px; border-radius: 12px; background: rgba(184,147,95,0.12); color: var(--gold-light); display: flex; align-items: center; justify-content: center; }
+  .value-item h3 { font-size: 1rem; font-weight: 700; }
+  .value-item p { margin: 0.25rem 0 0; font-size: 0.9rem; color: var(--slate); }
+
+  /* ---------- Features (bento) ---------- */
+  .bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1.1rem; }
+  .bento-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: clamp(1.5rem, 2vw, 2.1rem);
+    transition: transform 0.25s ease, border-color 0.25s ease;
+  }
+  .bento-card:hover { transform: translateY(-4px); border-color: var(--border-strong); }
+  .bento-card .icon-badge {
+    width: 46px; height: 46px; border-radius: 13px; background: rgba(184,147,95,0.12);
+    display: flex; align-items: center; justify-content: center; color: var(--gold-light);
+    margin-bottom: 1.1rem;
+  }
+  .bento-card h3 { font-size: 1.05rem; font-weight: 700; }
+  .bento-card p { font-size: 0.92rem; color: var(--slate); margin-top: 0.5rem; }
+  .b-span-3 { grid-column: span 3; }
+  .b-span-2 { grid-column: span 2; }
+  .b-span-4 { grid-column: span 4; }
+  .b-feature { background: linear-gradient(155deg, var(--surface-2), var(--surface)); border-color: var(--gold); }
+  .b-feature .icon-badge { background: rgba(228,207,166,0.16); }
+
+  @media (max-width: 860px) {
+    .bento { grid-template-columns: 1fr 1fr; }
+    .b-span-3, .b-span-2, .b-span-4 { grid-column: span 2; }
+  }
+  @media (max-width: 560px) {
+    .bento { grid-template-columns: 1fr; }
+    .b-span-3, .b-span-2, .b-span-4 { grid-column: span 1; }
+  }
+
+  /* ---------- How it works ---------- */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; counter-reset: step; position: relative; }
+  .steps::before { content: ""; position: absolute; top: 27px; left: 12%; right: 12%; height: 1px; background: var(--border-strong); }
+  .step { position: relative; z-index: 1; }
+  .step .step-num {
+    counter-increment: step; width: 54px; height: 54px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-weight: 600; color: var(--gold-light); font-size: 1.1rem;
+  }
+  .step .step-num::before { content: counter(step, decimal-leading-zero); }
+  .step h3 { font-size: 1rem; font-weight: 700; margin-top: 1.1rem; }
+  .step p { font-size: 0.88rem; color: var(--slate); margin-top: 0.4rem; }
+  @media (max-width: 760px) {
+    .steps { grid-template-columns: 1fr 1fr; row-gap: 2.2rem; }
+    .steps::before { display: none; }
+  }
+
+  /* ---------- Pricing ---------- */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; align-items: stretch; }
+  .plan {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: clamp(1.8rem, 2vw, 2.4rem); display: flex; flex-direction: column;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+  }
+  .plan:hover { transform: translateY(-4px); border-color: var(--border-strong); }
+  .plan-featured {
+    background: var(--surface-2); border: 1.5px solid var(--gold);
+    transform: scale(1.045); box-shadow: 0 30px 70px -28px rgba(184,147,95,0.35); z-index: 2;
+  }
+  .plan-featured:hover { transform: scale(1.045) translateY(-4px); }
+  .plan-badge {
+    align-self: flex-start; font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--bg); background: var(--gold-light);
+    padding: 0.3rem 0.7rem; border-radius: 999px; margin-bottom: 1rem; font-weight: 600;
+  }
+  .plan-name { font-size: 1.4rem; font-weight: 700; }
+  .plan-desc { font-size: 0.87rem; color: var(--slate); margin-top: 0.35rem; min-height: 2.6em; }
+  .plan-price { display: flex; align-items: baseline; gap: 0.35rem; margin-top: 1.4rem; }
+  .plan-price .amount { font-family: var(--font-mono); font-size: 2rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .plan-price .period { font-size: 0.85rem; color: var(--slate); }
+  .plan-guests { margin-top: 0.6rem; font-size: 0.82rem; font-weight: 600; color: var(--gold-light); display: flex; align-items: center; gap: 0.4rem; }
+  .plan-cta {
+    margin-top: 1.6rem; text-align: center; padding: 0.8rem; border-radius: 999px;
+    font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1px solid var(--border-strong); color: var(--cream);
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .plan-cta:hover { background: var(--cream); color: var(--bg); border-color: var(--cream); }
+  .plan-featured .plan-cta { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+  .plan-featured .plan-cta:hover { background: var(--gold-light); }
+  .plan-features { list-style: none; margin: 1.6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.65rem; flex: 1; }
+  .plan-features li { display: flex; gap: 0.6rem; font-size: 0.87rem; align-items: flex-start; }
+  .plan-features li svg { flex: none; margin-top: 0.15rem; color: var(--gold-light); }
+  .plan-ai {
+    margin-top: 1.2rem; padding: 0.9rem 1rem; border-radius: 14px; background: rgba(228,207,166,0.08);
+    border: 1px dashed var(--gold-light); font-size: 0.82rem; color: var(--gold-light);
+  }
+  @media (max-width: 900px) {
+    .pricing-grid { grid-template-columns: 1fr; }
+    .plan-featured { transform: none; }
+    .plan-featured:hover { transform: translateY(-4px); }
+  }
+
+  /* ---------- Final CTA ---------- */
+  .cta-band {
+    background: linear-gradient(135deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: clamp(2.5rem, 3vw, 4rem);
+    margin: 0 auto; max-width: 1180px; text-align: center;
+  }
+  .cta-band h2 { font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.4rem); }
+  .cta-band p { color: var(--slate); margin-top: 0.8rem; }
+  .cta-band .hero-actions { justify-content: center; margin-top: 1.8rem; }
+
+  /* ---------- Footer ---------- */
+  footer { background: var(--surface); border-top: 1px solid var(--border); color: var(--slate); padding: clamp(2.5rem, 3vw, 3.5rem) 0 2rem; margin-top: var(--space-xl); }
+  .footer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+  .footer-brand p { font-size: 0.85rem; max-width: 32ch; margin-top: 0.8rem; }
+  .footer-links { display: flex; gap: clamp(2rem, 5vw, 5rem); flex-wrap: wrap; }
+  .footer-col h4 { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); margin: 0 0 0.8rem; }
+  .footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+  .footer-col a { color: var(--slate); text-decoration: none; font-size: 0.87rem; }
+  .footer-col a:hover { color: var(--gold-light); }
+  .footer-bottom { display: flex; justify-content: space-between; padding-top: 1.5rem; font-size: 0.78rem; flex-wrap: wrap; gap: 0.5rem; }
+
+  /* ---------- Reveal on scroll ---------- */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
+
+  @media (max-width: 780px) { .nav-links { display: none; } }
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="container">
+    <a href="#" class="brand">
+      <svg class="brand-mark" viewBox="0 0 100 100"><rect x="12" y="12" width="56" height="56" rx="16" fill="none" stroke-width="6"/><rect x="52" y="52" width="34" height="34" rx="10"/></svg>
+      Konekto
+    </a>
+    <ul class="nav-links">
+      <li><a href="#produto">Produto</a></li>
+      <li><a href="#como-funciona">Como funciona</a></li>
+      <li><a href="#planos">Planos</a></li>
+    </ul>
+    <a href="login.html" class="nav-cta">Entrar</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div>
+      <p class="eyebrow">Para hotéis que encantam hóspedes</p>
+      <h1>A experiência do seu hotel,<br><span class="accent">sem instalar nada.</span></h1>
+      <p class="lede">O Konekto é o app de hóspedes com a cara do seu hotel: o hóspede escaneia um QR Code ou digita um código recebido por e-mail/WhatsApp e já entra direto na experiência da sua marca — check-in, serviços, pedidos e recepção, tudo num só lugar.</p>
+      <div class="hero-actions">
+        <a href="#planos" class="btn btn-primary">Ver planos</a>
+        <a href="#contato" class="btn btn-ghost">Agendar demonstração</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="num">0</div><div class="label">apps pra baixar</div></div>
+        <div class="hero-stat"><div class="num">100%</div><div class="label">com a marca do hotel</div></div>
+        <div class="hero-stat"><div class="num">&lt;30s</div><div class="label">do QR ao check-in</div></div>
+      </div>
+    </div>
+    <div class="phone-wrap">
+      <div class="phone-frame">
+        <div class="phone-side phone-side-action"></div>
+        <div class="phone-side phone-side-vol-up"></div>
+        <div class="phone-side phone-side-vol-down"></div>
+        <div class="phone-side phone-side-power"></div>
+        <div class="phone-screen">
+          <div class="dynamic-island"></div>
+          <div class="phone-panel">
+            <div class="phone-eyebrow">Sua estadia começa aqui</div>
+            <svg class="phone-logo" viewBox="0 0 100 100"><rect x="12" y="12" width="56" height="56" rx="16" fill="none" stroke-width="6"/><rect x="52" y="52" width="34" height="34" rx="10"/></svg>
+          </div>
+          <div class="phone-body">
+            <h3>Grand Konekto Palace</h3>
+            <div class="phone-tag">Bem-vindo(a) de volta</div>
+            <p class="phone-desc">Conecte-se ao seu hotel e descubra uma experiência personalizada.</p>
+            <div class="phone-input">🔑 Código de acesso do hotel</div>
+            <div class="phone-btn">CONFIRMAR ACESSO</div>
+            <div class="phone-scan">Escanear QR Code</div>
+          </div>
+          <div class="phone-home-indicator"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="value-strip section-alt">
+  <div class="container value-grid">
+    <div class="value-item">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h3v4h-7z"/></svg>
+      </div>
+      <div><h3>Zero fricção de instalação</h3><p>PWA instalável direto do navegador — o hóspede abre e já usa.</p></div>
+    </div>
+    <div class="value-item">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      </div>
+      <div><h3>Sua marca, não a nossa</h3><p>Cores, logo e fonte configuráveis por hotel — o hóspede nem percebe a Konekto.</p></div>
+    </div>
+    <div class="value-item">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v12H7l-3 3z"/></svg>
+      </div>
+      <div><h3>Mais consumo interno</h3><p>Spa, restaurante e passeios a um toque — sem precisar ligar pra recepção.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="produto">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Produto</p>
+      <h2>Tudo que o hóspede precisa. Tudo que o hotel controla.</h2>
+      <p>Uma plataforma, duas pontas: o app do hóspede com a identidade do seu hotel, e o painel onde sua equipe gerencia acesso, pedidos e conteúdo.</p>
+    </div>
+    <div class="bento">
+      <div class="bento-card b-span-3 b-feature reveal">
+        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 18h6"/></svg></div>
+        <h3>Check-in por QR Code ou código</h3>
+        <p>O hóspede recebe o acesso por e-mail ou WhatsApp antes mesmo de chegar — sem senha, sem cadastro, sem fricção.</p>
+      </div>
+      <div class="bento-card b-span-3 reveal">
+        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/></svg></div>
+        <h3>Wi-Fi e detalhes do quarto</h3>
+        <p>Número do quarto, senha de rede e informações da estadia, sempre à mão, sem passar na recepção.</p>
+      </div>
+      <div class="bento-card b-span-2 reveal">
+        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5l16 7-16 7z"/></svg></div>
+        <h3>Spa, restaurantes e passeios</h3>
+        <p>Catálogo de serviços com reserva direto pelo app.</p>
+      </div>
+      <div class="bento-card b-span-2 reveal">
+        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5A8.5 8.5 0 1 1 21 11.5z"/></svg></div>
+        <h3>Room service digital</h3>
+        <p>Cardápio completo, pedido enviado direto pro operacional.</p>
+      </div>
+      <div class="bento-card b-span-2 reveal">
+        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <h3>Mapa interativo do hotel</h3>
+        <p>Piscinas, quadras e áreas comuns, fáceis de encontrar.</p>
+      </div>
+      <div class="bento-card b-span-4 reveal">
+        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <h3>Mensagens em tempo real com a recepção</h3>
+        <p>Um canal direto entre hóspede e equipe do hotel, sem precisar ligar ou descer até a recepção.</p>
+      </div>
+      <div class="bento-card b-span-2 reveal">
+        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h3>Promoções e ofertas</h3>
+        <p>Carrossel de promoções direto na home do hóspede.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-alt" id="como-funciona">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Como funciona</p>
+      <h2>Da configuração ao check-in, em 4 passos.</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num"></div>
+        <h3>Configure sua marca</h3>
+        <p>Cores, logo, serviços e cardápio — tudo pelo painel do hotel.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num"></div>
+        <h3>Hóspede recebe o acesso</h3>
+        <p>Um código ou QR Code, enviado por e-mail ou WhatsApp antes da chegada.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num"></div>
+        <h3>Escaneia ou digita</h3>
+        <p>Sem senha, sem cadastro — o acesso já vem liberado pelo hotel.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num"></div>
+        <h3>Aproveita a estadia</h3>
+        <p>Serviços, pedidos e recepção, tudo dentro da experiência da sua marca.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="planos">
+  <div class="container">
+    <div class="section-head center reveal">
+      <p class="eyebrow">Planos</p>
+      <h2>Um plano pra cada tamanho de operação.</h2>
+      <p>O diferencial entre os planos é o volume de hóspedes ativos por mês — e, no topo, inteligência para o hóspede consumir mais durante a estadia.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="plan reveal">
+        <div class="plan-name">Essencial</div>
+        <p class="plan-desc">Pra pousadas e hotéis independentes começarem com o pé direito.</p>
+        <div class="plan-price"><span class="amount">R$ 349</span><span class="period">/mês</span></div>
+        <div class="plan-guests">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          até 80 hóspedes ativos/mês
+        </div>
+        <a href="#contato" class="plan-cta">Começar agora</a>
+        <ul class="plan-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>App com a marca do seu hotel</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Check-in por código ou QR Code</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Wi-Fi e detalhes do quarto</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Catálogo de serviços (consulta)</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Suporte por e-mail</li>
+        </ul>
+      </div>
+
+      <div class="plan plan-featured reveal">
+        <div class="plan-badge">Mais escolhido</div>
+        <div class="plan-name">Profissional</div>
+        <p class="plan-desc">Pra hotéis de médio porte que querem vender mais serviços durante a estadia.</p>
+        <div class="plan-price"><span class="amount">R$ 799</span><span class="period">/mês</span></div>
+        <div class="plan-guests">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          até 300 hóspedes ativos/mês
+        </div>
+        <a href="#contato" class="plan-cta">Começar agora</a>
+        <ul class="plan-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Tudo do Essencial</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Pedidos e reservas (room service, spa, restaurante)</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Mensagens em tempo real com a recepção</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Painel de gestão de hóspedes e pedidos</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Suporte prioritário</li>
+        </ul>
+      </div>
+
+      <div class="plan reveal">
+        <div class="plan-name">Elite</div>
+        <p class="plan-desc">Pra redes e hotéis de luxo que querem uma experiência sob medida.</p>
+        <div class="plan-price"><span class="amount">Sob consulta</span></div>
+        <div class="plan-guests">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          hóspedes ilimitados
+        </div>
+        <a href="#contato" class="plan-cta">Falar com vendas</a>
+        <ul class="plan-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Tudo do Profissional</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Personalização total de marca e tipografia</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Gerente de conta dedicado</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Relatórios avançados de consumo</li>
+        </ul>
+        <div class="plan-ai">✦ Recomendações por IA — sugestões personalizadas de spa, restaurante e passeios pro hóspede consumir mais durante a estadia.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contato">
+  <div class="container">
+    <div class="cta-band reveal">
+      <h2>Vamos colocar seu hotel no bolso do hóspede?</h2>
+      <p>Fale com a gente e veja o Konekto com a identidade do seu hotel em poucos dias.</p>
+      <div class="hero-actions">
+        <a href="mailto:contato@konekto.app" class="btn btn-primary">contato@konekto.app</a>
+        <a href="login.html" class="btn btn-ghost">Já sou cliente</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#" class="brand">
+          <svg class="brand-mark" viewBox="0 0 100 100"><rect x="12" y="12" width="56" height="56" rx="16" fill="none" stroke-width="6"/><rect x="52" y="52" width="34" height="34" rx="10"/></svg>
+          Konekto
+        </a>
+        <p>A experiência digital do seu hotel — com a marca do seu hotel, na palma da mão do hóspede.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Produto</h4>
+          <ul>
+            <li><a href="#produto">Recursos</a></li>
+            <li><a href="#como-funciona">Como funciona</a></li>
+            <li><a href="#planos">Planos</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Empresa</h4>
+          <ul>
+            <li><a href="#contato">Contato</a></li>
+            <li><a href="login.html">Área do hotel</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Konekto. Todos os direitos reservados.</span>
+      <span>Feito para hospitalidade de verdade.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+
+  const revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach((el) => io.observe(el));
+  } else {
+    revealEls.forEach((el) => el.classList.add('in'));
+  }
+</script>
+
+</body>
+</html>

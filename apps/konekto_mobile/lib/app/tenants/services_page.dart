@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
 import 'room_service_page.dart';
 import 'spa_services_list.dart';
 import 'restaurant_list_page.dart';
 import 'passeios_page.dart';
 import 'eventos_page.dart';
 import 'mapa_page.dart'; // NOVO: Importa a página do mapa
+import 'package:konekto/data/tenant_repository.dart';
+import 'package:konekto/data/tenant_repository_provider.dart';
 
 // Importe a função auxiliar
 Color hexToColor(String hexCode) {
@@ -64,6 +64,17 @@ class ServicesPage extends StatelessWidget {
     required this.tenantConfig,
   });
 
+  final TenantRepository _repository = createTenantRepository();
+
+  final Map<String, Future<Map<String, dynamic>> Function(TenantRepository, String)> _dataLoaders = {
+    'room_service': (repository, hotelId) => repository.getRoomServiceMenu(hotelId),
+    'spa': (repository, hotelId) => repository.getSpaServices(hotelId),
+    'restaurants': (repository, hotelId) => repository.getRestaurants(hotelId),
+    'eventos': (repository, hotelId) => repository.getEventos(hotelId),
+    'passeios': (repository, hotelId) => repository.getPasseios(hotelId),
+    'mapa': (repository, hotelId) => repository.getMapaData(hotelId),
+  };
+
   final Map<String, Widget Function(Map<String, dynamic>, dynamic)> _pageMapping = {
     'room_service': (tenantConfig, data) => RoomServicePage(
       tenantConfig: tenantConfig,
@@ -93,7 +104,6 @@ class ServicesPage extends StatelessWidget {
 
   Future<void> _handleNavigation(BuildContext context, Map<String, dynamic> serviceInfo) async {
     final String? route = serviceInfo['route'];
-    final String? menuPath = serviceInfo['menuPath'];
 
     if (route == null || !_pageMapping.containsKey(route)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -106,13 +116,13 @@ class ServicesPage extends StatelessWidget {
 
     try {
       dynamic serviceData;
-      // CORRIGIDO: Agora carrega os dados do JSON para todas as rotas que tiverem um menuPath
-      if (menuPath != null) {
-        final String jsonString = await rootBundle.loadString(menuPath);
-        final Map<String, dynamic> jsonData = json.decode(jsonString);
-        serviceData = jsonData;
+      final loader = _dataLoaders[route];
+      if (loader != null) {
+        final String hotelId = tenantConfig['id'] ?? 'hotel_1';
+        serviceData = await loader(_repository, hotelId);
       }
 
+      if (!context.mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -121,6 +131,7 @@ class ServicesPage extends StatelessWidget {
       );
     } catch (e) {
       print('Erro ao carregar os dados para o serviço $route: $e');
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Não foi possível carregar os detalhes do serviço.'),
@@ -129,9 +140,9 @@ class ServicesPage extends StatelessWidget {
     }
   }
 
-  Future<Map<String, dynamic>> _loadServicesPageConfig() async {
-    final String jsonString = await rootBundle.loadString('assets/tenant_assets/hotels/hotel_1/services_page.json');
-    return json.decode(jsonString);
+  Future<Map<String, dynamic>> _loadServicesPageConfig() {
+    final String hotelId = tenantConfig['id'] ?? 'hotel_1';
+    return _repository.getServicesPageConfig(hotelId);
   }
 
   @override

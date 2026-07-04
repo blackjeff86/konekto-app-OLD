@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:konekto/app/tenants/services_page.dart';
+import 'package:konekto/data/tenant_repository.dart';
+import 'package:konekto/data/tenant_repository_provider.dart';
 
 // --- Modelos de dados atualizados para refletir a nova estrutura JSON ---
 class HotelInfo {
@@ -65,6 +65,7 @@ class _TenantHomePageState extends State<TenantHomePage> {
   int _selectedIndex = 0;
   late Future<Map<String, dynamic>> _dataFuture;
   late final Map<String, Widget Function(Map<String, dynamic>, List<dynamic>?)> _widgetMapping;
+  final TenantRepository _repository = createTenantRepository();
 
   final Map<String, IconData> _iconMapping = {
     'home': Icons.home,
@@ -92,14 +93,10 @@ class _TenantHomePageState extends State<TenantHomePage> {
   }
 
   Future<Map<String, dynamic>> _loadTenantData() async {
-    final tenantConfigJsonString = await rootBundle.loadString('assets/tenant_assets/hotels/${widget.tenantId}/tenant_config.json');
-    final guestInfoJsonString = await rootBundle.loadString('assets/tenant_assets/hotels/${widget.tenantId}/guest_info.json');
-    final roomServiceMenuJsonString = await rootBundle.loadString('assets/tenant_assets/hotels/${widget.tenantId}/room_service_menu.json');
-
-    final Map<String, dynamic> tenantConfigMap = json.decode(tenantConfigJsonString);
-    final Map<String, dynamic> guestInfoMap = json.decode(guestInfoJsonString);
-    final Map<String, dynamic> roomServiceData = json.decode(roomServiceMenuJsonString);
-    final List<dynamic> roomServiceMenu = roomServiceData['menuItems'] ?? [];
+    final Map<String, dynamic> tenantConfigMap = await _repository.getTenantConfig(widget.tenantId);
+    final Map<String, dynamic> guestInfoMap = await _repository.getGuestInfo(widget.tenantId);
+    final Map<String, dynamic> roomServiceData = await _repository.getRoomServiceMenu(widget.tenantId);
+    final List<dynamic> roomServiceMenu = roomServiceData['menu'] ?? [];
 
     _widgetMapping = {
       'home': (data, _) {

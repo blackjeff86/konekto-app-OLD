@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:konekto/data/tenant_repository.dart';
+import 'package:konekto/data/tenant_repository_provider.dart';
 
 class RestaurantDetailPage extends StatefulWidget {
   final Map<String, dynamic> restaurant;
@@ -26,6 +26,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
 
   List<String> _availableTimes = [];
+  final TenantRepository _repository = createTenantRepository();
 
   @override
   void initState() {
@@ -36,8 +37,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   // Função para carregar o JSON de disponibilidade
   Future<void> _loadAvailabilityData() async {
     try {
-      final String jsonString = await rootBundle.loadString('assets/tenant_assets/hotels/hotel_1/restaurant_availability.json');
-      final Map<String, dynamic> data = json.decode(jsonString);
+      final String hotelId = widget.tenantConfig['id'] ?? 'hotel_1';
+      final Map<String, dynamic> data = await _repository.getRestaurantAvailability(hotelId);
       final List<dynamic> availabilityData = data['restaurantAvailability'] ?? [];
 
       final restaurantAvailability = availabilityData.firstWhere(

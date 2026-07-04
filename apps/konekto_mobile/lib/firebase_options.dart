@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -64,5 +61,15 @@ class DefaultFirebaseOptions {
     projectId: 'konekto-4ff14',
     storageBucket: 'konekto-4ff14.firebasestorage.app',
     iosBundleId: 'com.example.konekto',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDbecwuokHQ75FptjTBkG6bxtzcHsQ8SvE',
+    appId: '1:108078243563:web:663a41ea734995c0d2e8ae',
+    messagingSenderId: '108078243563',
+    projectId: 'konekto-4ff14',
+    authDomain: 'konekto-4ff14.firebaseapp.com',
+    storageBucket: 'konekto-4ff14.firebasestorage.app',
+    measurementId: 'G-QVNMDMXYMH',
   );
 }

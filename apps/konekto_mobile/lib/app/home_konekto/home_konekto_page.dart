@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'dart:convert';
 import 'dart:async';
 import 'package:konekto/app/home_konekto/history_page.dart';
 import 'package:konekto/app/home_konekto/profile_page.dart';
 import 'package:konekto/app/navigation/checkin_status_page.dart';
 import 'package:konekto/app/navigation/qr_scanner_page.dart';
 import 'package:konekto/theme/konekto_brand.dart';
+import 'package:konekto/data/tenant_repository.dart';
+import 'package:konekto/data/tenant_repository_provider.dart';
 
 // Modelo de dados para as promoções
 class Promotion {
@@ -113,6 +113,8 @@ class _HomePageBodyState extends State<_HomePageBody> {
   bool _isValidating = false;
   late Future<List<Promotion>> _promotionsFuture;
   late List<Promotion> _promotions;
+  final TenantsDirectoryRepository _tenantsDirectory = createTenantsDirectoryRepository();
+  final PromotionsRepository _promotionsRepository = createPromotionsRepository();
 
   @override
   void initState() {
@@ -139,8 +141,7 @@ class _HomePageBodyState extends State<_HomePageBody> {
   }
 
   Future<List<Tenant>> _loadTenants() async {
-    final jsonString = await rootBundle.loadString('assets/data/tenants.json');
-    final List<dynamic> jsonList = json.decode(jsonString);
+    final List<dynamic> jsonList = await _tenantsDirectory.getTenantsList();
     return jsonList.map((json) => Tenant.fromJson(json)).toList();
   }
 
@@ -202,8 +203,7 @@ class _HomePageBodyState extends State<_HomePageBody> {
   }
 
   Future<List<Promotion>> _loadPromotions() async {
-    final jsonString = await rootBundle.loadString('assets/data/promotions.json');
-    final Map<String, dynamic> jsonMap = json.decode(jsonString);
+    final Map<String, dynamic> jsonMap = await _promotionsRepository.getPromotions();
     final List<dynamic> promotionsJson = jsonMap['promotions'];
     return promotionsJson.map((json) => Promotion.fromJson(json)).toList();
   }

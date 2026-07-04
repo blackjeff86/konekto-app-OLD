@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:konekto/data/tenant_repository.dart';
+import 'package:konekto/data/tenant_repository_provider.dart';
 
 class SpaDetailPage extends StatefulWidget {
   final Map<String, dynamic> service;
@@ -28,6 +28,7 @@ class _SpaDetailPageState extends State<SpaDetailPage> {
   // Futuro para carregar os dados de disponibilidade
   late Future<List<dynamic>> _availabilityFuture;
   List<dynamic> _availabilityData = [];
+  final TenantRepository _repository = createTenantRepository();
 
   @override
   void initState() {
@@ -38,8 +39,8 @@ class _SpaDetailPageState extends State<SpaDetailPage> {
   // Função para carregar o JSON de disponibilidade
   Future<List<dynamic>> _loadAvailabilityData() async {
     try {
-      final String jsonString = await rootBundle.loadString('assets/tenant_assets/hotels/hotel_1/spa_availability.json');
-      final Map<String, dynamic> data = json.decode(jsonString);
+      final String hotelId = widget.tenantConfig['id'] ?? 'hotel_1';
+      final Map<String, dynamic> data = await _repository.getSpaAvailability(hotelId);
       final List<dynamic> availabilityList = data['spaAvailability'] ?? [];
 
       // Encontra a disponibilidade do serviço de SPA com base no slug

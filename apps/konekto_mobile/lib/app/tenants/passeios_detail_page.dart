@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:konekto/data/tenant_repository.dart';
+import 'package:konekto/data/tenant_repository_provider.dart';
 
 class PasseiosDetailPage extends StatefulWidget {
   final Map<String, dynamic> passeio;
@@ -27,7 +27,8 @@ class _PasseiosDetailPageState extends State<PasseiosDetailPage> {
   
   late Future<List<String>> _availableTimesFuture;
   List<String> _availableTimes = [];
-  
+  final TenantRepository _repository = createTenantRepository();
+
   @override
   void initState() {
     super.initState();
@@ -37,8 +38,7 @@ class _PasseiosDetailPageState extends State<PasseiosDetailPage> {
   Future<List<String>> _loadPasseiosAvailability() async {
     try {
       final String tenantId = widget.tenantConfig['id'] ?? 'hotel_1';
-      final String jsonString = await rootBundle.loadString('assets/tenant_assets/hotels/$tenantId/passeios_availability.json');
-      final Map<String, dynamic> data = json.decode(jsonString);
+      final Map<String, dynamic> data = await _repository.getPasseiosAvailability(tenantId);
       final List<dynamic> availabilityData = data['passeiosAvailability'] ?? [];
 
       final passeioAvailability = availabilityData.firstWhere(
