@@ -102,21 +102,29 @@ class _MapaPageState extends State<MapaPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          item['imageUrl']!,
-                          width: 160,
-                          height: imageHeight,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: 160,
-                              height: imageHeight,
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.error, color: Colors.grey),
-                            );
-                          },
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.14), blurRadius: 12, offset: const Offset(0, 6)),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            item['imageUrl']!,
+                            width: 160,
+                            height: imageHeight,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 160,
+                                height: imageHeight,
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.error, color: Colors.grey),
+                              );
+                            },
+                          ),
                         ),
                       ),
                       SizedBox(height: (layout['titleSpacing'] ?? 8).toDouble()),
@@ -151,6 +159,8 @@ class _MapaPageState extends State<MapaPage> {
           color: hexToColor(servicesTitleStyleJson['color'] ?? '#0D1B2A'),
         );
 
+        final Color cardBackgroundColor = hexToColor(widget.tenantConfig['colorPalette']['cardBackground']);
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -159,35 +169,45 @@ class _MapaPageState extends State<MapaPage> {
               style: servicesTitleStyle,
             ),
             SizedBox(height: titleSpacing),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: serviceItems.length,
-              separatorBuilder: (context, index) => Divider(color: dividerColor, height: itemSpacing),
-              itemBuilder: (context, index) {
-                final item = serviceItems[index];
-                final String? mapImageUrl = item['mapImageUrl'];
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    item['label']!,
-                    style: GoogleFonts.getFont(
-                      fontFamily,
-                      color: primaryColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: cardBackgroundColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: primaryColor.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, 8)),
+                ],
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: serviceItems.length,
+                separatorBuilder: (context, index) => Divider(color: dividerColor, height: itemSpacing),
+                itemBuilder: (context, index) {
+                  final item = serviceItems[index];
+                  final String? mapImageUrl = item['mapImageUrl'];
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      item['label']!,
+                      style: GoogleFonts.getFont(
+                        fontFamily,
+                        color: primaryColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                  trailing: Icon(Icons.chevron_right, color: bodyTextColor),
-                  onTap: () {
-                    if (mapImageUrl != null) {
-                      setState(() {
-                        _activeMapImageUrl = mapImageUrl;
-                      });
-                    }
-                  },
-                );
-              },
+                    trailing: Icon(Icons.chevron_right, color: bodyTextColor),
+                    onTap: () {
+                      if (mapImageUrl != null) {
+                        setState(() {
+                          _activeMapImageUrl = mapImageUrl;
+                        });
+                      }
+                    },
+                  );
+                },
+              ),
             ),
           ],
         );
@@ -201,6 +221,9 @@ class _MapaPageState extends State<MapaPage> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(borderRadius),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.16), blurRadius: 18, offset: const Offset(0, 8)),
+              ],
             ),
             clipBehavior: Clip.antiAlias,
             child: _activeMapImageUrl != null
