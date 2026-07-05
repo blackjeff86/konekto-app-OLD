@@ -7,13 +7,14 @@ import 'package:google_fonts/google_fonts.dart';
 class KonektoBrand {
   KonektoBrand._();
 
-  static const Color ink = Color(0xFF14181F);
-  static const Color inkSoft = Color(0xFF262C38);
+  // Paleta alinhada com apps/konekto_site (identidade oficial da marca).
+  static const Color ink = Color(0xFF0B0D12);
+  static const Color inkSoft = Color(0xFF171B23);
   static const Color gold = Color(0xFFB8935F);
-  static const Color goldLight = Color(0xFFD9C6A5);
-  static const Color cream = Color(0xFFFAF7F2);
-  static const Color sand = Color(0xFFF1EAE0);
-  static const Color slate = Color(0xFF5B6472);
+  static const Color goldLight = Color(0xFFE4CFA6);
+  static const Color cream = Color(0xFFF5F3EE);
+  static const Color sand = Color(0xFFE8E4DC);
+  static const Color slate = Color(0xFF9099A6);
 
   static TextStyle display({
     double fontSize = 32,
@@ -49,6 +50,59 @@ class KonektoBrand {
       fontWeight: fontWeight,
       color: color,
       height: height,
+    );
+  }
+}
+
+/// Marca geométrica da Konekto (dois quadrados arredondados sobrepostos) —
+/// mesma marca usada em apps/konekto_site/assets/logo/icon-mark-*.svg.
+/// Desenhada com widgets simples (sem depender de flutter_svg) já que é só
+/// duas formas.
+class KonektoMark extends StatelessWidget {
+  final double size;
+  final Color outlineColor;
+  final Color fillColor;
+
+  const KonektoMark({
+    super.key,
+    this.size = 56,
+    this.outlineColor = KonektoBrand.goldLight,
+    this.fillColor = KonektoBrand.gold,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        children: [
+          Positioned(
+            left: size * 0.12,
+            top: size * 0.12,
+            width: size * 0.56,
+            height: size * 0.56,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border.all(color: outlineColor, width: size * 0.06),
+                borderRadius: BorderRadius.circular(size * 0.16),
+              ),
+            ),
+          ),
+          Positioned(
+            left: size * 0.52,
+            top: size * 0.52,
+            width: size * 0.34,
+            height: size * 0.34,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: fillColor,
+                borderRadius: BorderRadius.circular(size * 0.10),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -185,9 +239,9 @@ class KonektoHeroPanel extends StatelessWidget {
             Container(
               width: 92,
               height: 92,
-              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                color: KonektoBrand.ink,
                 border: Border.all(color: KonektoBrand.gold, width: 1.4),
                 boxShadow: [
                   BoxShadow(
@@ -197,12 +251,7 @@ class KonektoHeroPanel extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const ClipOval(
-                child: Image(
-                  image: AssetImage('assets/app_assets/images/konekto_logo.png'),
-                  fit: BoxFit.cover,
-                ),
-              ),
+              child: const Center(child: KonektoMark(size: 50)),
             ),
           ],
         ),

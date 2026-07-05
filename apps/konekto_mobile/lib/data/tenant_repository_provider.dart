@@ -1,20 +1,20 @@
 import 'package:konekto/data/asset_tenant_repository.dart';
-import 'package:konekto/data/firestore_tenant_repository.dart';
+import 'package:konekto/data/http_tenant_repository.dart';
 import 'package:konekto/data/tenant_repository.dart';
 
 /// Liga a fonte de dados usada pelo app: assets locais (padrão, comportamento
-/// de hoje) ou Firestore. Troque em tempo de build com:
+/// de hoje) ou a API (apps/konekto_api). Troque em tempo de build com:
 ///
-///   flutter run --dart-define=USE_FIRESTORE=true
+///   flutter run --dart-define=USE_API=true --dart-define=API_BASE_URL=https://sua-api.vercel.app
 ///
-/// Mantém o app funcionando exatamente como antes por padrão até a migração
-/// pra Firestore ser validada tela por tela.
-const bool useFirestore = bool.fromEnvironment('USE_FIRESTORE', defaultValue: false);
+/// Mantém o app funcionando exatamente como antes por padrão até a API ser
+/// validada tela por tela.
+const bool useApi = bool.fromEnvironment('USE_API', defaultValue: false);
 
-TenantRepository createTenantRepository() => useFirestore ? FirestoreTenantRepository() : AssetTenantRepository();
+TenantRepository createTenantRepository() => useApi ? HttpTenantRepository() : AssetTenantRepository();
 
 TenantsDirectoryRepository createTenantsDirectoryRepository() =>
-    useFirestore ? FirestoreTenantsDirectoryRepository() : AssetTenantsDirectoryRepository();
+    useApi ? HttpTenantsDirectoryRepository() : AssetTenantsDirectoryRepository();
 
 PromotionsRepository createPromotionsRepository() =>
-    useFirestore ? FirestorePromotionsRepository() : AssetPromotionsRepository();
+    useApi ? HttpPromotionsRepository() : AssetPromotionsRepository();

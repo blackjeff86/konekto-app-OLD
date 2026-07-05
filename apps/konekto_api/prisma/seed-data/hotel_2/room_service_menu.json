@@ -1,0 +1,156 @@
+{
+  "pageConfig": {
+    "title": "Serviço de Quarto",
+    "headerImage": "assets/tenant_assets/hotels/hotel_2/images/room_service/room_service_banner.jpg",
+    "layoutType": "list",
+    "styles": {
+      "backgroundColor": "#FAFFF8",
+      "textColor": "#2F3B4E",
+      "cardBackgroundColor": "#FFFFFF",
+      "cardBorderColor": "#D9E3E8",
+      "cardShadowColor": "#E6EBF0",
+      "buttonColor": "#007BFF"
+    },
+    "layoutStyles": {
+      "screenPadding": 16,
+      "headerImage": {
+        "height": 150,
+        "borderRadius": 16
+      },
+      "card": {
+        "borderRadius": 8
+      },
+      "list": {
+        "itemSpacing": 12,
+        "itemPadding": 16,
+        "cardImage": {
+          "height": 80,
+          "width": 80
+        }
+      },
+      "grid": {
+        "crossAxisCount": 2,
+        "mainAxisSpacing": 16,
+        "crossAxisSpacing": 16,
+        "childAspectRatio": 0.8,
+        "itemPadding": 8
+      }
+    },
+    "textStyles": {
+      "pageTitle": {
+        "fontSize": 24,
+        "fontWeight": "w700"
+      },
+      "categoryTitle": {
+        "fontSize": 20,
+        "fontWeight": "w600"
+      },
+      "itemTitle": {
+        "fontSize": 18,
+        "fontWeight": "w600"
+      },
+      "itemDescription": {
+        "fontSize": 14,
+        "fontWeight": "w400"
+      },
+      "itemPrice": {
+        "fontSize": 16,
+        "fontWeight": "w700"
+      }
+    }
+  },
+  "menu": [
+    {
+      "category": "Entradas",
+      "items": [
+        {
+          "id": 1,
+          "name": "Bruschetta de Tomate e Manjericão",
+          "description": "Fatias de pão rústico tostado com tomate fresco, manjericão e azeite de oliva extra virgem.",
+          "price": 25.00,
+          "imageUrl": "assets/tenant_assets/hotels/{{tenantId}}/images/room_service/bruschetta.jpg",
+          "preparationTime": "15 a 20 minutos"
+        },
+        {
+          "id": 2,
+          "name": "Salada Caprese",
+          "description": "Mussarela de búfala fresca, tomates cereja e folhas de manjericão, regados com um toque de azeite e aceto balsâmico.",
+          "price": 35.00,
+          "imageUrl": "assets/tenant_assets/hotels/{{tenantId}}/images/room_service/caprese.jpg",
+          "preparationTime": "10 a 15 minutos"
+        }
+      ]
+    },
+    {
+      "category": "Pratos Principais",
+      "items": [
+        {
+          "id": 3,
+          "name": "Filé Mignon ao Molho de Vinho Tinto",
+          "description": "Medalhão de filé mignon grelhado, acompanhado de risoto de cogumelos e aspargos salteados.",
+          "price": 85.00,
+          "imageUrl": "assets/tenant_assets/hotels/{{tenantId}}/images/room_service/file_mignon.jpg",
+          "preparationTime": "25 a 30 minutos"
+        },
+        {
+          "id": 4,
+          "name": "Salmão Grelhado com Legumes",
+          "description": "Salmão fresco grelhado com manteiga de ervas e uma seleção de legumes sazonais cozidos no vapor.",
+          "price": 75.00,
+          "imageUrl": "assets/tenant_assets/hotels/{{tenantId}}/images/room_service/salmao.jpg",
+          "preparationTime": "20 a 25 minutos"
+        }
+      ]
+    },
+    {
+      "category": "Bebidas",
+      "items": [
+        {
+          "id": 5,
+          "name": "Água Mineral",
+          "description": "Água mineral sem gás.",
+          "price": 5.00,
+          "imageUrl": "assets/tenant_assets/hotels/{{tenantId}}/images/room_service/agua_mineral.jpg",
+          "preparationTime": "5 minutos"
+        },
+        {
+          "id": 6,
+          "name": "Suco de Laranja Natural",
+          "description": "Suco de laranja fresco, espremido na hora.",
+          "price": 12.00,
+          "imageUrl": "assets/tenant_assets/hotels/{{tenantId}}/images/room_service/suco.jpg",
+          "preparationTime": "10 minutos"
+        },
+        {
+          "id": 7,
+          "name": "Coca-Cola",
+          "description": "Refrigerante de cola.",
+          "price": 8.00,
+          "imageUrl": "assets/tenant_assets/hotels/{{tenantId}}/images/room_service/coca_cola.jpg",
+          "preparationTime": "5 minutos"
+        }
+      ]
+    },
+    {
+      "category": "Sobremesas",
+      "items": [
+        {
+          "id": 8,
+          "name": "Petit Gâteau com Sorvete de Baunilha",
+          "description": "Bolo de chocolate quente com recheio derretido, servido com uma bola de sorvete de baunilha.",
+          "price": 28.00,
+          "imageUrl": "assets/tenant_assets/hotels/{{tenantId}}/images/room_service/petit_gateau.jpg",
+          "preparationTime": "20 minutos"
+        },
+        {
+          "id": 9,
+          "name": "Mousse de Maracujá",
+          "description": "Mousse leve e refrescante de maracujá, com sementes para um toque especial.",
+          "price": 22.00,
+          "imageUrl": "assets/tenant_assets/hotels/{{tenantId}}/images/room_service/Mousse_Maracujá.jpg",
+          "preparationTime": "15 minutos"
+        }
+      ]
+    }
+  ]
+}

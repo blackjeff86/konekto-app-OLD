@@ -1,0 +1,66 @@
+{
+  "pageConfig": {
+    "title": "Serviços de SPA",
+    "bannerImageUrl": "assets/tenant_assets/hotels/hotel_1/images/spa/services_background.png",
+    "layoutType": "list",
+    "styles": {
+      "backgroundColor": "#F7F5F2",
+      "textColor": "#4A4A4A",
+      "cardBackgroundColor": "#FFFFFF",
+      "cardShadowColor": "#E6EBF0",
+      "buttonColor": "#007BFF"
+    },
+    "textStyles": {
+      "pageTitle": {
+        "fontSize": 24,
+        "fontWeight": "w700"
+      },
+      "categoryTitle": {
+        "fontSize": 20,
+        "fontWeight": "w600"
+      },
+      "itemTitle": {
+        "fontSize": 18,
+        "fontWeight": "w700"
+      },
+      "itemDescription": {
+        "fontSize": 14,
+        "fontWeight": "w400"
+      },
+      "itemPrice": {
+        "fontSize": 16,
+        "fontWeight": "w700"
+      }
+    }
+  },
+  "spaServices": [
+    {
+      "name": "Massagem Relaxante",
+      "description": "Uma massagem suave para aliviar o estresse e a tensão muscular, promovendo relaxamento profundo.",
+      "price": 120.00,
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/spa/massagem_terapeutica.png",
+      "slug": "massagem-relaxante"
+    },
+    {
+      "name": "Limpeza de Pele Profunda",
+      "description": "Tratamento facial completo para remover impurezas, cravos e células mortas, deixando a pele limpa e radiante.",
+      "price": 95.00,
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/spa/spa_background.png",
+      "slug": "limpeza-de-pele-profunda"
+    },
+    {
+      "name": "Drenagem Linfática",
+      "description": "Técnica que estimula o sistema linfático para desintoxicar o corpo, reduzir o inchaço e melhorar a circulação.",
+      "price": 150.00,
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/spa/tratamento_antiidade.png",
+      "slug": "drenagem-linfatica"
+    },
+    {
+      "name": "Pacote Dia de SPA",
+      "description": "Um pacote especial que inclui massagem, limpeza de pele e hidratação corporal para um dia de renovação total.",
+      "price": 280.00,
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/spa/services_background.png",
+      "slug": "pacote-dia-de-spa"
+    }
+  ]
+}

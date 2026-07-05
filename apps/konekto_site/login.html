@@ -141,8 +141,8 @@
         <a href="#" class="forgot">Esqueci minha senha</a>
       </div>
 
-      <button type="submit" class="btn-submit">
-        Entrar no painel
+      <button type="submit" class="btn-submit" id="submit-btn">
+        <span id="submit-label">Entrar no painel</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
     </form>
@@ -157,14 +157,66 @@
 </footer>
 
 <script>
-  // Formulário ainda não conectado ao backend (Firebase Auth) — a fase de
-  // autenticação de staff do portal do hotel ainda está em construção.
-  document.getElementById('login-form').addEventListener('submit', function (e) {
+  // Essa é a ÚNICA tela de login real do produto — o portal do hotel
+  // (apps/konekto_portal) não tem formulário próprio, só recebe o token
+  // gerado aqui via query string e valida contra a API. Evita manter duas
+  // telas de login em paralelo (e desalinhar visualmente, como já aconteceu).
+  //
+  // Ajuste esses dois valores pra cada ambiente (local vs produção).
+  const API_BASE_URL = 'http://localhost:3000';
+  const PORTAL_URL = 'http://localhost:5050'; // troque pela porta do `flutter run -d chrome` local, ou https://portal.konekto.app em produção
+
+  const form = document.getElementById('login-form');
+  const errorEl = document.getElementById('error');
+  const submitBtn = document.getElementById('submit-btn');
+  const submitLabel = document.getElementById('submit-label');
+
+  const ERROR_MESSAGES = {
+    staff_not_found: 'Esta conta não está associada a nenhum hotel. Contate o suporte.',
+    invalid_token: 'Sua sessão expirou. Entre novamente.',
+  };
+
+  function showError(message) {
+    errorEl.textContent = message;
+    errorEl.classList.add('show');
+  }
+
+  // Se o portal redirecionou de volta por token inválido/expirado, mostra o motivo.
+  const params = new URLSearchParams(window.location.search);
+  const redirectError = params.get('error');
+  if (redirectError && ERROR_MESSAGES[redirectError]) {
+    showError(ERROR_MESSAGES[redirectError]);
+  }
+
+  form.addEventListener('submit', async function (e) {
     e.preventDefault();
-    document.getElementById('error').classList.remove('show');
-    // TODO: ligar ao Firebase Auth (signInWithEmailAndPassword) quando o
-    // painel do hotel (apps/konekto_portal) estiver pronto.
-    alert('O painel do hotel ainda está em construção — em breve você poderá entrar por aqui.');
+    errorEl.classList.remove('show');
+    submitBtn.disabled = true;
+    submitLabel.textContent = 'Entrando...';
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('email').value.trim(),
+          password: document.getElementById('password').value,
+        }),
+      });
+
+      if (!response.ok) {
+        showError('E-mail ou senha inválidos. Confira seus dados e tente novamente.');
+        return;
+      }
+
+      const data = await response.json();
+      window.location.href = `${PORTAL_URL}/?token=${encodeURIComponent(data.token)}`;
+    } catch (err) {
+      showError('Não foi possível conectar ao servidor. Tente novamente em instantes.');
+    } finally {
+      submitBtn.disabled = false;
+      submitLabel.textContent = 'Entrar no painel';
+    }
   });
 </script>
 

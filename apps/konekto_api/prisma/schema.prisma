@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Um registro por hotel. `config` é o antigo tenant_config.json inteiro
+/// (hotelInfo, colorPalette, typography, buttonStyles, navigationItems,
+/// servicesList, homePage, promoImages...). Sem duplicar o nome do hotel
+/// numa coluna separada — é lido de dentro do jsonb quando necessário
+/// (ex: no endpoint de diretório).
+model Hotel {
+  id           String         @id // "hotel_1", "hotel_2"
+  config       Json
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  content      HotelContent[]
+  staff        Staff[]
+  services     Service[]
+  staffInvites StaffInvite[]
+
+  @@map("hotels")
+}
+
+/// Uma linha por "página" por hotel — substitui hotels/{hotelId}/content/{docName}.
+/// docName é texto livre (não enum): o lado Flutter já trata isso como um
+/// conjunto aberto de chaves de página.
+model HotelContent {
+  hotelId   String
+  docName   String
+  data      Json
+  updatedAt DateTime @updatedAt
+  hotel     Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@id([hotelId, docName])
+  @@map("hotel_content")
+}
+
+enum StaffRole {
+  gerente
+  recepcao
+}
+
+/// Autenticação de staff — o único ponto que vale normalizar (e-mail precisa
+/// de unicidade, hotelId/role precisam ser consultados e devolvidos em toda
+/// requisição de login/me).
+model Staff {
+  id           String    @id @default(cuid())
+  hotelId      String
+  email        String    @unique
+  passwordHash String
+  role         StaffRole
+  name         String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  hotel        Hotel     @relation(fields: [hotelId], references: [id])
+
+  @@index([hotelId])
+  @@map("staff")
+}
+
+/// Convite pra uma nova conta de staff se cadastrar como `recepcao` de um
+/// hotel específico, sem precisar de um `gerente` criando a conta na mão.
+/// `role` fica travado em `recepcao` pela rota que cria o convite (Task
+/// 13) — não é um campo livre que o cliente possa escolher.
+model StaffInvite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  hotelId   String
+  role      StaffRole @default(recepcao)
+  consumed  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  hotel     Hotel     @relation(fields: [hotelId], references: [id])
+
+  @@index([hotelId])
+  @@map("staff_invites")
+}
+
+/// Substitui konektoBrand/{docId} — tabela global (não específica de hotel),
+/// hoje só usada pra "promotions".
+model BrandContent {
+  key       String   @id
+  data      Json
+  updatedAt DateTime @updatedAt
+
+  @@map("brand_content")
+}
+
+/// Serviço criado pelo hotel (Room Service, Spa, um restaurante específico,
+/// ou algo totalmente novo como "Aluguel de Bicicleta") — substitui os 5
+/// tipos fixos que existiam antes no código. Cada restaurante é seu próprio
+/// Service (não um Service "Restaurantes" com um nível extra dentro).
+model Service {
+  id             String        @id @default(cuid())
+  hotelId        String
+  name           String
+  slug           String
+  icon           String // nome do ícone Material (ex: "room_service", "spa", "restaurant")
+  description    String
+  bannerImageUrl String?
+  position       Int           @default(0)
+  enabled        Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  hotel          Hotel         @relation(fields: [hotelId], references: [id])
+  items          ServiceItem[]
+
+  @@unique([hotelId, slug])
+  @@index([hotelId])
+  @@map("services")
+}
+
+/// Item de um serviço (prato do cardápio, tratamento de spa, evento,
+/// passeio...). `price: null` = não é "comprável" (eventos/passeios só têm
+/// "solicitar"/"reservar", sem preço) — a UI decide o que mostrar com base
+/// nisso, sem precisar de um campo separado tipo "buttonText".
+model ServiceItem {
+  id          String   @id @default(cuid())
+  serviceId   String
+  name        String
+  description String
+  price       Float?
+  imageUrl    String?
+  location    String? // usado por eventos/passeios
+  category    String? // agrupamento opcional (usado por room service: Entradas/Pratos/etc.)
+  extraInfo   String? // rótulo livre (tempo de preparo, duração, etc.)
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+  @@map("service_items")
+}

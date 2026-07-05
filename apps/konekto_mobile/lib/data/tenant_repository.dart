@@ -8,16 +8,14 @@ abstract class TenantRepository {
   Future<Map<String, dynamic>> getTenantConfig(String hotelId);
   Future<Map<String, dynamic>> getGuestInfo(String hotelId);
   Future<Map<String, dynamic>> getServicesPageConfig(String hotelId);
-  Future<Map<String, dynamic>> getRoomServiceMenu(String hotelId);
-  Future<Map<String, dynamic>> getSpaServices(String hotelId);
-  Future<Map<String, dynamic>> getSpaAvailability(String hotelId);
-  Future<Map<String, dynamic>> getRestaurants(String hotelId);
-  Future<Map<String, dynamic>> getRestaurantAvailability(String hotelId);
-  Future<Map<String, dynamic>> getEventos(String hotelId);
-  Future<Map<String, dynamic>> getEventAvailability(String hotelId);
-  Future<Map<String, dynamic>> getPasseios(String hotelId);
-  Future<Map<String, dynamic>> getPasseiosAvailability(String hotelId);
   Future<Map<String, dynamic>> getMapaData(String hotelId);
+
+  /// Serviços dinâmicos do hotel (Room Service, Spa, cada restaurante, ou
+  /// qualquer serviço que o hotel tenha criado) — substitui os métodos
+  /// fixos por tipo de catálogo que existiam antes (getRoomServiceMenu,
+  /// getSpaServices, getRestaurants, getEventos, getPasseios).
+  Future<List<dynamic>> getServices(String hotelId);
+  Future<Map<String, dynamic>> getService(String hotelId, String serviceId);
 }
 
 /// Diretório global (não específico de um hotel) usado na tela de acesso

@@ -1,0 +1,46 @@
+{
+  "eventAvailability": [
+    {
+      "slug": "noite-de-luau",
+      "availableTimes": [
+        "19:00",
+        "20:00",
+        "21:00",
+        "22:00"
+      ]
+    },
+    {
+      "slug": "aula-de-surf",
+      "availableTimes": [
+        "08:00",
+        "09:30",
+        "11:00",
+        "14:00"
+      ]
+    },
+    {
+      "slug": "jantar-romantico",
+      "availableTimes": [
+        "20:00",
+        "21:00",
+        "22:00"
+      ]
+    },
+    {
+      "slug": "torneio-de-volei",
+      "availableTimes": [
+        "10:00",
+        "11:30",
+        "13:00",
+        "15:00"
+      ]
+    },
+    {
+      "slug": "yoga-ao-nascer",
+      "availableTimes": [
+        "06:00",
+        "07:00"
+      ]
+    }
+  ]
+}

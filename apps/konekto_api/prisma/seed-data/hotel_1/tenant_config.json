@@ -1,0 +1,157 @@
+{
+  "id": "hotel_1",
+  "hotelInfo": {
+    "name": "Hotel 1",
+    "logoUrl": "assets/app_assets/images/hotel_logo.png",
+    "accessCode": "KONEKTO123",
+    "promoImages": {
+      "carouselEnabled": true,
+      "images": [
+        "assets/tenant_assets/hotels/hotel_1/images/hotel_1_promo.png",
+        "assets/tenant_assets/hotels/hotel_1/images/hotel_1_view_1.png",
+        "assets/tenant_assets/hotels/hotel_1/images/hotel_1_view_2.png"
+      ],
+      "carouselHeight": 250
+    }
+  },
+  "homePage": {
+    "textStyles": {
+      "pageTitle": { "size": 24, "weight": "w700" },
+      "welcomeTitle": { "size": 24, "weight": "w700" },
+      "welcomeMessage": { "size": 16, "weight": "w400" },
+      "roomCardTitle": { "size": 16, "weight": "w600" },
+      "roomCardDetails": { "size": 16, "weight": "w400" },
+      "quickServicesTitle": { "size": 18, "weight": "w700" }
+    },
+    "welcomeSection": {
+      "titleTemplate": "Bem-vindo, {userName}!",
+      "message": "Check-in realizado com sucesso! Toque abaixo para ver os detalhes do seu quarto.",
+      "enabled": true
+    },
+    "roomDetailsSection": {
+      "title": "Detalhes do Quarto e Wi-Fi",
+      "icon": "door_front_door_outlined",
+      "enabled": true,
+      "styles": {
+        "backgroundColor": "#FFFFFF",
+        "borderColor": "#D1D5DB",
+        "icons": {
+          "roomIcon": "person_pin",
+          "wifiIcon": "wifi",
+          "passwordIcon": "lock"
+        }
+      }
+    },
+    "quickServicesSection": {
+      "title": "Nossos serviços",
+      "layout": "grid",
+      "card": {
+        "style": {
+          "widthFactor": 0.45,
+          "height": 132,
+          "padding": 16,
+          "backgroundColor": "#FFFFFF",
+          "borderColor": "#D1D5DB",
+          "borderRadius": 8
+        },
+        "titleStyle": {
+          "size": 16,
+          "weight": "bold",
+          "color": "#0D1B2A"
+        },
+        "iconStyle": {
+          "size": 24,
+          "color": "#0D1B2A"
+        }
+      },
+      "items": [
+        { "title": "Serviço de quarto", "icon": "room_service", "route": "room_service" },
+        { "title": "Mapa", "icon": "map", "route": "map" },
+        { "title": "Histórico", "icon": "history", "route": "history" }
+      ]
+    }
+  },
+  "colorPalette": {
+    "primary": "#0D1B2A",
+    "secondary": "#C9A227",
+    "background": "#F9FAFB",
+    "cardBackground": "#FFFFFF",
+    "notificationBackground": "#E3F2FD",
+    "notificationText": "#0D47A1",
+    "dividerColor": "#D1D5DB"
+  },
+  "typography": {
+  "fontFamily": "Plus Jakarta Sans",
+  "heading1": { "size": 28, "weight": "bold", "color": "#111827" },
+  "bodyText": { "size": 16, "weight": "regular", "color": "#374151" },
+  "passeioTitle": { "size": 16, "weight": "w700", "color": "#111416" },
+  "passeioDescription": { "size": 14, "weight": "w400", "color": "#637287" },
+  "buttonText": { "size": 14, "weight": "w500", "color": "#111416" }
+  },
+  "buttonStyles": {
+    "primaryButton": { "backgroundColor": "#0D1B2A", "textColor": "#FFFFFF", "borderRadius": 10 },
+    "secondaryButton": { "backgroundColor": "#C9A227", "textColor": "#FFFFFF", "borderRadius": 10 },
+    "logoutButton": { "backgroundColor": "#DC2626", "textColor": "#FFFFFF", "borderRadius": 10 }
+  },
+  "navigationItems": [
+    { "label": "Início", "icon": "home", "route": "home" },
+    { "label": "Serviços", "icon": "widgets", "route": "services" },
+    { "label": "Reservas", "icon": "book_online", "route": "bookings" },
+    { "label": "Perfil", "icon": "person", "route": "profile" }
+  ],
+  "servicesPage": {
+    "bannerImageUrl": "assets/tenant_assets/hotels/hotel_1/images/room_service/room_service_banner.jpg"
+  },
+  "servicesList": [
+    { 
+      "title": "Serviço de Quarto",
+      "description": "Peça comidas, bebidas e outros serviços diretamente para o seu quarto.",
+      "icon": "room_service",
+      "bannerImageUrl": "assets/tenant_assets/hotels/hotel_1/images/room_service_banner.jpg",
+      "route": "room_service",
+      "menuPath": "assets/tenant_assets/hotels/hotel_1/room_service_menu.json",
+      "dataKey": "roomServiceMenu"
+    },
+    {
+      "title": "SPA",
+      "description": "Relaxe e renove-se com nossa variedade de tratamentos de spa.",
+      "icon": "spa",
+      "bannerImageUrl": "assets/tenant_assets/hotels/hotel_1/images/services_background.png",
+      "route": "spa",
+      "menuPath": "assets/tenant_assets/hotels/hotel_1/spa_services.json",
+      "dataKey": "spaServices"
+    },
+    {
+      "title": "Restaurantes",
+      "description": "Descubra os melhores restaurantes e faça sua reserva.",
+      "icon": "restaurant",
+      "route": "restaurants",
+      "menuPath": "assets/tenant_assets/hotels/hotel_1/restaurants.json",
+      "dataKey": "restaurants"
+    },
+    {
+      "title": "Eventos",
+      "description": "Confira a agenda de eventos especiais e entretenimento do hotel.",
+      "icon": "event",
+      "route": "eventos",
+      "menuPath": "assets/tenant_assets/hotels/hotel_1/eventos_data.json",
+      "dataKey": "eventos"
+    },
+    {
+      "title": "Passeios",
+      "description": "Encontre e agende passeios e atividades locais.",
+      "icon": "sports_soccer",
+      "route": "passeios",
+      "menuPath": "assets/tenant_assets/hotels/hotel_1/passeios_data.json",
+      "dataKey": "passeios"
+    },
+    {
+      "title": "Mapa do Hotel",
+      "description": "Navegue facilmente pelas instalações do hotel com nosso mapa interativo.",
+      "icon": "map",
+      "route": "mapa",
+      "menuPath": "assets/tenant_assets/hotels/hotel_1/mapa_data.json",
+      "dataKey": "mapaData"
+    }
+  ]
+}

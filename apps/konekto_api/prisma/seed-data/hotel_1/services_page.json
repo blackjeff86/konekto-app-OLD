@@ -1,0 +1,32 @@
+{
+  "pageStyles": {
+    "pageTitle": {
+      "text": "Serviços Disponíveis",
+      "size": 24,
+      "weight": "w700"
+    },
+    "banner": {
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/services_background.png",
+      "height": 150,
+      "borderRadius": 16
+    }
+  },
+  "cardStyles": {
+    "padding": 16,
+    "borderRadius": 8,
+    "borderWidth": 1,
+    "title": {
+      "size": 16,
+      "weight": "w500"
+    },
+    "description": {
+      "size": 14,
+      "weight": "w400"
+    },
+    "iconContainer": {
+      "size": 48,
+      "iconSize": 24,
+      "borderRadius": 8
+    }
+  }
+}

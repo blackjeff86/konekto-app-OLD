@@ -1,0 +1,19 @@
+{
+  "promotions": [
+    {
+      "title": "Relaxe e Rejuvenesça",
+      "subtitle": "Descubra nossos pacotes de spa.",
+      "imagePath": "assets/app_assets/images/promotions/promo_1.jpg"
+    },
+    {
+      "title": "Aventura em Família",
+      "subtitle": "Atividades e diversão para todas as idades.",
+      "imagePath": "assets/app_assets/images/promotions/promo_2.jpg"
+    },
+    {
+      "title": "Delícias da Gastronomia",
+      "subtitle": "Experimente os melhores pratos locais.",
+      "imagePath": "assets/app_assets/images/promotions/promo_3.jpg"
+    }
+  ]
+}

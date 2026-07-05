@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:konekto/theme/konekto_brand.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -10,13 +11,11 @@ class ProfilePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 80),
-          // Logo da Konekto
-          ClipOval(
-            child: Image.asset(
-              'assets/app_assets/images/konekto_logo.png',
-              height: 100,
-              width: 100,
-            ),
+          Container(
+            width: 100,
+            height: 100,
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: KonektoBrand.ink),
+            child: const Center(child: KonektoMark(size: 56)),
           ),
           const SizedBox(height: 16),
           // Nome do Perfil

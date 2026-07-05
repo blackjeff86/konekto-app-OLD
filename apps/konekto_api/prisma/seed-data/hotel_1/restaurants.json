@@ -1,0 +1,101 @@
+{
+  "pageConfig": {
+    "title": "Restaurantes",
+    "bannerImageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/le_mare.png",
+    "layoutType": "list", 
+    "theme": {
+      "colorPalette": {
+        "primary": "#3E2723",
+        "background": "#F5F5F5",
+        "cardBackground": "#FFFFFF",
+        "dividerColor": "#BDBDBD"
+      },
+      "typography": {
+        "fontFamily": "Lato",
+        "bodyText": {
+          "color": "#3E2723"
+        }
+      }
+    }
+  },
+  "restaurants": [
+    {
+      "name": "Le Maré",
+      "description": "Culinária francesa com a brisa e a vista deslumbrante do oceano.",
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/le_mare.png",
+      "slug": "le-mare",
+      "menuItems": [
+        {
+          "name": "Steak Frites",
+          "description": "O clássico francês: um suculento bife de filé mignon acompanhado por batatas fritas crocantes e molho especial.",
+          "price": 95.00,
+          "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/steak_frites.jpg"
+        },
+        {
+          "name": "Salmão Grelhado com Molho de Maracujá",
+          "description": "Salmão fresco com crosta de gergelim, servido com um toque agridoce de molho de maracujá e purê de batata-doce.",
+          "price": 85.00,
+          "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/salmao_maracuja.jpg"
+        },
+        {
+          "name": "Crème Brûlée",
+          "description": "A sobremesa que não pode faltar: creme de baunilha com uma fina camada de açúcar caramelizado.",
+          "price": 35.00,
+          "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/creme_brulee.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Hanabi Sushi",
+      "description": "Experiência gastronômica japonesa que combina tradição com toques de modernidade.",
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/hanabi_sushi.png",
+      "slug": "hanabi-sushi",
+      "menuItems": [
+        {
+          "name": "Combinado Hanabi (25 peças)",
+          "description": "Uma seleção de sushis e sashimis frescos, incluindo salmão, atum e peixe branco, com ovas e camarão.",
+          "price": 150.00,
+          "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/combinado.jpg"
+        },
+        {
+          "name": "Tempurá de Camarão",
+          "description": "Camarões empanados e fritos, com textura leve e crocante. Servido com molho tentsuyu.",
+          "price": 70.00,
+          "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/tempura_camarao.jpg"
+        },
+        {
+          "name": "Hanabi Roll (8 peças)",
+          "description": "Um rolo especial da casa, com salmão grelhado, cream cheese e um toque de pimenta sriracha, coberto com couve frita.",
+          "price": 60.00,
+          "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/hanabi_roll.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Toro & Brasa",
+      "description": "A mais fina churrascaria, com cortes nobres e ambiente sofisticado.",
+      "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/toro_brasa.png",
+      "slug": "toro-brasa",
+      "menuItems": [
+        {
+          "name": "Picanha Angus",
+          "description": "Corte nobre da picanha angus, servido no ponto ideal, com farofa de ovos e vinagrete.",
+          "price": 120.00,
+          "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/picanha_angus.jpg"
+        },
+        {
+          "name": "Costela de Cordeiro",
+          "description": "Tenra costela de cordeiro, marinada com ervas finas e assada lentamente. Acompanha purê de mandioquinha.",
+          "price": 110.00,
+          "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/costela_cordeiro.jpg"
+        },
+        {
+          "name": "Filet Mignon com Risoto de Cogumelos",
+          "description": "Medalhões de filé mignon grelhados, servidos com risoto cremoso de funghi porcini.",
+          "price": 105.00,
+          "imageUrl": "assets/tenant_assets/hotels/hotel_1/images/restaurants/filet_mignon_risoto.jpg"
+        }
+      ]
+    }
+  ]
+}

@@ -95,8 +95,6 @@ class _TenantHomePageState extends State<TenantHomePage> {
   Future<Map<String, dynamic>> _loadTenantData() async {
     final Map<String, dynamic> tenantConfigMap = await _repository.getTenantConfig(widget.tenantId);
     final Map<String, dynamic> guestInfoMap = await _repository.getGuestInfo(widget.tenantId);
-    final Map<String, dynamic> roomServiceData = await _repository.getRoomServiceMenu(widget.tenantId);
-    final List<dynamic> roomServiceMenu = roomServiceData['menu'] ?? [];
 
     _widgetMapping = {
       'home': (data, _) {
@@ -129,7 +127,6 @@ class _TenantHomePageState extends State<TenantHomePage> {
     return {
       'tenantConfig': tenantConfigMap,
       'guestInfo': guestInfoMap,
-      'roomServiceMenu': roomServiceMenu,
     };
   }
 

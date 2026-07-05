@@ -1,0 +1,11 @@
+{
+  "status": "checkin_ok",
+  "guest": {
+    "name": "Lukas Boladao",
+    "room_number": "307"
+  },
+  "wifi": {
+    "network_name": "Hotel_2_Guest",
+    "password": "Senha_Secreta_123"
+  }
+}
