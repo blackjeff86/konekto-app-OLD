@@ -205,7 +205,76 @@ model ServiceItem {
 
 ### Checkpoint: Convite de staff completo
 - [x] Fluxo ponta a ponta verificado via curl: gerente gera convite (201) → nova conta consome o código (200, token+staff com `role: recepcao`) → reuso do mesmo código rejeitado (409) → login da nova conta confirma o papel certo. `flutter analyze`/`flutter test`/`flutter build web` limpos no portal (API e web build também limpos). Sem verificação visual no Chrome (mesma limitação de sessão já registrada nos Checkpoints C/D — sem ferramenta de browser automation).
-- [ ] Confirmar com o usuário que o escopo de "Configurações" (Fase 5, sub-entrega 1) está completo antes de iniciar o Plan de Hóspedes.
+- [x] Confirmar com o usuário que o escopo de "Configurações" (Fase 5, sub-entrega 1) está completo — confirmado; deploy de produção (konekto_api + konekto_portal na Vercel, login.html apontando pros dois) validado ponta a ponta em produção antes de avançar.
+
+## Fase Hóspedes (sub-entrega 2 do spec original)
+
+Hoje o app do hóspede não tem NENHUM conceito de identidade individual: a "entrada" é um código único por hotel (`_HomePageBody._validateAccessCode()` em `home_konekto_page.dart`, casando contra `TenantsDirectoryRepository.getTenantsList()`), e o "check-in" (`CheckinStatusPage`) é 100% simulado — nome/quarto fixos vindos de um `guest_info.json` estático, o mesmo pra qualquer pessoa que entre naquele hotel. Não existe tabela de hóspedes, não existe código individual, não existe revogação.
+
+**Decisão de design**: em vez de um segundo campo/tela de entrada, o mesmo campo "Código de Acesso" tenta resolver como código de HÓSPEDE primeiro (via `POST /api/guest/claim`); se não for um código de hóspede válido, cai no fluxo antigo de código de hotel, sem mudança nenhuma pro que já funciona. Isso cumpre a boundary do spec ("não remover o código único-por-hotel antes de Hóspedes estar completo e testado") sem exigir uma UI paralela confusa.
+
+**Acesso**: `gerente` E `recepcao` podem gerenciar hóspedes (diferente de Configurações, que é só `gerente`) — a user story original é "como recepcionista".
+
+### A: Modelo + auth de hóspede
+- [x] **Task 1: Model `Guest` + migration.** `id`, `hotelId`, `name`, `roomNumber`, `accessCode` (`@unique`), `status` (enum `GuestStatus { active revoked }`, default `active`), `createdAt`. Migration `20260705224859_add_guest` aplicada no Neon.
+- [x] **Task 2: `lib/guest-auth.ts`** — `signGuestToken`/`verifyGuestToken`, payload `{sub, hotelId, name, roomNumber}`, expiração 7 dias.
+- [x] **Checkpoint A:** migration + `npx prisma generate` + `npm run build` limpos.
+
+### B: Rotas de API
+- [x] **Task 3: `POST /api/hotels/:hotelId/guests`** (gerente OU recepcao) — gera `accessCode` via `crypto.randomBytes(5).toString('hex').toUpperCase()` (mesmo gerador de staff-invites).
+- [x] **Task 4: `GET /api/hotels/:hotelId/guests`** (lista ordenada por `createdAt` desc).
+- [x] **Task 5: `DELETE /api/hotels/:hotelId/guests/:guestId`** (seta `status: revoked`).
+- [x] **Task 6: `POST /api/guest/claim`** (público, código normalizado pra uppercase/trim, retorna `{token, guest}`).
+- [x] **Checkpoint B:** `curl` validado — 401 sem token, 201 criar (gerente e recepcao), 200 listar, 200 claim (incluindo case-insensitive), 404 código inexistente, 200 revoke, 403 claim pós-revoke.
+
+### C: Portal — tela Hóspedes
+- [x] **Task 7: `GuestsRepository` + modelo Dart `Guest`.** Files: `lib/models/guest.dart`, `lib/data/guests_repository.dart`.
+- [x] **Task 8: Tela "Hóspedes"** — lista (nome, quarto, status, código com botão copiar) + "Criar hóspede" (mostra o código gerado num diálogo pós-criação, com botão copiar) + revogar com confirmação. Substituiu o `PlaceholderSectionCard` do índice 0 no dashboard — disponível pra `gerente` e `recepcao` (não filtrado como Configurações). Files: `lib/features/guests/guests_page.dart`.
+- [x] **Checkpoint C:** `flutter analyze`/`flutter test`/`flutter build web` limpos; CRUD já validado via curl contra o mesmo contrato no Checkpoint B.
+
+### D: App do hóspede — entrada por código individual
+- [x] **Task 9: `GuestClaimRepository`** — `claim(String code)` chamando `POST /api/guest/claim`, nunca lança (retorna `null` em qualquer falha, incluindo `useApi == false`), persiste o token via `shared_preferences` (dependência nova) pra uso futuro (Pedidos). Files: `lib/data/guest_claim_repository.dart`.
+- [x] **Task 10: Integrado no `_validateAccessCode()` existente** — tenta `claim(rawInput)` primeiro; sucesso → vai direto pro `TenantHomePage` (pula o `CheckinStatusPage` fake, já que o claim em si já é a confirmação real); falha → cai no `_loadTenants()` de hoje sem nenhuma mudança. Files: `lib/app/home_konekto/home_konekto_page.dart`.
+- [x] **Task 11: `TenantHomePage` ganhou `guestName`/`guestRoomNumber` opcionais** — quando presentes, substituem o registro estático de `getGuestInfo` só na exibição (wifi continua vindo do hotel, que é legitimamente compartilhado). Files: `lib/app/tenants/tenant_home_page.dart`.
+- [x] **Checkpoint D:** `flutter analyze`/`flutter test`/`flutter build web` limpos (2 modos, mesmos 8 lints pré-existentes de sempre, nenhum novo). Ciclo completo via curl: criar hóspede → claim (nome/quarto/hotelId/token corretos) → `GET /api/hotels` (fluxo antigo) confirmado ainda em 200 → revogar → claim pós-revoke em 403.
+
+### Checkpoint: Hóspedes completo
+- [x] Recepção cria hóspede (nome+quarto) → recebe código → hóspede reivindica → nome/quarto reais confirmados na resposta → recepção revoga → novo claim do mesmo código falha (403). Validado via curl, contrato idêntico ao que o portal e o app consomem.
+- [x] Código único-por-hotel (fluxo antigo) continua funcionando sem regressão — confirmado no mesmo teste acima.
+- [ ] Confirmar com o usuário antes de iniciar Pedidos (que depende de Hóspedes existir). Sem verificação visual no Chrome/dispositivo real (sem browser automation nesta sessão) — recomendado testar manualmente o fluxo (portal cria hóspede → copia código → digita no app → app entra direto mostrando o nome/quarto reais).
+
+## Fase Pedidos (sub-entrega 3, final do spec original)
+
+**Ajuste em relação ao spec original**: o spec falava em "os 4 tipos entram juntos" (room service, spa, restaurante, passeios) porque na época esses eram tipos fixos no código. Como a Fase 4 substituiu isso por `Service`/`ServiceItem` genérico, um Pedido agora referencia um `ServiceItem` qualquer — não existe mais distinção por "tipo", então "os 4 tipos" vem de graça (qualquer serviço, incluindo um criado do zero pelo hotel, já pode gerar pedido).
+
+**Botão existente**: `service_item_detail_page.dart` já tem "Adicionar ao pedido"/"Solicitar", hoje só um SnackBar de mentira. Vai virar um POST real — mas só quando o hóspede entrou por código individual (tem guest token salvo); se entrou pelo código antigo de hotel (sem identidade), mantém o SnackBar de simulação, já que não há hóspede pra vincular o pedido.
+
+### A: Modelo + auth de hóspede em rota
+- [x] **Task 1: Model `Order` + migration.** Migration `20260705230848_add_order` aplicada no Neon.
+- [x] **Task 2: `requireGuestAuth`** em `lib/auth-guard.ts` (paralelo a `requireStaffRole`, usa `verifyGuestToken`).
+- [x] **Checkpoint A:** migration + `npm run build` limpos.
+
+### B: Rotas de API
+- [x] **Task 3: `POST /api/orders`** — `itemName`/`price` sempre lidos do `ServiceItem` no servidor (snapshot, nunca do body); `guestId`/`hotelId` sempre do token.
+- [x] **Task 4: `GET /api/hotels/:hotelId/orders`** — inclui `guest: {name, roomNumber}` via `include`.
+- [x] **Task 5: `PATCH /api/hotels/:hotelId/orders/:orderId`** — atualiza `status`.
+- [x] **Checkpoint B:** `curl` — 401 sem guest token, 201 criar pedido (snapshot correto de nome/preço), 200 listar (nome/quarto do hóspede presentes), 200 mudar status, 401 listar sem staff token.
+
+### C: Portal — tela Pedidos com polling
+- [x] **Task 6: `OrdersRepository` + modelo Dart `Order`.** Files: `lib/models/order.dart`, `lib/data/orders_repository.dart`.
+- [x] **Task 7: Tela "Pedidos"** — lista (item ×qtd, preço total ou "Sob consulta", hóspede+quarto, badge de status, menu pra avançar status) + `Timer.periodic(5s)` cancelado no `dispose`. Substituiu o `PlaceholderSectionCard` do índice 1. Files: `lib/features/orders/orders_page.dart`.
+- [x] **Checkpoint C:** `flutter analyze`/`flutter test`/`flutter build web` limpos. Polling verificado indiretamente (mesma limitação de sempre — sem browser automation): confirmei que uma nova consulta reflete dados criados depois via curl, que é exatamente o que o `Timer.periodic` reproduziria visualmente.
+
+### D: App do hóspede — pedido real
+- [x] **Task 8: `GuestClaimRepository.getStoredToken()`** — expõe o token salvo por `claim()`, mesmo padrão do `AuthRepository` do portal.
+- [x] **Task 9: `OrdersRepository`** (app do hóspede) — `createOrder({serviceId, serviceItemId, token, quantity})`. Files: `lib/data/orders_repository.dart`.
+- [x] **Task 10: `ServiceItemDetailPage` virou `StatefulWidget`** — `_confirm` agora é async: se existe guest token salvo, faz o `POST /api/orders` real (com spinner no botão enquanto envia, erro amigável em caso de falha); se não existe (fluxo antigo de código de hotel), mantém o SnackBar de simulação de sempre — zero regressão. Ganhou `serviceId` (antes só recebia o `item`), threaded a partir de `ServiceItemsListPage`.
+- [x] **Checkpoint D:** `flutter analyze`/`flutter test`/`flutter build web` (2 modos) limpos — mesmos 8 lints pré-existentes, nenhum novo. Ciclo ponta a ponta via curl: criar hóspede → claim → `POST /api/orders` com o guest token (201, snapshot correto de nome/preço) → aparece na listagem do portal (`GET /api/hotels/:hotelId/orders`) com nome/quarto certos.
+
+### Checkpoint: Pedidos completo (fecha o spec original inteiro)
+- [x] Hóspede com identidade faz um pedido → aparece na listagem do portal com dados corretos (verificado via curl — polling em si não foi clicado visualmente, sem browser automation nesta sessão).
+- [x] Hóspede sem identidade (fluxo antigo) não quebra — a lógica do fallback (`getStoredToken() == null` → SnackBar de simulação) foi revisada no código; sem clique manual real no navegador.
+- [ ] Confirmar com o usuário antes de considerar a Fase 5 do spec original (Hóspedes/Pedidos/Configurações) inteiramente concluída.
 
 ## Risks and Mitigations
 

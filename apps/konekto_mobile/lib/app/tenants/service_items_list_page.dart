@@ -111,6 +111,7 @@ class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
                                   MaterialPageRoute(
                                     builder: (context) => ServiceItemDetailPage(
                                       tenantConfig: widget.tenantConfig,
+                                      serviceId: widget.serviceId,
                                       serviceName: service.name,
                                       item: item,
                                       assetPathBuilder: _assetPath,

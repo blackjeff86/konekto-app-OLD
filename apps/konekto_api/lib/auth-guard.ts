@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyStaffToken, type StaffTokenPayload } from '@/lib/jwt'
+import { verifyGuestToken, type GuestTokenPayload } from '@/lib/guest-auth'
 
 export class AuthGuardError extends Error {
   constructor(public readonly response: NextResponse) {
@@ -34,4 +35,23 @@ export async function requireStaffRole(
   }
 
   return payload
+}
+
+/**
+ * Extrai e verifica o Bearer token de um HÓSPEDE (não staff) — mesma
+ * forma de `requireStaffRole`, sem checagem de papel (hóspede não tem
+ * `role`).
+ */
+export async function requireGuestAuth(request: NextRequest): Promise<GuestTokenPayload> {
+  const authHeader = request.headers.get('authorization')
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (!token) {
+    throw new AuthGuardError(NextResponse.json({ error: 'missing_token' }, { status: 401 }))
+  }
+
+  try {
+    return await verifyGuestToken(token)
+  } catch {
+    throw new AuthGuardError(NextResponse.json({ error: 'invalid_token' }, { status: 401 }))
+  }
 }

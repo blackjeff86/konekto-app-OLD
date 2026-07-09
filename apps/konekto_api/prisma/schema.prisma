@@ -24,6 +24,8 @@ model Hotel {
   staff        Staff[]
   services     Service[]
   staffInvites StaffInvite[]
+  guests       Guest[]
+  orders       Order[]
 
   @@map("hotels")
 }
@@ -80,6 +82,62 @@ model StaffInvite {
 
   @@index([hotelId])
   @@map("staff_invites")
+}
+
+enum GuestStatus {
+  active
+  revoked
+}
+
+/// Hóspede individual de um hotel — substitui o código único-por-hotel
+/// (compartilhado por qualquer pessoa) por um código pessoal ligado a um
+/// nome+quarto específico, que a recepção pode revogar no check-out.
+/// `status: revoked` em vez de apagar a linha — preserva o registro pra
+/// quando Pedidos existir (um pedido vai referenciar um Guest).
+model Guest {
+  id         String      @id @default(cuid())
+  hotelId    String
+  name       String
+  roomNumber String
+  accessCode String      @unique
+  status     GuestStatus @default(active)
+  createdAt  DateTime    @default(now())
+  hotel      Hotel       @relation(fields: [hotelId], references: [id])
+  orders     Order[]
+
+  @@index([hotelId])
+  @@map("guests")
+}
+
+enum OrderStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+/// Pedido de um hóspede referenciando um `ServiceItem` qualquer — sem
+/// distinção por "tipo" (room service, spa, etc.), já que o catálogo em si
+/// é genérico desde a Fase 4. `itemName`/`price` são um snapshot no
+/// momento do pedido: sobrevivem a uma edição ou remoção do item depois.
+model Order {
+  id            String      @id @default(cuid())
+  hotelId       String
+  guestId       String
+  serviceId     String
+  serviceItemId String
+  itemName      String
+  quantity      Int         @default(1)
+  price         Float?
+  status        OrderStatus @default(pending)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  hotel         Hotel       @relation(fields: [hotelId], references: [id])
+  guest         Guest       @relation(fields: [guestId], references: [id])
+
+  @@index([hotelId])
+  @@index([guestId])
+  @@map("orders")
 }
 
 /// Substitui konektoBrand/{docId} — tabela global (não específica de hotel),

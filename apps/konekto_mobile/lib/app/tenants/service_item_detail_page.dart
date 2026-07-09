@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:konekto/app/tenants/services_page.dart' show hexToColor;
+import 'package:konekto/data/guest_claim_repository.dart';
+import 'package:konekto/data/orders_repository.dart';
 import 'package:konekto/models/service.dart';
 import 'package:konekto/widgets/tenant_image.dart';
 
@@ -10,12 +12,16 @@ import 'package:konekto/widgets/tenant_image.dart';
 ///
 /// `item.price != null` → mostra preço e um botão "Adicionar ao pedido".
 /// `item.price == null` → item não é comprável (evento/passeio/reserva) e
-/// mostra "Solicitar" no lugar. Pedidos reais (gravados no backend) ainda
-/// não existem — ver `specs/portal-fase5-hospedes-pedidos-config.md`, fase
-/// "Pedidos" — por enquanto ambos os botões só confirmam com um SnackBar,
-/// preservando o comportamento de simulação que as telas antigas já tinham.
-class ServiceItemDetailPage extends StatelessWidget {
+/// mostra "Solicitar" no lugar.
+///
+/// Pedido real: se o hóspede entrou por código individual (tem guest token
+/// salvo — ver `GuestClaimRepository`), o botão faz um `POST /api/orders`
+/// de verdade. Se entrou pelo fluxo antigo de código de hotel (sem
+/// identidade), não há hóspede pra vincular o pedido — mantém o SnackBar
+/// de simulação que a tela já tinha, sem regressão.
+class ServiceItemDetailPage extends StatefulWidget {
   final Map<String, dynamic> tenantConfig;
+  final String serviceId;
   final String serviceName;
   final ServiceItem item;
   final String Function(String) assetPathBuilder;
@@ -23,23 +29,64 @@ class ServiceItemDetailPage extends StatelessWidget {
   const ServiceItemDetailPage({
     super.key,
     required this.tenantConfig,
+    required this.serviceId,
     required this.serviceName,
     required this.item,
     required this.assetPathBuilder,
   });
 
-  void _confirm(BuildContext context) {
+  @override
+  State<ServiceItemDetailPage> createState() => _ServiceItemDetailPageState();
+}
+
+class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
+  final GuestClaimRepository _guestClaimRepository = GuestClaimRepository();
+  final OrdersRepository _ordersRepository = OrdersRepository();
+  bool _isSubmitting = false;
+
+  Map<String, dynamic> get tenantConfig => widget.tenantConfig;
+  ServiceItem get item => widget.item;
+
+  Future<void> _confirm(BuildContext context) async {
     final String fontFamily = tenantConfig['typography']['fontFamily'];
     final Color primaryColor = hexToColor(tenantConfig['colorPalette']['primary']);
     final bool isPurchasable = item.price != null;
 
+    final guestToken = await _guestClaimRepository.getStoredToken();
+    if (guestToken == null) {
+      if (!context.mounted) return;
+      _showSnackBar(
+        context,
+        message: isPurchasable ? 'Pedido enviado! A recepção foi notificada.' : 'Solicitação enviada! A recepção entrará em contato.',
+        fontFamily: fontFamily,
+        color: primaryColor,
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    try {
+      await _ordersRepository.createOrder(serviceId: widget.serviceId, serviceItemId: item.id, token: guestToken);
+      if (!context.mounted) return;
+      _showSnackBar(
+        context,
+        message: isPurchasable ? 'Pedido enviado! A recepção foi notificada.' : 'Solicitação enviada! A recepção entrará em contato.',
+        fontFamily: fontFamily,
+        color: primaryColor,
+      );
+    } on StateError catch (error) {
+      if (!context.mounted) return;
+      _showSnackBar(context, message: error.message, fontFamily: fontFamily, color: Colors.red.shade700);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  void _showSnackBar(BuildContext context, {required String message, required String fontFamily, required Color color}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          isPurchasable ? 'Pedido enviado! A recepção foi notificada.' : 'Solicitação enviada! A recepção entrará em contato.',
-          style: GoogleFonts.getFont(fontFamily, color: Colors.white),
-        ),
-        backgroundColor: primaryColor,
+        content: Text(message, style: GoogleFonts.getFont(fontFamily, color: Colors.white)),
+        backgroundColor: color,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -68,7 +115,7 @@ class ServiceItemDetailPage extends StatelessWidget {
                   ),
                   child: TenantImage(
                     imageUrl: item.imageUrl,
-                    assetPathBuilder: assetPathBuilder,
+                    assetPathBuilder: widget.assetPathBuilder,
                     height: 240,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -98,7 +145,7 @@ class ServiceItemDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    serviceName,
+                    widget.serviceName,
                     style: GoogleFonts.getFont(fontFamily, color: bodyTextColor, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 4),
@@ -132,8 +179,10 @@ class ServiceItemDetailPage extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () => _confirm(context),
-                      icon: Icon(isPurchasable ? Icons.shopping_cart : Icons.event_available_outlined, size: 22),
+                      onPressed: _isSubmitting ? null : () => _confirm(context),
+                      icon: _isSubmitting
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : Icon(isPurchasable ? Icons.shopping_cart : Icons.event_available_outlined, size: 22),
                       label: Text(
                         isPurchasable ? 'Adicionar ao pedido' : 'Solicitar',
                         style: GoogleFonts.getFont(fontFamily, fontSize: 16),

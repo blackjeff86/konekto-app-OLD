@@ -4,7 +4,9 @@ import 'package:konekto/app/home_konekto/history_page.dart';
 import 'package:konekto/app/home_konekto/profile_page.dart';
 import 'package:konekto/app/navigation/checkin_status_page.dart';
 import 'package:konekto/app/navigation/qr_scanner_page.dart';
+import 'package:konekto/app/tenants/tenant_home_page.dart' show TenantHomePage;
 import 'package:konekto/theme/konekto_brand.dart';
+import 'package:konekto/data/guest_claim_repository.dart';
 import 'package:konekto/data/tenant_repository.dart';
 import 'package:konekto/data/tenant_repository_provider.dart';
 
@@ -115,6 +117,7 @@ class _HomePageBodyState extends State<_HomePageBody> {
   late List<Promotion> _promotions;
   final TenantsDirectoryRepository _tenantsDirectory = createTenantsDirectoryRepository();
   final PromotionsRepository _promotionsRepository = createPromotionsRepository();
+  final GuestClaimRepository _guestClaimRepository = GuestClaimRepository();
 
   @override
   void initState() {
@@ -157,13 +160,37 @@ class _HomePageBodyState extends State<_HomePageBody> {
   }
 
   void _validateAccessCode() async {
-    final userInput = _accessCodeController.text.trim().toLowerCase();
-    if (userInput.isEmpty) {
+    final rawInput = _accessCodeController.text.trim();
+    if (rawInput.isEmpty) {
       _showError('Insira o código de acesso do hotel.');
       return;
     }
 
     setState(() => _isValidating = true);
+
+    // Tenta primeiro como código INDIVIDUAL de hóspede (criado pela
+    // recepção) — se não for (código de hotel, ou app sem API), cai no
+    // fluxo antigo de código único por hotel, sem nenhuma mudança de
+    // comportamento nesse caso.
+    final claimResult = await _guestClaimRepository.claim(rawInput);
+    if (claimResult != null) {
+      if (!mounted) return;
+      setState(() => _isValidating = false);
+      final guest = claimResult['guest'] as Map<String, dynamic>;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TenantHomePage(
+            tenantId: guest['hotelId'] as String,
+            guestName: guest['name'] as String,
+            guestRoomNumber: guest['roomNumber'] as String,
+          ),
+        ),
+      );
+      return;
+    }
+
+    final userInput = rawInput.toLowerCase();
     final tenants = await _loadTenants();
     bool isValid = false;
     String? foundTenantId;

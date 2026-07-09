@@ -7,8 +7,13 @@ import 'package:konekto_portal/auth/staff_role.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
 import 'package:konekto_portal/features/dashboard/widgets/placeholder_section_card.dart';
 import 'package:konekto_portal/features/dashboard/widgets/portal_sidebar.dart';
+import 'package:konekto_portal/features/guests/guests_page.dart';
+import 'package:konekto_portal/features/orders/orders_page.dart';
 import 'package:konekto_portal/features/settings/settings_page.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
+
+const int _kHospedesIndex = 0;
+const int _kPedidosIndex = 1;
 
 const DashboardSection _kHospedesSection = (
   icon: Icons.people_outline,
@@ -90,13 +95,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(32),
-                    child: _selectedIndex == _configuracoesIndex
-                        ? SettingsPage(session: widget.session, authRepository: widget.authRepository)
-                        : PlaceholderSectionCard(
-                            icon: section.icon,
-                            title: section.title,
-                            description: section.description,
-                          ),
+                    child: switch (_selectedIndex) {
+                      _kHospedesIndex => GuestsPage(session: widget.session, authRepository: widget.authRepository),
+                      _kPedidosIndex => OrdersPage(session: widget.session, authRepository: widget.authRepository),
+                      _ when _selectedIndex == _configuracoesIndex =>
+                        SettingsPage(session: widget.session, authRepository: widget.authRepository),
+                      _ => PlaceholderSectionCard(icon: section.icon, title: section.title, description: section.description),
+                    },
                   ),
                 ),
               ],

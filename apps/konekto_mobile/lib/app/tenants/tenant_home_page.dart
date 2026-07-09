@@ -55,7 +55,17 @@ class TenantConfig {
 
 class TenantHomePage extends StatefulWidget {
   final String tenantId;
-  const TenantHomePage({super.key, required this.tenantId});
+
+  /// Nome/quarto reais de um hóspede que entrou com código individual
+  /// (ver `GuestClaimRepository`) — quando presentes, substituem o
+  /// registro estático/compartilhado de `getGuestInfo` só pra exibição
+  /// (o wifi continua vindo do `guestInfo` do hotel, que é legitimamente
+  /// compartilhado). `null` preserva o comportamento de hoje (fluxo de
+  /// código único por hotel).
+  final String? guestName;
+  final String? guestRoomNumber;
+
+  const TenantHomePage({super.key, required this.tenantId, this.guestName, this.guestRoomNumber});
 
   @override
   State<TenantHomePage> createState() => _TenantHomePageState();
@@ -102,8 +112,8 @@ class _TenantHomePageState extends State<TenantHomePage> {
         final wifiData = data['guestInfo']['wifi'];
         return TenantHomeBody(
           tenantId: widget.tenantId,
-          userName: guestData['name'] ?? 'Hóspede',
-          roomNumber: guestData['room_number'] ?? 'N/A',
+          userName: widget.guestName ?? guestData['name'] ?? 'Hóspede',
+          roomNumber: widget.guestRoomNumber ?? guestData['room_number'] ?? 'N/A',
           wifiNetworkName: wifiData['network_name'] ?? 'Não disponível',
           wifiPassword: wifiData['password'] ?? 'Não disponível',
           tenantConfig: data['tenantConfig'],
