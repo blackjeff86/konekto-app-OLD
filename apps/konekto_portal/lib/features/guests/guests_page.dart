@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
 import 'package:konekto_portal/data/guests_repository.dart';
+import 'package:konekto_portal/guest_app_config.dart';
 import 'package:konekto_portal/models/guest.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
+
+void _copyToClipboard(BuildContext context, String value) {
+  Clipboard.setData(ClipboardData(text: value));
+  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copiado.')));
+}
+
+String _inviteMessage(Guest guest) {
+  return 'Olá, ${guest.name}! Seu check-in foi confirmado (quarto ${guest.roomNumber}).\n'
+      'Acesse $guestAppUrl e digite o código ${guest.accessCode} para começar.';
+}
 
 /// Tela "Hóspedes" — lista os hóspedes do hotel, permite criar (nome +
 /// quarto, gera um código individual) e revogar acesso. Disponível pra
@@ -90,39 +102,57 @@ class _GuestsPageState extends State<GuestsPage> {
       builder: (context) => AlertDialog(
         backgroundColor: KonektoBrand.surface,
         title: Text('Hóspede criado', style: KonektoBrand.display(fontSize: 16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Passe esse código pro hóspede digitar no app:', style: KonektoBrand.body(fontSize: 13)),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: KonektoBrand.borderStrong),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      guest.accessCode,
-                      style: KonektoBrand.display(fontSize: 18, color: KonektoBrand.goldLight),
+        content: SizedBox(
+          width: 380,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Código de acesso:', style: KonektoBrand.body(fontSize: 13)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: KonektoBrand.borderStrong),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        guest.accessCode,
+                        style: KonektoBrand.display(fontSize: 18, color: KonektoBrand.goldLight),
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: 'Copiar',
-                    icon: const Icon(Icons.copy_outlined, size: 18, color: KonektoBrand.slate),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: guest.accessCode));
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copiado.')));
-                    },
-                  ),
-                ],
+                    IconButton(
+                      tooltip: 'Copiar código',
+                      icon: const Icon(Icons.copy_outlined, size: 18, color: KonektoBrand.slate),
+                      onPressed: () => _copyToClipboard(context, guest.accessCode),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                'Ou copie a mensagem pronta pra mandar por WhatsApp/e-mail:',
+                style: KonektoBrand.body(fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _copyToClipboard(context, _inviteMessage(guest)),
+                  icon: const Icon(Icons.content_copy, size: 16, color: KonektoBrand.goldLight),
+                  label: Text('Copiar mensagem', style: KonektoBrand.body(fontSize: 13, color: KonektoBrand.goldLight)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: KonektoBrand.borderStrong),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Fechar')),
@@ -170,6 +200,8 @@ class _GuestsPageState extends State<GuestsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const _ReceptionQrCard(),
+          const SizedBox(height: 24),
           Row(
             children: [
               Expanded(child: Text('Hóspedes', style: KonektoBrand.display(fontSize: 18))),
@@ -225,6 +257,55 @@ class _GuestsPageState extends State<GuestsPage> {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// QR code fixo (não muda por hóspede) apontando pro app do hóspede —
+/// pensado pra imprimir e deixar na recepção. Quem escanear só abre o app;
+/// o hóspede ainda digita seu próprio código individual depois.
+class _ReceptionQrCard extends StatelessWidget {
+  const _ReceptionQrCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: KonektoBrand.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: KonektoBrand.borderStrong),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+            child: QrImageView(data: guestAppUrl, size: 72, backgroundColor: Colors.white),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('QR code de recepção', style: KonektoBrand.body(fontSize: 14, fontWeight: FontWeight.w700, color: KonektoBrand.cream)),
+                const SizedBox(height: 2),
+                Text(
+                  'Imprima e deixe na recepção — o hóspede escaneia, abre o app e digita o código individual dele.',
+                  style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                ),
+                const SizedBox(height: 8),
+                Text(guestAppUrl, style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.goldLight)),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Copiar link',
+            icon: const Icon(Icons.copy_outlined, size: 18, color: KonektoBrand.slate),
+            onPressed: () => _copyToClipboard(context, guestAppUrl),
+          ),
         ],
       ),
     );
