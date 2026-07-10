@@ -9,16 +9,23 @@ import 'package:konekto_portal/features/dashboard/widgets/placeholder_section_ca
 import 'package:konekto_portal/features/dashboard/widgets/portal_sidebar.dart';
 import 'package:konekto_portal/features/guests/guests_page.dart';
 import 'package:konekto_portal/features/orders/orders_page.dart';
+import 'package:konekto_portal/features/rooms/rooms_page.dart';
 import 'package:konekto_portal/features/settings/settings_page.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
 
 const int _kHospedesIndex = 0;
-const int _kPedidosIndex = 1;
+const int _kQuartosIndex = 1;
+const int _kPedidosIndex = 2;
 
 const DashboardSection _kHospedesSection = (
   icon: Icons.people_outline,
   title: 'Hóspedes',
   description: 'Conceda e revogue acesso, veja quem está hospedado.',
+);
+const DashboardSection _kQuartosSection = (
+  icon: Icons.meeting_room_outlined,
+  title: 'Quartos',
+  description: 'Estadias com vários hóspedes, avisos e fechamento de conta.',
 );
 const DashboardSection _kPedidosSection = (
   icon: Icons.receipt_long_outlined,
@@ -56,6 +63,7 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     _sections = [
       _kHospedesSection,
+      _kQuartosSection,
       _kPedidosSection,
       if (widget.session.role == StaffRole.gerente) _kConfiguracoesSection,
     ];
@@ -97,6 +105,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     padding: const EdgeInsets.all(32),
                     child: switch (_selectedIndex) {
                       _kHospedesIndex => GuestsPage(session: widget.session, authRepository: widget.authRepository),
+                      _kQuartosIndex => RoomsPage(session: widget.session, authRepository: widget.authRepository),
                       _kPedidosIndex => OrdersPage(session: widget.session, authRepository: widget.authRepository),
                       _ when _selectedIndex == _configuracoesIndex =>
                         SettingsPage(session: widget.session, authRepository: widget.authRepository),

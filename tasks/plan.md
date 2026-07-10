@@ -310,6 +310,34 @@ Motivação: o cadastro mínimo (nome + quarto) da Fase Hóspedes original não 
 
 **Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web` (2 modos) limpos nos dois apps Flutter, `npm run build` limpo na API — mesmos 8 lints pré-existentes de sempre, nenhum novo. Ciclo ponta a ponta via curl: criar hóspede com cadastro completo → claim (nome/quarto/wifi resolvido corretos) → pedido real → aparece no portal com o nome certo. Ainda **não deployado em produção** (só validado local) e sem clique manual no navegador (sem browser automation nesta sessão).
 
+## Fase Hóspedes 3.0 — página de detalhe do hóspede + agrupamento por quarto (Stay) + aviso da recepção
+
+**Status: concluído e em produção.**
+
+Motivação: (1) a tela de Hóspedes do portal só abria um modal com os dados cadastrais — precisava virar uma página de verdade, mostrando cadastro completo, quarto, pedidos/reservas, e uma opção de "fechamento de conta" pro hóspede/estadia como um todo. (2) `Guest` era 1:1 com "uma pessoa com um código de acesso" — não existia nada que agrupasse várias pessoas do mesmo quarto (marido, esposa, filhos), cada uma com seu próprio código de login/pedidos, mas todas vinculadas à mesma "conta do quarto".
+
+**Decisões confirmadas com o usuário:**
+1. Nova entidade `Stay` (reserva/estadia) — a recepção cria a reserva do quarto uma vez (datas, número do quarto) e depois adiciona quantos hóspedes quiser dentro dela, cada um com seu próprio código de acesso.
+2. Aviso da recepção pro quarto é só leitura (ex: "seu jantar está pronto") — hóspede visualiza, não responde. Chat com resposta fica pra uma fase futura.
+3. Migração retroativa: 1 `Stay` por `Guest` já existente em produção (nenhum quarto compartilhado hoje, então 1:1 é exato, não uma aproximação).
+4. "Fechar conta" mostra um resumo de consumo (soma de todos os pedidos de todos os hóspedes da estadia) antes de confirmar.
+
+**Backend:**
+- Novo model `Stay` (`id`, `hotelId`, `roomNumber`, `checkInDate`, `checkOutDate`, `status: active|closed`) e `StayNotice` (`stayId`, `message`, `createdAt`). `Guest` perdeu `roomNumber`/`checkInDate`/`checkOutDate` (agora vivem só em `Stay`) e ganhou `stayId` (FK obrigatória).
+- Migration `20260710103328_add_stay_entity` — escrita à mão (não via `prisma migrate dev`, que se recusa em modo não-interativo quando há perda de dados) em 3 passos dentro da mesma transação: (1) cria as tabelas + `stayId` opcional, (2) backfill via `DO $$ ... FOR ... LOOP $$` criando uma Stay por Guest existente e linkando, (3) trava `stayId` como `NOT NULL` e remove as 3 colunas antigas. Verificado com `prisma migrate status` limpo depois.
+- Rotas novas: `POST/GET /api/hotels/:hotelId/stays`, `GET/PATCH /api/hotels/:hotelId/stays/:stayId` (`PATCH {close:true}` fecha a estadia inteira e revoga todos os `Guest.accessCode` vinculados numa transação), `POST /api/hotels/:hotelId/stays/:stayId/notices`, `GET /api/guest/notices` (hóspede lê os avisos do próprio quarto).
+- Rotas existentes atualizadas pra resolver quarto/datas via `guest.stay` em vez de campos diretos: `POST /api/hotels/:hotelId/guests` (agora exige `stayId`, valida que a Stay pertence ao hotel), novo `GET /api/hotels/:hotelId/guests/:guestId` (detalhe com `stay` + `orders` incluídos), `POST /api/guest/claim` (resolve `roomNumber`/datas via `guest.stay`, bloqueia se `stay.status === 'closed'`), `GET /api/hotels/:hotelId/orders` (achata `guest.stay.roomNumber` de volta pra `guest.roomNumber` na resposta, pra não quebrar o modelo Dart do portal).
+
+**Portal:**
+- Nova tela "Quartos" (`lib/features/rooms/rooms_page.dart` + `stay_detail_page.dart`): lista de estadias → detalhe com hóspedes vinculados (cada um navegável pro detalhe completo), campo de aviso, e "Fechar conta" (mostra o resumo de consumo somado de todos os hóspedes antes de confirmar).
+- Nova página de detalhe do hóspede (`lib/features/guests/guest_detail_page.dart`) substitui o modal antigo — cadastro completo, quarto/estadia, lista de pedidos/reservas com status/preço/observação/agendamento, botão "Revogar acesso".
+- Tela de Hóspedes (`guests_page.dart`) virou uma lista plana cross-quarto; "Criar hóspede" agora resolve o quarto inline (dropdown de estadias ativas + opção "Novo quarto" que revela os campos de quarto/datas na hora).
+- Modelos novos: `lib/models/stay.dart` (`Stay`, `StaySummary`, `StayGuestSummary`, `StayNotice`, `GuestOrderSummary`, `NewStayInput`); `Guest` atualizado pra ler quarto/datas via `stay` aninhado (getters de conveniência `roomNumber`/`checkInDate`/`checkOutDate` mantêm o resto do código sem mudanças).
+
+**App do hóspede:** novo ícone de sino no cabeçalho da home (`tenant_home_page.dart`) abre `notices_page.dart`, listando os avisos do quarto via `GET /api/guest/notices`.
+
+**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web` limpos nos dois apps Flutter (mesmos 8 lints pré-existentes, nenhum novo), `npm run build` limpo na API com todas as rotas novas geradas. Ciclo ponta a ponta via curl contra um servidor local apontando pro banco de produção: criar Stay → 2 hóspedes vinculados → claim de ambos → aviso enviado pela recepção → **ambos** leem o mesmo aviso → detalhe da Stay mostra os 2 hóspedes → fechar conta → claim de qualquer um dos dois falha com `access_revoked`. Deployado em produção (API + konekto-guest + konekto-portal), verificado via curl que os 3 domínios respondem corretamente pós-deploy.
+
 ## Itens abertos (pendências conhecidas, não bloqueiam)
 
 - **Imagem de item com URL externa não carrega no app do hóspede** (`TenantImage`, `apps/konekto_mobile/lib/widgets/tenant_image.dart`): criamos o widget que decide entre `Image.asset` (conteúdo semeado) e `Image.network` (itens novos do portal), mas testando com uma URL real (`fontagua.com.br`) a imagem não carregou — provavelmente CORS do host de origem, hotlink bloqueado, ou renderer CanvasKit do Flutter Web exigindo CORS pra decodificar a imagem em textura. Investigar depois: (1) testar com uma URL de imagem de um host que permite CORS/hotlink (ex: Unsplash, Cloudinary), (2) considerar um proxy de imagem no backend, ou (3) adicionar upload de imagem pro próprio `konekto_api`/storage em vez de depender de URL externa.

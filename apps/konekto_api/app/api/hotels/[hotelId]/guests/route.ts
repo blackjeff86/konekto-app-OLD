@@ -35,11 +35,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const guests = await prisma.guest.findMany({
     where: { hotelId },
     orderBy: { createdAt: 'desc' },
+    include: { stay: { select: { roomNumber: true, checkInDate: true, checkOutDate: true, status: true } } },
   })
   return NextResponse.json(guests)
 }
 
 const createGuestSchema = z.object({
+  stayId: z.string().min(1),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   documentType: z.enum(['cpf', 'passport', 'other']),
@@ -51,12 +53,14 @@ const createGuestSchema = z.object({
   email: z.string().email().optional(),
   address: z.string().min(1).optional(),
   country: z.string().min(1),
-  checkInDate: z.coerce.date(),
-  checkOutDate: z.coerce.date(),
-  roomNumber: z.string().min(1),
   wifiPassword: z.string().min(1).optional(),
 })
 
+// Todo hóspede pertence a uma `Stay` já existente (o quarto/reserva) — a
+// recepção cria a Stay primeiro (ver `/api/hotels/:hotelId/stays`) e só
+// depois adiciona cada pessoa dentro dela. Isso é o que permite vários
+// hóspedes (marido, esposa, filhos) com códigos individuais, todos
+// centralizados no mesmo quarto.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = await params
 
@@ -76,8 +80,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 })
   }
 
+  const stay = await prisma.stay.findFirst({ where: { id: parsed.data.stayId, hotelId } })
+  if (!stay) {
+    return NextResponse.json({ error: 'stay_not_found' }, { status: 404 })
+  }
+
   const guest = await prisma.guest.create({
     data: { hotelId, ...parsed.data, accessCode: generateAccessCode(hotelId) },
+    include: { stay: { select: { roomNumber: true, checkInDate: true, checkOutDate: true, status: true } } },
   })
   return NextResponse.json(guest, { status: 201 })
 }

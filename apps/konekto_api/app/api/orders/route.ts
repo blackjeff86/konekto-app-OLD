@@ -9,6 +9,8 @@ const createOrderSchema = z.object({
   serviceId: z.string().min(1),
   serviceItemId: z.string().min(1),
   quantity: z.number().int().min(1).default(1),
+  note: z.string().trim().max(500).optional(),
+  scheduledFor: z.coerce.date().optional(),
 })
 
 // `itemName`/`price` são lidos do ServiceItem no momento da criação (nunca
@@ -44,7 +46,28 @@ export async function POST(request: NextRequest) {
       itemName: item.name,
       price: item.price,
       quantity: parsed.data.quantity,
+      note: parsed.data.note || null,
+      scheduledFor: parsed.data.scheduledFor,
     },
   })
   return NextResponse.json(order, { status: 201 })
+}
+
+// Pedidos do PRÓPRIO hóspede autenticado (tela "Meus Pedidos" do app) — não
+// confundir com `GET /api/hotels/:hotelId/orders`, que é a visão do staff
+// pra todos os hóspedes do hotel.
+export async function GET(request: NextRequest) {
+  let guest
+  try {
+    guest = await requireGuestAuth(request)
+  } catch (error) {
+    if (error instanceof AuthGuardError) return error.response
+    throw error
+  }
+
+  const orders = await prisma.order.findMany({
+    where: { guestId: guest.sub },
+    orderBy: { createdAt: 'desc' },
+  })
+  return NextResponse.json(orders)
 }

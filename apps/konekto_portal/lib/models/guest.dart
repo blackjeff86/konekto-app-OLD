@@ -1,3 +1,5 @@
+import 'package:konekto_portal/models/stay.dart';
+
 enum GuestStatus {
   active,
   revoked;
@@ -30,11 +32,17 @@ enum DocumentType {
 }
 
 /// Hóspede individual de um hotel — cadastro completo (nome, documento,
-/// contato, estadia) + código de acesso pessoal, criado pela recepção ou
-/// gerente. `accessCode` já vem prefixado com uma tag do hotel (ex:
-/// "HOTEL1-8F3A2B1C") — só exibição/auditoria, a API garante a unicidade.
+/// contato) + código de acesso pessoal, sempre vinculado a uma `Stay` (o
+/// quarto/estadia compartilhado com o resto da família). `accessCode` já
+/// vem prefixado com uma tag do hotel (ex: "HOTEL1-8F3A2B1C") — só
+/// exibição/auditoria, a API garante a unicidade.
+///
+/// `orders` só vem preenchido quando o JSON de origem é o endpoint de
+/// DETALHE (`GET /api/hotels/:hotelId/guests/:guestId`) — na listagem
+/// (`GET /api/hotels/:hotelId/guests`) vem vazio.
 class Guest {
   final String id;
+  final String stayId;
   final String firstName;
   final String lastName;
   final DocumentType documentType;
@@ -46,16 +54,16 @@ class Guest {
   final String? email;
   final String? address;
   final String country;
-  final DateTime checkInDate;
-  final DateTime checkOutDate;
-  final String roomNumber;
   final String? wifiPassword;
   final String accessCode;
   final GuestStatus status;
   final DateTime createdAt;
+  final StaySummary stay;
+  final List<GuestOrderSummary> orders;
 
   const Guest({
     required this.id,
+    required this.stayId,
     required this.firstName,
     required this.lastName,
     required this.documentType,
@@ -67,20 +75,24 @@ class Guest {
     this.email,
     this.address,
     required this.country,
-    required this.checkInDate,
-    required this.checkOutDate,
-    required this.roomNumber,
     this.wifiPassword,
     required this.accessCode,
     required this.status,
     required this.createdAt,
+    required this.stay,
+    this.orders = const [],
   });
 
   String get fullName => '$firstName $lastName';
+  String get roomNumber => stay.roomNumber;
+  DateTime get checkInDate => stay.checkInDate;
+  DateTime get checkOutDate => stay.checkOutDate;
 
   factory Guest.fromJson(Map<String, dynamic> json) {
+    final rawOrders = json['orders'] as List<dynamic>?;
     return Guest(
       id: json['id'] as String,
+      stayId: json['stayId'] as String,
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,
       documentType: DocumentType.fromString(json['documentType'] as String),
@@ -92,20 +104,23 @@ class Guest {
       email: json['email'] as String?,
       address: json['address'] as String?,
       country: json['country'] as String,
-      checkInDate: DateTime.parse(json['checkInDate'] as String),
-      checkOutDate: DateTime.parse(json['checkOutDate'] as String),
-      roomNumber: json['roomNumber'] as String,
       wifiPassword: json['wifiPassword'] as String?,
       accessCode: json['accessCode'] as String,
       status: GuestStatus.fromString(json['status'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      stay: StaySummary.fromJson(json['stay'] as Map<String, dynamic>),
+      orders: rawOrders == null
+          ? const []
+          : rawOrders.map((raw) => GuestOrderSummary.fromJson(raw as Map<String, dynamic>)).toList(),
     );
   }
 }
 
 /// Dados do formulário de cadastro — sem `id`/`accessCode`/`status`, que só
-/// existem depois que a API cria o hóspede.
+/// existem depois que a API cria o hóspede. `stayId` referencia a estadia
+/// (quarto) já criada onde esse hóspede vai entrar.
 class NewGuestInput {
+  final String stayId;
   final String firstName;
   final String lastName;
   final DocumentType documentType;
@@ -117,12 +132,10 @@ class NewGuestInput {
   final String? email;
   final String? address;
   final String country;
-  final DateTime checkInDate;
-  final DateTime checkOutDate;
-  final String roomNumber;
   final String? wifiPassword;
 
   const NewGuestInput({
+    required this.stayId,
     required this.firstName,
     required this.lastName,
     required this.documentType,
@@ -134,14 +147,12 @@ class NewGuestInput {
     this.email,
     this.address,
     required this.country,
-    required this.checkInDate,
-    required this.checkOutDate,
-    required this.roomNumber,
     this.wifiPassword,
   });
 
   Map<String, dynamic> toJson() {
     return {
+      'stayId': stayId,
       'firstName': firstName,
       'lastName': lastName,
       'documentType': documentType.name,
@@ -153,9 +164,6 @@ class NewGuestInput {
       if (email != null) 'email': email,
       if (address != null) 'address': address,
       'country': country,
-      'checkInDate': checkInDate.toIso8601String(),
-      'checkOutDate': checkOutDate.toIso8601String(),
-      'roomNumber': roomNumber,
       if (wifiPassword != null) 'wifiPassword': wifiPassword,
     };
   }

@@ -5,8 +5,11 @@ import 'package:intl_phone_field/phone_number.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
 import 'package:konekto_portal/data/guests_repository.dart';
+import 'package:konekto_portal/data/stays_repository.dart';
+import 'package:konekto_portal/features/guests/guest_detail_page.dart';
 import 'package:konekto_portal/guest_app_config.dart';
 import 'package:konekto_portal/models/guest.dart';
+import 'package:konekto_portal/models/stay.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
 
 void _copyToClipboard(BuildContext context, String value) {
@@ -25,9 +28,52 @@ String _formatDate(DateTime date) {
   return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 }
 
-/// Tela "Hóspedes" — cadastro completo (documento, contato, estadia),
-/// gera um código individual e permite revogar acesso. Disponível pra
-/// `gerente` e `recepcao` (diferente de Configurações).
+/// Dados pessoais coletados pelo formulário — sem `stayId`, resolvido
+/// separadamente (quarto novo ou existente) antes de criar o hóspede.
+class _GuestPersonalInput {
+  final String firstName;
+  final String lastName;
+  final DocumentType documentType;
+  final String documentNumber;
+  final String phoneCountryCode;
+  final String phoneNumber;
+  final String? whatsappCountryCode;
+  final String? whatsappNumber;
+  final String? email;
+  final String? address;
+  final String country;
+  final String? wifiPassword;
+
+  const _GuestPersonalInput({
+    required this.firstName,
+    required this.lastName,
+    required this.documentType,
+    required this.documentNumber,
+    required this.phoneCountryCode,
+    required this.phoneNumber,
+    this.whatsappCountryCode,
+    this.whatsappNumber,
+    this.email,
+    this.address,
+    required this.country,
+    this.wifiPassword,
+  });
+}
+
+class _GuestFormResult {
+  final _GuestPersonalInput personal;
+  final String? existingStayId;
+  final NewStayInput? newStay;
+
+  const _GuestFormResult({required this.personal, this.existingStayId, this.newStay});
+}
+
+/// Tela "Hóspedes" — lista plana de todas as pessoas cadastradas (de
+/// qualquer quarto), cada uma com seu código individual. Criar um hóspede
+/// vincula (ou cria na hora) o quarto/estadia dele — ver `_GuestFormDialog`.
+/// Tocar numa linha abre a página de detalhe completa (substitui o modal
+/// antigo). Gestão por quarto (vários hóspedes, avisos, fechar conta) fica
+/// na tela "Quartos".
 class GuestsPage extends StatefulWidget {
   final StaffSession session;
   final AuthRepository authRepository;
@@ -44,6 +90,7 @@ class GuestsPage extends StatefulWidget {
 
 class _GuestsPageState extends State<GuestsPage> {
   final _repository = GuestsRepository();
+  final _staysRepository = StaysRepository();
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -89,20 +136,56 @@ class _GuestsPageState extends State<GuestsPage> {
   }
 
   Future<void> _createGuest() async {
-    final input = await showDialog<NewGuestInput>(
-      context: context,
-      builder: (context) => const _GuestFormDialog(),
-    );
-    if (input == null) return;
-
     final token = await _requireToken();
     if (token == null) return;
 
+    List<Stay> activeStays;
     try {
+      final stays = await _staysRepository.listStays(hotelId: widget.session.hotelId, token: token);
+      activeStays = stays.where((stay) => stay.status == StayStatus.active).toList();
+    } on StateError catch (error) {
+      setState(() => _errorMessage = error.message);
+      return;
+    }
+
+    if (!mounted) return;
+    final result = await showDialog<_GuestFormResult>(
+      context: context,
+      builder: (context) => _GuestFormDialog(activeStays: activeStays),
+    );
+    if (result == null) return;
+
+    try {
+      String stayId;
+      if (result.newStay != null) {
+        final stay = await _staysRepository.createStay(
+          hotelId: widget.session.hotelId,
+          token: token,
+          input: result.newStay!,
+        );
+        stayId = stay.id;
+      } else {
+        stayId = result.existingStayId!;
+      }
+
       final guest = await _repository.createGuest(
         hotelId: widget.session.hotelId,
         token: token,
-        input: input,
+        input: NewGuestInput(
+          stayId: stayId,
+          firstName: result.personal.firstName,
+          lastName: result.personal.lastName,
+          documentType: result.personal.documentType,
+          documentNumber: result.personal.documentNumber,
+          phoneCountryCode: result.personal.phoneCountryCode,
+          phoneNumber: result.personal.phoneNumber,
+          whatsappCountryCode: result.personal.whatsappCountryCode,
+          whatsappNumber: result.personal.whatsappNumber,
+          email: result.personal.email,
+          address: result.personal.address,
+          country: result.personal.country,
+          wifiPassword: result.personal.wifiPassword,
+        ),
       );
       await _load();
       if (mounted) await _showAccessCodeDialog(guest);
@@ -204,104 +287,17 @@ class _GuestsPageState extends State<GuestsPage> {
     );
   }
 
-  Future<void> _showGuestDetails(Guest guest) {
-    return showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: KonektoBrand.surface,
-        title: Text(guest.fullName, style: KonektoBrand.display(fontSize: 16)),
-        content: SizedBox(
-          width: 420,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _DetailLine(
-                  label: 'Documento',
-                  value:
-                      '${guest.documentType.label} · ${guest.documentNumber}',
-                ),
-                _DetailLine(
-                  label: 'Telefone',
-                  value: '${guest.phoneCountryCode} ${guest.phoneNumber}',
-                ),
-                if (guest.whatsappNumber != null)
-                  _DetailLine(
-                    label: 'WhatsApp',
-                    value:
-                        '${guest.whatsappCountryCode} ${guest.whatsappNumber}',
-                  ),
-                if (guest.email != null)
-                  _DetailLine(label: 'E-mail', value: guest.email!),
-                if (guest.address != null)
-                  _DetailLine(label: 'Endereço', value: guest.address!),
-                _DetailLine(label: 'País', value: guest.country),
-                _DetailLine(label: 'Quarto', value: guest.roomNumber),
-                _DetailLine(
-                  label: 'Estadia',
-                  value:
-                      '${_formatDate(guest.checkInDate)} até ${_formatDate(guest.checkOutDate)}',
-                ),
-                _DetailLine(
-                  label: 'Senha de wifi',
-                  value: guest.wifiPassword ?? 'Padrão do hotel',
-                ),
-                _DetailLine(label: 'Código de acesso', value: guest.accessCode),
-              ],
-            ),
-          ),
+  Future<void> _openGuestDetail(Guest guest) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GuestDetailPage(
+          session: widget.session,
+          authRepository: widget.authRepository,
+          guestId: guest.id,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Fechar'),
-          ),
-        ],
       ),
     );
-  }
-
-  Future<void> _revokeGuest(Guest guest) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: KonektoBrand.surface,
-        title: Text(
-          'Revogar acesso?',
-          style: KonektoBrand.display(fontSize: 16),
-        ),
-        content: Text(
-          '"${guest.fullName}" (quarto ${guest.roomNumber}) não vai mais conseguir entrar no app com esse código.',
-          style: KonektoBrand.body(fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Revogar'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    final token = await _requireToken();
-    if (token == null) return;
-
-    try {
-      await _repository.revokeGuest(
-        hotelId: widget.session.hotelId,
-        guestId: guest.id,
-        token: token,
-      );
-      await _load();
-    } on StateError catch (error) {
-      setState(() => _errorMessage = error.message);
-    }
+    await _load();
   }
 
   @override
@@ -343,7 +339,7 @@ class _GuestsPageState extends State<GuestsPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Cada hóspede recebe um código individual pra entrar no app — sem senha, sem cadastro.',
+            'Cada hóspede recebe um código individual pra entrar no app — sem senha, sem cadastro. Vários hóspedes do mesmo quarto ficam agrupados na aba Quartos.',
             style: KonektoBrand.body(fontSize: 12.5),
           ),
           const SizedBox(height: 20),
@@ -396,8 +392,7 @@ class _GuestsPageState extends State<GuestsPage> {
                       ),
                     _GuestRow(
                       guest: guest,
-                      onRevoke: () => _revokeGuest(guest),
-                      onTap: () => _showGuestDetails(guest),
+                      onTap: () => _openGuestDetail(guest),
                     ),
                   ],
                 ],
@@ -409,46 +404,12 @@ class _GuestsPageState extends State<GuestsPage> {
   }
 }
 
-class _DetailLine extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _DetailLine({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: KonektoBrand.body(fontSize: 13, color: KonektoBrand.cream),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _GuestRow extends StatelessWidget {
   final Guest guest;
-  final VoidCallback onRevoke;
   final VoidCallback onTap;
 
   const _GuestRow({
     required this.guest,
-    required this.onRevoke,
     required this.onTap,
   });
 
@@ -503,18 +464,8 @@ class _GuestRow extends StatelessWidget {
                 ),
               ),
             ),
-            if (isActive) ...[
-              const SizedBox(width: 8),
-              IconButton(
-                tooltip: 'Revogar acesso',
-                icon: const Icon(
-                  Icons.block,
-                  size: 18,
-                  color: KonektoBrand.slate,
-                ),
-                onPressed: onRevoke,
-              ),
-            ],
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right, size: 18, color: KonektoBrand.slate),
           ],
         ),
       ),
@@ -523,11 +474,17 @@ class _GuestRow extends StatelessWidget {
 }
 
 class _GuestFormDialog extends StatefulWidget {
-  const _GuestFormDialog();
+  final List<Stay> activeStays;
+
+  const _GuestFormDialog({required this.activeStays});
 
   @override
   State<_GuestFormDialog> createState() => _GuestFormDialogState();
 }
+
+/// Sentinela pro item "Novo quarto" no dropdown de estadias — distinto de
+/// qualquer `Stay.id` real.
+const _newStaySentinel = '__new_stay__';
 
 class _GuestFormDialogState extends State<_GuestFormDialog> {
   final _firstNameController = TextEditingController();
@@ -546,6 +503,13 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
   DateTime? _checkInDate;
   DateTime? _checkOutDate;
   String? _errorMessage;
+  late String _selectedStayId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedStayId = widget.activeStays.isEmpty ? _newStaySentinel : widget.activeStays.first.id;
+  }
 
   @override
   void dispose() {
@@ -585,8 +549,9 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
     final lastName = _lastNameController.text.trim();
     final documentNumber = _documentNumberController.text.trim();
     final country = _countryController.text.trim();
-    final roomNumber = _roomController.text.trim();
     final phone = _phone;
+    final isNewStay = _selectedStayId == _newStaySentinel;
+    final roomNumber = _roomController.text.trim();
     final checkInDate = _checkInDate;
     final checkOutDate = _checkOutDate;
 
@@ -594,20 +559,21 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
         lastName.isEmpty ||
         documentNumber.isEmpty ||
         country.isEmpty ||
-        roomNumber.isEmpty ||
-        phone == null ||
-        checkInDate == null ||
-        checkOutDate == null) {
+        phone == null) {
       setState(
-        () => _errorMessage =
-            'Preencha nome, sobrenome, documento, telefone, país, quarto e as datas de estadia.',
+        () => _errorMessage = 'Preencha nome, sobrenome, documento, telefone e país.',
       );
       return;
     }
-    if (checkOutDate.isBefore(checkInDate)) {
+    if (isNewStay && (roomNumber.isEmpty || checkInDate == null || checkOutDate == null)) {
       setState(
-        () => _errorMessage =
-            'A data de saída não pode ser antes da data de entrada.',
+        () => _errorMessage = 'Preencha o número do quarto e as datas de estadia.',
+      );
+      return;
+    }
+    if (isNewStay && checkOutDate!.isBefore(checkInDate!)) {
+      setState(
+        () => _errorMessage = 'A data de saída não pode ser antes da data de entrada.',
       );
       return;
     }
@@ -617,29 +583,34 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
     final address = _addressController.text.trim();
     final wifiPassword = _wifiPasswordController.text.trim();
 
+    final personal = _GuestPersonalInput(
+      firstName: firstName,
+      lastName: lastName,
+      documentType: _documentType,
+      documentNumber: documentNumber,
+      phoneCountryCode: phone.countryCode,
+      phoneNumber: phone.number,
+      whatsappCountryCode: whatsapp?.countryCode,
+      whatsappNumber: whatsapp?.number,
+      email: email.isEmpty ? null : email,
+      address: address.isEmpty ? null : address,
+      country: country,
+      wifiPassword: wifiPassword.isEmpty ? null : wifiPassword,
+    );
+
     Navigator.of(context).pop(
-      NewGuestInput(
-        firstName: firstName,
-        lastName: lastName,
-        documentType: _documentType,
-        documentNumber: documentNumber,
-        phoneCountryCode: phone.countryCode,
-        phoneNumber: phone.number,
-        whatsappCountryCode: whatsapp?.countryCode,
-        whatsappNumber: whatsapp?.number,
-        email: email.isEmpty ? null : email,
-        address: address.isEmpty ? null : address,
-        country: country,
-        checkInDate: checkInDate,
-        checkOutDate: checkOutDate,
-        roomNumber: roomNumber,
-        wifiPassword: wifiPassword.isEmpty ? null : wifiPassword,
-      ),
+      isNewStay
+          ? _GuestFormResult(
+              personal: personal,
+              newStay: NewStayInput(roomNumber: roomNumber, checkInDate: checkInDate!, checkOutDate: checkOutDate!),
+            )
+          : _GuestFormResult(personal: personal, existingStayId: _selectedStayId),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isNewStay = _selectedStayId == _newStaySentinel;
     return AlertDialog(
       backgroundColor: KonektoBrand.surface,
       title: Text('Criar hóspede', style: KonektoBrand.display(fontSize: 16)),
@@ -671,6 +642,28 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
                 ),
                 const SizedBox(height: 14),
               ],
+              DropdownButtonFormField<String>(
+                initialValue: _selectedStayId,
+                dropdownColor: KonektoBrand.surface,
+                style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                decoration: InputDecoration(
+                  labelText: 'Quarto',
+                  labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                  isDense: true,
+                  enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
+                  focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+                ),
+                items: [
+                  for (final stay in widget.activeStays)
+                    DropdownMenuItem(
+                      value: stay.id,
+                      child: Text('Quarto ${stay.roomNumber} (${stay.guests.length} hóspede${stay.guests.length == 1 ? '' : 's'})'),
+                    ),
+                  const DropdownMenuItem(value: _newStaySentinel, child: Text('+ Novo quarto')),
+                ],
+                onChanged: (value) => setState(() => _selectedStayId = value ?? _newStaySentinel),
+              ),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -824,43 +817,37 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
                 controller: _addressController,
               ),
               const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _FormField(
-                      label: 'País',
-                      controller: _countryController,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _FormField(
-                      label: 'Número do quarto',
-                      controller: _roomController,
-                    ),
-                  ),
-                ],
+              _FormField(
+                label: 'País',
+                controller: _countryController,
               ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _DatePickerField(
-                      label: 'Check-in',
-                      date: _checkInDate,
-                      onTap: () => _pickDate(isCheckIn: true),
+              if (isNewStay) ...[
+                const SizedBox(height: 10),
+                _FormField(
+                  label: 'Número do quarto',
+                  controller: _roomController,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _DatePickerField(
+                        label: 'Check-in',
+                        date: _checkInDate,
+                        onTap: () => _pickDate(isCheckIn: true),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _DatePickerField(
-                      label: 'Check-out',
-                      date: _checkOutDate,
-                      onTap: () => _pickDate(isCheckIn: false),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _DatePickerField(
+                        label: 'Check-out',
+                        date: _checkOutDate,
+                        onTap: () => _pickDate(isCheckIn: false),
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 10),
               _FormField(
                 label: 'Senha de wifi (opcional — vazio usa a padrão do hotel)',

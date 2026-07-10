@@ -28,8 +28,6 @@ class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
 
   String get _hotelId => widget.tenantConfig['id'] ?? 'hotel_1';
 
-  String _assetPath(String fileName) => 'assets/tenant_assets/hotels/$_hotelId/images/${widget.serviceId}/$fileName';
-
   @override
   void initState() {
     super.initState();
@@ -99,7 +97,7 @@ class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
                             final item = service.items[index];
                             return _ItemCard(
                               item: item,
-                              assetPathBuilder: _assetPath,
+                              hotelId: _hotelId,
                               fontFamily: fontFamily,
                               primaryColor: primaryColor,
                               bodyTextColor: bodyTextColor,
@@ -113,8 +111,9 @@ class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
                                       tenantConfig: widget.tenantConfig,
                                       serviceId: widget.serviceId,
                                       serviceName: service.name,
+                                      isRoomService: service.isRoomService,
                                       item: item,
-                                      assetPathBuilder: _assetPath,
+                                      hotelId: _hotelId,
                                     ),
                                   ),
                                 );
@@ -134,7 +133,7 @@ class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
 
 class _ItemCard extends StatelessWidget {
   final ServiceItem item;
-  final String Function(String) assetPathBuilder;
+  final String hotelId;
   final String fontFamily;
   final Color primaryColor;
   final Color bodyTextColor;
@@ -144,7 +143,7 @@ class _ItemCard extends StatelessWidget {
 
   const _ItemCard({
     required this.item,
-    required this.assetPathBuilder,
+    required this.hotelId,
     required this.fontFamily,
     required this.primaryColor,
     required this.bodyTextColor,
@@ -171,7 +170,7 @@ class _ItemCard extends StatelessWidget {
           children: [
             TenantImage(
               imageUrl: item.imageUrl,
-              assetPathBuilder: assetPathBuilder,
+              hotelId: hotelId,
               height: 68,
               width: 68,
               fit: BoxFit.cover,

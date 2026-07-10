@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:konekto/app/tenants/booking_sheet.dart';
+import 'package:konekto/app/tenants/order_quantity_note_sheet.dart';
 import 'package:konekto/app/tenants/services_page.dart' show hexToColor;
 import 'package:konekto/data/guest_claim_repository.dart';
 import 'package:konekto/data/orders_repository.dart';
@@ -10,9 +12,15 @@ import 'package:konekto/widgets/tenant_image.dart';
 /// (room_service_detail, spa_detail, restaurant_detail, event_detail,
 /// passeios_detail) por uma única tela genérica.
 ///
-/// `item.price != null` → mostra preço e um botão "Adicionar ao pedido".
-/// `item.price == null` → item não é comprável (evento/passeio/reserva) e
-/// mostra "Solicitar" no lugar.
+/// Dois fluxos de confirmação, escolhidos por [isRoomService]:
+/// - **Serviço de Quarto**: [showOrderQuantityNoteSheet] (quantidade +
+///   observação) — `item.price != null` mostra "Adicionar ao pedido",
+///   `item.price == null` mostra "Solicitar".
+/// - **Todo o resto** (restaurantes, spa, eventos, passeios):
+///   [showBookingSheet] (dia + horário) — botão sempre "Reservar". O
+///   seletor de "pessoa alocada no quarto" ainda não existe aqui — depende
+///   da entidade Stay (reserva de quarto), planejada pra depois; por
+///   enquanto a reserva sempre fica em nome de quem está logado.
 ///
 /// Pedido real: faz um `POST /api/orders` de verdade usando o guest token
 /// salvo em `GuestClaimRepository`. Só cai no SnackBar de simulação no modo
@@ -23,16 +31,18 @@ class ServiceItemDetailPage extends StatefulWidget {
   final Map<String, dynamic> tenantConfig;
   final String serviceId;
   final String serviceName;
+  final bool isRoomService;
   final ServiceItem item;
-  final String Function(String) assetPathBuilder;
+  final String hotelId;
 
   const ServiceItemDetailPage({
     super.key,
     required this.tenantConfig,
     required this.serviceId,
     required this.serviceName,
+    required this.isRoomService,
     required this.item,
-    required this.assetPathBuilder,
+    required this.hotelId,
   });
 
   @override
@@ -48,32 +58,94 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
   ServiceItem get item => widget.item;
 
   Future<void> _confirm(BuildContext context) async {
+    if (widget.isRoomService) {
+      await _confirmOrder(context);
+    } else {
+      await _confirmBooking(context);
+    }
+  }
+
+  Future<void> _confirmOrder(BuildContext context) async {
     final String fontFamily = tenantConfig['typography']['fontFamily'];
     final Color primaryColor = hexToColor(tenantConfig['colorPalette']['primary']);
+    final Color backgroundColor = hexToColor(tenantConfig['colorPalette']['background']);
+    final Color bodyTextColor = hexToColor(tenantConfig['typography']['bodyText']['color']);
     final bool isPurchasable = item.price != null;
+
+    final result = await showOrderQuantityNoteSheet(
+      context,
+      itemName: item.name,
+      fontFamily: fontFamily,
+      primaryColor: primaryColor,
+      backgroundColor: backgroundColor,
+      bodyTextColor: bodyTextColor,
+      confirmLabel: isPurchasable ? 'Adicionar ao pedido' : 'Solicitar',
+    );
+    if (result == null) return;
+    if (!context.mounted) return;
+
+    await _submitOrder(
+      context,
+      quantity: result.quantity,
+      note: result.note,
+      successMessage: isPurchasable ? 'Pedido enviado! A recepção foi notificada.' : 'Solicitação enviada! A recepção entrará em contato.',
+    );
+  }
+
+  Future<void> _confirmBooking(BuildContext context) async {
+    final String fontFamily = tenantConfig['typography']['fontFamily'];
+    final Color primaryColor = hexToColor(tenantConfig['colorPalette']['primary']);
+    final Color backgroundColor = hexToColor(tenantConfig['colorPalette']['background']);
+    final Color bodyTextColor = hexToColor(tenantConfig['typography']['bodyText']['color']);
+
+    final result = await showBookingSheet(
+      context,
+      itemName: item.name,
+      fontFamily: fontFamily,
+      primaryColor: primaryColor,
+      backgroundColor: backgroundColor,
+      bodyTextColor: bodyTextColor,
+    );
+    if (result == null) return;
+    if (!context.mounted) return;
+
+    await _submitOrder(
+      context,
+      quantity: 1,
+      scheduledFor: result.dateTime,
+      successMessage: 'Reserva confirmada! A recepção foi notificada.',
+    );
+  }
+
+  Future<void> _submitOrder(
+    BuildContext context, {
+    required int quantity,
+    String? note,
+    DateTime? scheduledFor,
+    required String successMessage,
+  }) async {
+    final String fontFamily = tenantConfig['typography']['fontFamily'];
+    final Color primaryColor = hexToColor(tenantConfig['colorPalette']['primary']);
 
     final guestToken = await _guestClaimRepository.getStoredToken();
     if (guestToken == null) {
       if (!context.mounted) return;
-      _showSnackBar(
-        context,
-        message: isPurchasable ? 'Pedido enviado! A recepção foi notificada.' : 'Solicitação enviada! A recepção entrará em contato.',
-        fontFamily: fontFamily,
-        color: primaryColor,
-      );
+      _showSnackBar(context, message: successMessage, fontFamily: fontFamily, color: primaryColor);
       return;
     }
 
     setState(() => _isSubmitting = true);
     try {
-      await _ordersRepository.createOrder(serviceId: widget.serviceId, serviceItemId: item.id, token: guestToken);
-      if (!context.mounted) return;
-      _showSnackBar(
-        context,
-        message: isPurchasable ? 'Pedido enviado! A recepção foi notificada.' : 'Solicitação enviada! A recepção entrará em contato.',
-        fontFamily: fontFamily,
-        color: primaryColor,
+      await _ordersRepository.createOrder(
+        serviceId: widget.serviceId,
+        serviceItemId: item.id,
+        token: guestToken,
+        quantity: quantity,
+        note: note,
+        scheduledFor: scheduledFor,
       );
+      if (!context.mounted) return;
+      _showSnackBar(context, message: successMessage, fontFamily: fontFamily, color: primaryColor);
     } on StateError catch (error) {
       if (!context.mounted) return;
       _showSnackBar(context, message: error.message, fontFamily: fontFamily, color: Colors.red.shade700);
@@ -115,7 +187,7 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
                   ),
                   child: TenantImage(
                     imageUrl: item.imageUrl,
-                    assetPathBuilder: widget.assetPathBuilder,
+                    hotelId: widget.hotelId,
                     height: 240,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -182,9 +254,14 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
                       onPressed: _isSubmitting ? null : () => _confirm(context),
                       icon: _isSubmitting
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : Icon(isPurchasable ? Icons.shopping_cart : Icons.event_available_outlined, size: 22),
+                          : Icon(
+                              widget.isRoomService
+                                  ? (isPurchasable ? Icons.shopping_cart : Icons.event_available_outlined)
+                                  : Icons.calendar_month_outlined,
+                              size: 22,
+                            ),
                       label: Text(
-                        isPurchasable ? 'Adicionar ao pedido' : 'Solicitar',
+                        widget.isRoomService ? (isPurchasable ? 'Adicionar ao pedido' : 'Solicitar') : 'Reservar',
                         style: GoogleFonts.getFont(fontFamily, fontSize: 16),
                       ),
                       style: ElevatedButton.styleFrom(

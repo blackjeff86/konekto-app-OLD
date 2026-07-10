@@ -41,6 +41,7 @@ class ServiceItem {
 class Service {
   final String id;
   final String name;
+  final String slug;
   final String icon;
   final String description;
   final String? bannerImageUrl;
@@ -49,17 +50,26 @@ class Service {
   const Service({
     required this.id,
     required this.name,
+    required this.slug,
     required this.icon,
     required this.description,
     this.bannerImageUrl,
     this.items = const [],
   });
 
+  /// Room Service é o único serviço com pedido "direto" (quantidade +
+  /// observação) — todo o resto (restaurantes, spa, eventos, passeios) usa o
+  /// fluxo de agendamento (dia + horário). Comparado pelo `slug` (estável e
+  /// exclusivo do Room Service), não pelo `icon` (reaproveitado por vários
+  /// serviços, ex: os 3 restaurantes usam o mesmo ícone).
+  bool get isRoomService => slug == 'room-service';
+
   factory Service.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List<dynamic>?;
     return Service(
       id: json['id'] as String,
       name: json['name'] as String,
+      slug: json['slug'] as String,
       icon: json['icon'] as String,
       description: json['description'] as String? ?? '',
       bannerImageUrl: json['bannerImageUrl'] as String?,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:konekto/app/tenants/my_orders_page.dart';
+import 'package:konekto/app/tenants/notices_page.dart';
 import 'package:konekto/app/tenants/services_page.dart';
 import 'package:konekto/data/tenant_repository.dart';
 import 'package:konekto/data/tenant_repository_provider.dart';
@@ -315,6 +317,25 @@ class TenantHomeBody extends StatelessWidget {
                       ),
                     ),
                   ),
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => NoticesPage(tenantConfig: tenantConfig)),
+                    ),
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(color: primaryColor.withValues(alpha: 0.16), blurRadius: 12, offset: const Offset(0, 4)),
+                        ],
+                      ),
+                      child: Icon(Icons.notifications_outlined, color: primaryColor),
+                    ),
+                  ),
                   Container(
                     width: 48,
                     height: 48,
@@ -385,6 +406,12 @@ class TenantHomeBody extends StatelessWidget {
                     cardStyle: quickServicesConfig['card']['style'],
                     titleStyle: quickServicesConfig['card']['titleStyle'],
                     iconStyle: quickServicesConfig['card']['iconStyle'],
+                    onTap: card['route'] == 'room_service'
+                        ? () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => MyOrdersPage(tenantConfig: tenantConfig)),
+                            )
+                        : null,
                   );
                 }),
               ),
@@ -406,6 +433,7 @@ class TenantHomeBody extends StatelessWidget {
     required Map<String, dynamic> cardStyle,
     required Map<String, dynamic> titleStyle,
     required Map<String, dynamic> iconStyle,
+    VoidCallback? onTap,
   }) {
     final icon = iconMapping[iconName] ?? Icons.error;
     final fontFamily = tenantConfig['typography']['fontFamily'];
@@ -416,44 +444,47 @@ class TenantHomeBody extends StatelessWidget {
 
     final double iconSize = iconStyle['size']?.toDouble() ?? 24;
 
-    return Container(
-      width: (MediaQuery.of(context).size.width - 32 - 24) / 2,
-      height: cardStyle['height']?.toDouble() ?? 132,
-      padding: EdgeInsets.all(cardStyle['padding']?.toDouble() ?? 16),
-      decoration: BoxDecoration(
-        color: cardBackgroundColor,
-        border: Border.all(color: cardBorderColor.withValues(alpha: 0.5)),
-        borderRadius: BorderRadius.circular(cardStyle['borderRadius']?.toDouble() ?? 8),
-        boxShadow: [
-          BoxShadow(color: iconColor.withValues(alpha: 0.10), blurRadius: 16, offset: const Offset(0, 8)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: iconSize + 20,
-            height: iconSize + 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: iconColor.withValues(alpha: 0.10),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: (MediaQuery.of(context).size.width - 32 - 24) / 2,
+        height: cardStyle['height']?.toDouble() ?? 132,
+        padding: EdgeInsets.all(cardStyle['padding']?.toDouble() ?? 16),
+        decoration: BoxDecoration(
+          color: cardBackgroundColor,
+          border: Border.all(color: cardBorderColor.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(cardStyle['borderRadius']?.toDouble() ?? 8),
+          boxShadow: [
+            BoxShadow(color: iconColor.withValues(alpha: 0.10), blurRadius: 16, offset: const Offset(0, 8)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: iconSize + 20,
+              height: iconSize + 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: iconColor.withValues(alpha: 0.10),
+              ),
+              child: Icon(icon, color: iconColor, size: iconSize),
             ),
-            child: Icon(icon, color: iconColor, size: iconSize),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.getFont(
-              fontFamily,
-              fontSize: titleStyle['size']?.toDouble() ?? 16,
-              fontWeight: _getFontWeight(titleStyle['weight']),
-              color: titleColor,
+            const SizedBox(height: 10),
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.getFont(
+                fontFamily,
+                fontSize: titleStyle['size']?.toDouble() ?? 16,
+                fontWeight: _getFontWeight(titleStyle['weight']),
+                color: titleColor,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

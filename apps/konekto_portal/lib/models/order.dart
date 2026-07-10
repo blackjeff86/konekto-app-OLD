@@ -37,6 +37,8 @@ class Order {
   final int quantity;
   final double? price;
   final OrderStatus status;
+  final String? note;
+  final DateTime? scheduledFor;
   final String guestName;
   final String guestRoomNumber;
   final DateTime createdAt;
@@ -47,6 +49,8 @@ class Order {
     required this.quantity,
     this.price,
     required this.status,
+    this.note,
+    this.scheduledFor,
     required this.guestName,
     required this.guestRoomNumber,
     required this.createdAt,
@@ -60,6 +64,8 @@ class Order {
       quantity: json['quantity'] as int? ?? 1,
       price: (json['price'] as num?)?.toDouble(),
       status: OrderStatus.fromString(json['status'] as String),
+      note: json['note'] as String?,
+      scheduledFor: json['scheduledFor'] != null ? DateTime.parse(json['scheduledFor'] as String) : null,
       guestName: '${guest['firstName']} ${guest['lastName']}',
       guestRoomNumber: guest['roomNumber'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),

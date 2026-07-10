@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 
 /// Carrega a imagem de um item de catálogo (room service, spa, restaurantes,
 /// eventos, passeios), que pode vir de duas fontes: um asset local
-/// empacotado no app (conteúdo semeado originalmente, `imageUrl` é só um
-/// nome de arquivo relativo) ou uma URL de rede real (itens adicionados
-/// depois pelo portal, que não tem como empacotar um asset local dentro do
-/// app). Decide com base no prefixo da URL.
+/// empacotado no app (conteúdo semeado originalmente, `imageUrl` já é o
+/// caminho completo do asset, ex.
+/// `assets/tenant_assets/hotels/{{tenantId}}/images/spa/massagem.png`) ou uma
+/// URL de rede real (itens adicionados depois pelo portal, que não tem como
+/// empacotar um asset local dentro do app). Decide com base no prefixo da
+/// URL. O placeholder `{{tenantId}}` (deixado por alguns dados semeados) é
+/// substituído pelo [hotelId] real antes de resolver o asset.
 class TenantImage extends StatelessWidget {
   final String? imageUrl;
-  final String Function(String fileName) assetPathBuilder;
+  final String hotelId;
   final double? height;
   final double? width;
   final BoxFit fit;
@@ -17,7 +20,7 @@ class TenantImage extends StatelessWidget {
   const TenantImage({
     super.key,
     required this.imageUrl,
-    required this.assetPathBuilder,
+    required this.hotelId,
     this.height,
     this.width,
     this.fit = BoxFit.cover,
@@ -31,21 +34,27 @@ class TenantImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = _isNetworkUrl
-        ? Image.network(
-            imageUrl!,
-            height: height,
-            width: width,
-            fit: fit,
-            errorBuilder: (context, error, stackTrace) => _placeholder(),
-          )
-        : Image.asset(
-            assetPathBuilder(imageUrl?.split('/').last ?? 'placeholder.png'),
-            height: height,
-            width: width,
-            fit: fit,
-            errorBuilder: (context, error, stackTrace) => _placeholder(),
-          );
+    final url = imageUrl;
+    Widget image;
+    if (url == null || url.isEmpty) {
+      image = _placeholder();
+    } else if (_isNetworkUrl) {
+      image = Image.network(
+        url,
+        height: height,
+        width: width,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => _placeholder(),
+      );
+    } else {
+      image = Image.asset(
+        url.replaceAll('{{tenantId}}', hotelId),
+        height: height,
+        width: width,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => _placeholder(),
+      );
+    }
 
     if (borderRadius != null) {
       return ClipRRect(borderRadius: borderRadius!, child: image);

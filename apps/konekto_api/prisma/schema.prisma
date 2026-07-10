@@ -26,6 +26,7 @@ model Hotel {
   staffInvites StaffInvite[]
   guests       Guest[]
   orders       Order[]
+  stays        Stay[]
 
   @@map("hotels")
 }
@@ -84,6 +85,51 @@ model StaffInvite {
   @@map("staff_invites")
 }
 
+enum StayStatus {
+  active
+  closed
+}
+
+/// Reserva de um quarto — agrupa um ou mais hóspedes (marido, esposa,
+/// filhos) sob a mesma estadia. `roomNumber`/`checkInDate`/`checkOutDate`
+/// vivem aqui (não em `Guest`) porque são dados do QUARTO, compartilhados
+/// por todo mundo que está nele; cada `Guest` individual só guarda seus
+/// próprios dados pessoais + código de acesso.
+///
+/// "Fechar a conta" = marcar `status: closed` e revogar (`status: revoked`)
+/// o `accessCode` de todos os `Guest` da estadia de uma vez — feito em
+/// `PATCH /api/hotels/:hotelId/stays/:stayId`.
+model Stay {
+  id           String       @id @default(cuid())
+  hotelId      String
+  roomNumber   String
+  checkInDate  DateTime
+  checkOutDate DateTime
+  status       StayStatus   @default(active)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  hotel        Hotel        @relation(fields: [hotelId], references: [id])
+  guests       Guest[]
+  notices      StayNotice[]
+
+  @@index([hotelId])
+  @@map("stays")
+}
+
+/// Aviso da recepção pra todos os hóspedes de uma estadia — só leitura
+/// (o hóspede visualiza, não responde). Um chat de verdade fica pra uma
+/// fase futura separada.
+model StayNotice {
+  id        String   @id @default(cuid())
+  stayId    String
+  message   String
+  createdAt DateTime @default(now())
+  stay      Stay     @relation(fields: [stayId], references: [id], onDelete: Cascade)
+
+  @@index([stayId])
+  @@map("stay_notices")
+}
+
 enum GuestStatus {
   active
   revoked
@@ -96,10 +142,12 @@ enum DocumentType {
 }
 
 /// Hóspede individual de um hotel — cadastro completo (nome, documento,
-/// contato, estadia), substitui o código único-por-hotel (compartilhado
-/// por qualquer pessoa) por um código pessoal que a recepção pode revogar
-/// no check-out. `status: revoked` em vez de apagar a linha — preserva o
-/// registro pra Pedidos (um pedido referencia um Guest).
+/// contato), sempre vinculado a uma `Stay` (o quarto/estadia que ele
+/// compartilha com o resto da família). Substitui o código único-por-hotel
+/// (compartilhado por qualquer pessoa) por um código pessoal que a
+/// recepção pode revogar no check-out. `status: revoked` em vez de apagar
+/// a linha — preserva o registro pra Pedidos (um pedido referencia um
+/// Guest).
 ///
 /// `accessCode` é prefixado com uma tag derivada do próprio `hotelId` (ex:
 /// "HOTEL1-8F3A2B1C") — puramente pra deixar auditável/visível de qual
@@ -112,6 +160,7 @@ enum DocumentType {
 model Guest {
   id                  String       @id @default(cuid())
   hotelId             String
+  stayId              String
   firstName           String
   lastName            String
   documentType        DocumentType
@@ -123,17 +172,16 @@ model Guest {
   email               String?
   address             String?
   country             String
-  checkInDate         DateTime
-  checkOutDate        DateTime
-  roomNumber          String
   wifiPassword        String?
   accessCode          String       @unique
   status              GuestStatus  @default(active)
   createdAt           DateTime     @default(now())
   hotel               Hotel        @relation(fields: [hotelId], references: [id])
+  stay                Stay         @relation(fields: [stayId], references: [id])
   orders              Order[]
 
   @@index([hotelId])
+  @@index([stayId])
   @@map("guests")
 }
 
@@ -158,6 +206,11 @@ model Order {
   quantity      Int         @default(1)
   price         Float?
   status        OrderStatus @default(pending)
+  note          String?
+  /// Data/hora escolhida pelo hóspede — só preenchido pra itens que passam
+  /// pelo fluxo de agendamento (restaurantes, spa, eventos, passeios).
+  /// `null` pra pedidos de Serviço de Quarto, que não têm horário marcado.
+  scheduledFor  DateTime?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   hotel         Hotel       @relation(fields: [hotelId], references: [id])

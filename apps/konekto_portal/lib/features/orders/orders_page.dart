@@ -150,6 +150,14 @@ class _OrderRow extends StatelessWidget {
 
   const _OrderRow({required this.order, required this.onStatusChange});
 
+  String _formatScheduledFor(DateTime dateTime) {
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$day/$month às $hour:$minute';
+  }
+
   Color _statusColor() {
     return switch (order.status) {
       OrderStatus.pending => KonektoBrand.gold,
@@ -191,6 +199,20 @@ class _OrderRow extends StatelessWidget {
                   '${order.price != null ? ' · R\$ ${(order.price! * order.quantity).toStringAsFixed(2)}' : ' · Sob consulta'}',
                   style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
                 ),
+                if (order.scheduledFor != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Agendado: ${_formatScheduledFor(order.scheduledFor!)}',
+                    style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.gold, fontWeight: FontWeight.w600),
+                  ),
+                ],
+                if (order.note != null && order.note!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Obs: ${order.note}',
+                    style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.gold).copyWith(fontStyle: FontStyle.italic),
+                  ),
+                ],
               ],
             ),
           ),
