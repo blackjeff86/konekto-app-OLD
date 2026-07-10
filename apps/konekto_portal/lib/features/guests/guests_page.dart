@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
 import 'package:konekto_portal/data/guests_repository.dart';
@@ -12,7 +11,9 @@ import 'package:konekto_portal/theme/konekto_brand.dart';
 
 void _copyToClipboard(BuildContext context, String value) {
   Clipboard.setData(ClipboardData(text: value));
-  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copiado.')));
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(const SnackBar(content: Text('Copiado.')));
 }
 
 String _inviteMessage(Guest guest) {
@@ -31,7 +32,11 @@ class GuestsPage extends StatefulWidget {
   final StaffSession session;
   final AuthRepository authRepository;
 
-  const GuestsPage({super.key, required this.session, required this.authRepository});
+  const GuestsPage({
+    super.key,
+    required this.session,
+    required this.authRepository,
+  });
 
   @override
   State<GuestsPage> createState() => _GuestsPageState();
@@ -53,7 +58,9 @@ class _GuestsPageState extends State<GuestsPage> {
   Future<String?> _requireToken() async {
     final token = await widget.authRepository.getStoredToken();
     if (token == null) {
-      setState(() => _errorMessage = 'Sessão expirada — saia e entre novamente.');
+      setState(
+        () => _errorMessage = 'Sessão expirada — saia e entre novamente.',
+      );
     }
     return token;
   }
@@ -69,7 +76,10 @@ class _GuestsPageState extends State<GuestsPage> {
       return;
     }
     try {
-      final guests = await _repository.listGuests(hotelId: widget.session.hotelId, token: token);
+      final guests = await _repository.listGuests(
+        hotelId: widget.session.hotelId,
+        token: token,
+      );
       setState(() => _guests = guests);
     } on StateError catch (error) {
       setState(() => _errorMessage = error.message);
@@ -89,7 +99,11 @@ class _GuestsPageState extends State<GuestsPage> {
     if (token == null) return;
 
     try {
-      final guest = await _repository.createGuest(hotelId: widget.session.hotelId, token: token, input: input);
+      final guest = await _repository.createGuest(
+        hotelId: widget.session.hotelId,
+        token: token,
+        input: input,
+      );
       await _load();
       if (mounted) await _showAccessCodeDialog(guest);
     } on StateError catch (error) {
@@ -102,7 +116,10 @@ class _GuestsPageState extends State<GuestsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: KonektoBrand.surface,
-        title: Text('Hóspede criado', style: KonektoBrand.display(fontSize: 16)),
+        title: Text(
+          'Hóspede criado',
+          style: KonektoBrand.display(fontSize: 16),
+        ),
         content: SizedBox(
           width: 380,
           child: Column(
@@ -112,7 +129,10 @@ class _GuestsPageState extends State<GuestsPage> {
               Text('Código de acesso:', style: KonektoBrand.body(fontSize: 13)),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(10),
@@ -123,13 +143,21 @@ class _GuestsPageState extends State<GuestsPage> {
                     Expanded(
                       child: Text(
                         guest.accessCode,
-                        style: KonektoBrand.display(fontSize: 18, color: KonektoBrand.goldLight),
+                        style: KonektoBrand.display(
+                          fontSize: 18,
+                          color: KonektoBrand.goldLight,
+                        ),
                       ),
                     ),
                     IconButton(
                       tooltip: 'Copiar código',
-                      icon: const Icon(Icons.copy_outlined, size: 18, color: KonektoBrand.slate),
-                      onPressed: () => _copyToClipboard(context, guest.accessCode),
+                      icon: const Icon(
+                        Icons.copy_outlined,
+                        size: 18,
+                        color: KonektoBrand.slate,
+                      ),
+                      onPressed: () =>
+                          _copyToClipboard(context, guest.accessCode),
                     ),
                   ],
                 ),
@@ -143,9 +171,20 @@ class _GuestsPageState extends State<GuestsPage> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () => _copyToClipboard(context, _inviteMessage(guest)),
-                  icon: const Icon(Icons.content_copy, size: 16, color: KonektoBrand.goldLight),
-                  label: Text('Copiar mensagem', style: KonektoBrand.body(fontSize: 13, color: KonektoBrand.goldLight)),
+                  onPressed: () =>
+                      _copyToClipboard(context, _inviteMessage(guest)),
+                  icon: const Icon(
+                    Icons.content_copy,
+                    size: 16,
+                    color: KonektoBrand.goldLight,
+                  ),
+                  label: Text(
+                    'Copiar mensagem',
+                    style: KonektoBrand.body(
+                      fontSize: 13,
+                      color: KonektoBrand.goldLight,
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: KonektoBrand.borderStrong),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -156,7 +195,10 @@ class _GuestsPageState extends State<GuestsPage> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Fechar')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Fechar'),
+          ),
         ],
       ),
     );
@@ -175,23 +217,46 @@ class _GuestsPageState extends State<GuestsPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _DetailLine(label: 'Documento', value: '${guest.documentType.label} · ${guest.documentNumber}'),
-                _DetailLine(label: 'Telefone', value: '${guest.phoneCountryCode} ${guest.phoneNumber}'),
+                _DetailLine(
+                  label: 'Documento',
+                  value:
+                      '${guest.documentType.label} · ${guest.documentNumber}',
+                ),
+                _DetailLine(
+                  label: 'Telefone',
+                  value: '${guest.phoneCountryCode} ${guest.phoneNumber}',
+                ),
                 if (guest.whatsappNumber != null)
-                  _DetailLine(label: 'WhatsApp', value: '${guest.whatsappCountryCode} ${guest.whatsappNumber}'),
-                if (guest.email != null) _DetailLine(label: 'E-mail', value: guest.email!),
-                if (guest.address != null) _DetailLine(label: 'Endereço', value: guest.address!),
+                  _DetailLine(
+                    label: 'WhatsApp',
+                    value:
+                        '${guest.whatsappCountryCode} ${guest.whatsappNumber}',
+                  ),
+                if (guest.email != null)
+                  _DetailLine(label: 'E-mail', value: guest.email!),
+                if (guest.address != null)
+                  _DetailLine(label: 'Endereço', value: guest.address!),
                 _DetailLine(label: 'País', value: guest.country),
                 _DetailLine(label: 'Quarto', value: guest.roomNumber),
-                _DetailLine(label: 'Estadia', value: '${_formatDate(guest.checkInDate)} até ${_formatDate(guest.checkOutDate)}'),
-                _DetailLine(label: 'Senha de wifi', value: guest.wifiPassword ?? 'Padrão do hotel'),
+                _DetailLine(
+                  label: 'Estadia',
+                  value:
+                      '${_formatDate(guest.checkInDate)} até ${_formatDate(guest.checkOutDate)}',
+                ),
+                _DetailLine(
+                  label: 'Senha de wifi',
+                  value: guest.wifiPassword ?? 'Padrão do hotel',
+                ),
                 _DetailLine(label: 'Código de acesso', value: guest.accessCode),
               ],
             ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Fechar')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Fechar'),
+          ),
         ],
       ),
     );
@@ -202,14 +267,23 @@ class _GuestsPageState extends State<GuestsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: KonektoBrand.surface,
-        title: Text('Revogar acesso?', style: KonektoBrand.display(fontSize: 16)),
+        title: Text(
+          'Revogar acesso?',
+          style: KonektoBrand.display(fontSize: 16),
+        ),
         content: Text(
           '"${guest.fullName}" (quarto ${guest.roomNumber}) não vai mais conseguir entrar no app com esse código.',
           style: KonektoBrand.body(fontSize: 13),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Revogar')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Revogar'),
+          ),
         ],
       ),
     );
@@ -219,7 +293,11 @@ class _GuestsPageState extends State<GuestsPage> {
     if (token == null) return;
 
     try {
-      await _repository.revokeGuest(hotelId: widget.session.hotelId, guestId: guest.id, token: token);
+      await _repository.revokeGuest(
+        hotelId: widget.session.hotelId,
+        guestId: guest.id,
+        token: token,
+      );
       await _load();
     } on StateError catch (error) {
       setState(() => _errorMessage = error.message);
@@ -229,22 +307,37 @@ class _GuestsPageState extends State<GuestsPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: KonektoBrand.gold));
+      return const Center(
+        child: CircularProgressIndicator(color: KonektoBrand.gold),
+      );
     }
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _ReceptionQrCard(),
-          const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: Text('Hóspedes', style: KonektoBrand.display(fontSize: 18))),
+              Expanded(
+                child: Text(
+                  'Hóspedes',
+                  style: KonektoBrand.display(fontSize: 18),
+                ),
+              ),
               TextButton.icon(
                 onPressed: _createGuest,
-                icon: const Icon(Icons.person_add_alt_1, size: 18, color: KonektoBrand.goldLight),
-                label: Text('Criar hóspede', style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.goldLight)),
+                icon: const Icon(
+                  Icons.person_add_alt_1,
+                  size: 18,
+                  color: KonektoBrand.goldLight,
+                ),
+                label: Text(
+                  'Criar hóspede',
+                  style: KonektoBrand.body(
+                    fontSize: 12.5,
+                    color: KonektoBrand.goldLight,
+                  ),
+                ),
               ),
             ],
           ),
@@ -262,7 +355,13 @@ class _GuestsPageState extends State<GuestsPage> {
                 border: Border.all(color: const Color(0x4DDC2626)),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
+              child: Text(
+                _errorMessage!,
+                style: KonektoBrand.body(
+                  fontSize: 12.5,
+                  color: const Color(0xFFF1A6A0),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -274,7 +373,10 @@ class _GuestsPageState extends State<GuestsPage> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: KonektoBrand.borderStrong),
               ),
-              child: Text('Nenhum hóspede cadastrado ainda.', style: KonektoBrand.body(fontSize: 13.5)),
+              child: Text(
+                'Nenhum hóspede cadastrado ainda.',
+                style: KonektoBrand.body(fontSize: 13.5),
+              ),
             )
           else
             Container(
@@ -287,7 +389,11 @@ class _GuestsPageState extends State<GuestsPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   for (final guest in _guests) ...[
-                    if (guest != _guests.first) const Divider(height: 1, color: KonektoBrand.borderStrong),
+                    if (guest != _guests.first)
+                      const Divider(
+                        height: 1,
+                        color: KonektoBrand.borderStrong,
+                      ),
                     _GuestRow(
                       guest: guest,
                       onRevoke: () => _revokeGuest(guest),
@@ -318,59 +424,16 @@ class _DetailLine extends StatelessWidget {
         children: [
           SizedBox(
             width: 120,
-            child: Text(label, style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
-          ),
-          Expanded(
-            child: Text(value, style: KonektoBrand.body(fontSize: 13, color: KonektoBrand.cream)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// QR code fixo (não muda por hóspede) apontando pro app do hóspede —
-/// pensado pra imprimir e deixar na recepção. Quem escanear só abre o app;
-/// o hóspede ainda digita seu próprio código individual depois.
-class _ReceptionQrCard extends StatelessWidget {
-  const _ReceptionQrCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: KonektoBrand.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: KonektoBrand.borderStrong),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-            child: QrImageView(data: guestAppUrl, size: 72, backgroundColor: Colors.white),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('QR code de recepção', style: KonektoBrand.body(fontSize: 14, fontWeight: FontWeight.w700, color: KonektoBrand.cream)),
-                const SizedBox(height: 2),
-                Text(
-                  'Imprima e deixe na recepção — o hóspede escaneia, abre o app e digita o código individual dele.',
-                  style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
-                ),
-                const SizedBox(height: 8),
-                Text(guestAppUrl, style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.goldLight)),
-              ],
+            child: Text(
+              label,
+              style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
             ),
           ),
-          IconButton(
-            tooltip: 'Copiar link',
-            icon: const Icon(Icons.copy_outlined, size: 18, color: KonektoBrand.slate),
-            onPressed: () => _copyToClipboard(context, guestAppUrl),
+          Expanded(
+            child: Text(
+              value,
+              style: KonektoBrand.body(fontSize: 13, color: KonektoBrand.cream),
+            ),
           ),
         ],
       ),
@@ -383,7 +446,11 @@ class _GuestRow extends StatelessWidget {
   final VoidCallback onRevoke;
   final VoidCallback onTap;
 
-  const _GuestRow({required this.guest, required this.onRevoke, required this.onTap});
+  const _GuestRow({
+    required this.guest,
+    required this.onRevoke,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -398,11 +465,21 @@ class _GuestRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(guest.fullName, style: KonektoBrand.body(fontSize: 14, fontWeight: FontWeight.w700, color: KonektoBrand.cream)),
+                  Text(
+                    guest.fullName,
+                    style: KonektoBrand.body(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: KonektoBrand.cream,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     'Quarto ${guest.roomNumber}  ·  ${guest.accessCode}  ·  ${_formatDate(guest.checkInDate)}–${_formatDate(guest.checkOutDate)}',
-                    style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                    style: KonektoBrand.body(
+                      fontSize: 12,
+                      color: KonektoBrand.slate,
+                    ),
                   ),
                 ],
               ),
@@ -410,7 +487,9 @@ class _GuestRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: isActive ? KonektoBrand.gold.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.05),
+                color: isActive
+                    ? KonektoBrand.gold.withValues(alpha: 0.12)
+                    : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -418,7 +497,9 @@ class _GuestRow extends StatelessWidget {
                 style: KonektoBrand.body(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: isActive ? KonektoBrand.goldLight : KonektoBrand.slateSoft,
+                  color: isActive
+                      ? KonektoBrand.goldLight
+                      : KonektoBrand.slateSoft,
                 ),
               ),
             ),
@@ -426,7 +507,11 @@ class _GuestRow extends StatelessWidget {
               const SizedBox(width: 8),
               IconButton(
                 tooltip: 'Revogar acesso',
-                icon: const Icon(Icons.block, size: 18, color: KonektoBrand.slate),
+                icon: const Icon(
+                  Icons.block,
+                  size: 18,
+                  color: KonektoBrand.slate,
+                ),
                 onPressed: onRevoke,
               ),
             ],
@@ -479,7 +564,9 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate: isCheckIn ? (_checkInDate ?? now) : (_checkOutDate ?? _checkInDate ?? now),
+      initialDate: isCheckIn
+          ? (_checkInDate ?? now)
+          : (_checkOutDate ?? _checkInDate ?? now),
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 2),
     );
@@ -511,11 +598,17 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
         phone == null ||
         checkInDate == null ||
         checkOutDate == null) {
-      setState(() => _errorMessage = 'Preencha nome, sobrenome, documento, telefone, país, quarto e as datas de estadia.');
+      setState(
+        () => _errorMessage =
+            'Preencha nome, sobrenome, documento, telefone, país, quarto e as datas de estadia.',
+      );
       return;
     }
     if (checkOutDate.isBefore(checkInDate)) {
-      setState(() => _errorMessage = 'A data de saída não pode ser antes da data de entrada.');
+      setState(
+        () => _errorMessage =
+            'A data de saída não pode ser antes da data de entrada.',
+      );
       return;
     }
 
@@ -559,21 +652,40 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
             children: [
               if (_errorMessage != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0x1ADC2626),
                     border: Border.all(color: const Color(0x4DDC2626)),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
+                  child: Text(
+                    _errorMessage!,
+                    style: KonektoBrand.body(
+                      fontSize: 12.5,
+                      color: const Color(0xFFF1A6A0),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 14),
               ],
               Row(
                 children: [
-                  Expanded(child: _FormField(label: 'Nome', controller: _firstNameController)),
+                  Expanded(
+                    child: _FormField(
+                      label: 'Nome',
+                      controller: _firstNameController,
+                    ),
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: _FormField(label: 'Sobrenome', controller: _lastNameController)),
+                  Expanded(
+                    child: _FormField(
+                      label: 'Sobrenome',
+                      controller: _lastNameController,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -585,75 +697,148 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
                     child: DropdownButtonFormField<DocumentType>(
                       initialValue: _documentType,
                       dropdownColor: KonektoBrand.surface,
-                      style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                      style: KonektoBrand.body(
+                        fontSize: 13.5,
+                        color: KonektoBrand.cream,
+                      ),
                       decoration: InputDecoration(
                         labelText: 'Documento',
-                        labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                        labelStyle: KonektoBrand.body(
+                          fontSize: 12,
+                          color: KonektoBrand.slate,
+                        ),
                         isDense: true,
-                        enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
-                        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+                        enabledBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: KonektoBrand.borderStrong,
+                          ),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: KonektoBrand.gold),
+                        ),
                       ),
                       items: [
-                        for (final type in DocumentType.values) DropdownMenuItem(value: type, child: Text(type.label)),
+                        for (final type in DocumentType.values)
+                          DropdownMenuItem(
+                            value: type,
+                            child: Text(type.label),
+                          ),
                       ],
-                      onChanged: (value) => setState(() => _documentType = value ?? _documentType),
+                      onChanged: (value) => setState(
+                        () => _documentType = value ?? _documentType,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(child: _FormField(label: 'Número do documento', controller: _documentNumberController)),
+                  Expanded(
+                    child: _FormField(
+                      label: 'Número do documento',
+                      controller: _documentNumberController,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
               IntlPhoneField(
                 initialCountryCode: 'BR',
-                style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
-                dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                style: KonektoBrand.body(
+                  fontSize: 13.5,
+                  color: KonektoBrand.cream,
+                ),
+                dropdownTextStyle: KonektoBrand.body(
+                  fontSize: 13.5,
+                  color: KonektoBrand.cream,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Telefone',
-                  labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                  labelStyle: KonektoBrand.body(
+                    fontSize: 12,
+                    color: KonektoBrand.slate,
+                  ),
                   isDense: true,
-                  enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
-                  focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: KonektoBrand.borderStrong),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: KonektoBrand.gold),
+                  ),
                 ),
                 onChanged: (phone) => _phone = phone,
               ),
               const SizedBox(height: 4),
               CheckboxListTile(
                 value: _whatsappSameAsPhone,
-                onChanged: (value) => setState(() => _whatsappSameAsPhone = value ?? true),
+                onChanged: (value) =>
+                    setState(() => _whatsappSameAsPhone = value ?? true),
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
                 activeColor: KonektoBrand.gold,
                 dense: true,
-                title: Text('WhatsApp é o mesmo número do telefone', style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slate)),
+                title: Text(
+                  'WhatsApp é o mesmo número do telefone',
+                  style: KonektoBrand.body(
+                    fontSize: 12.5,
+                    color: KonektoBrand.slate,
+                  ),
+                ),
               ),
               if (!_whatsappSameAsPhone) ...[
                 const SizedBox(height: 4),
                 IntlPhoneField(
                   initialCountryCode: 'BR',
-                  style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
-                  dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                  style: KonektoBrand.body(
+                    fontSize: 13.5,
+                    color: KonektoBrand.cream,
+                  ),
+                  dropdownTextStyle: KonektoBrand.body(
+                    fontSize: 13.5,
+                    color: KonektoBrand.cream,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'WhatsApp',
-                    labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                    labelStyle: KonektoBrand.body(
+                      fontSize: 12,
+                      color: KonektoBrand.slate,
+                    ),
                     isDense: true,
-                    enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
-                    focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: KonektoBrand.borderStrong),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: KonektoBrand.gold),
+                    ),
                   ),
                   onChanged: (phone) => _whatsapp = phone,
                 ),
                 const SizedBox(height: 10),
               ],
               const SizedBox(height: 6),
-              _FormField(label: 'E-mail (opcional)', controller: _emailController, keyboardType: TextInputType.emailAddress),
+              _FormField(
+                label: 'E-mail (opcional)',
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
               const SizedBox(height: 10),
-              _FormField(label: 'Endereço (opcional)', controller: _addressController),
+              _FormField(
+                label: 'Endereço (opcional)',
+                controller: _addressController,
+              ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: _FormField(label: 'País', controller: _countryController)),
+                  Expanded(
+                    child: _FormField(
+                      label: 'País',
+                      controller: _countryController,
+                    ),
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: _FormField(label: 'Número do quarto', controller: _roomController)),
+                  Expanded(
+                    child: _FormField(
+                      label: 'Número do quarto',
+                      controller: _roomController,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -686,7 +871,10 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
         TextButton(onPressed: _submit, child: const Text('Criar')),
       ],
     );
@@ -698,7 +886,11 @@ class _FormField extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType? keyboardType;
 
-  const _FormField({required this.label, required this.controller, this.keyboardType});
+  const _FormField({
+    required this.label,
+    required this.controller,
+    this.keyboardType,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -710,8 +902,12 @@ class _FormField extends StatelessWidget {
         labelText: label,
         labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
         isDense: true,
-        enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
-        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: KonektoBrand.borderStrong),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: KonektoBrand.gold),
+        ),
       ),
     );
   }
@@ -722,7 +918,11 @@ class _DatePickerField extends StatelessWidget {
   final DateTime? date;
   final VoidCallback onTap;
 
-  const _DatePickerField({required this.label, required this.date, required this.onTap});
+  const _DatePickerField({
+    required this.label,
+    required this.date,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -731,19 +931,35 @@ class _DatePickerField extends StatelessWidget {
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+          labelStyle: KonektoBrand.body(
+            fontSize: 12,
+            color: KonektoBrand.slate,
+          ),
           isDense: true,
-          enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
-          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+          enabledBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: KonektoBrand.borderStrong),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: KonektoBrand.gold),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               date != null ? _formatDate(date!) : 'Selecionar',
-              style: KonektoBrand.body(fontSize: 13.5, color: date != null ? KonektoBrand.cream : KonektoBrand.slateSoft),
+              style: KonektoBrand.body(
+                fontSize: 13.5,
+                color: date != null
+                    ? KonektoBrand.cream
+                    : KonektoBrand.slateSoft,
+              ),
             ),
-            const Icon(Icons.calendar_today_outlined, size: 15, color: KonektoBrand.slate),
+            const Icon(
+              Icons.calendar_today_outlined,
+              size: 15,
+              color: KonektoBrand.slate,
+            ),
           ],
         ),
       ),
