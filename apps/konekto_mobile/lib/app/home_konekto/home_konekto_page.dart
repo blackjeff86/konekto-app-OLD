@@ -146,9 +146,17 @@ class _HomePageBodyState extends State<_HomePageBody> {
 
     setState(() => _isValidating = true);
 
-    final claimResult = await _guestClaimRepository.claim(rawInput);
+    Map<String, dynamic>? claimResult;
+    try {
+      claimResult = await _guestClaimRepository.claim(rawInput);
+    } finally {
+      // Garante que o botão nunca fica travado em "carregando" — mesmo se
+      // algo inesperado der errado no meio do caminho (rede, storage do
+      // navegador, etc.), o usuário volta a ver a tela de entrada com uma
+      // mensagem de erro em vez de uma tela presa.
+      if (mounted) setState(() => _isValidating = false);
+    }
     if (!mounted) return;
-    setState(() => _isValidating = false);
 
     if (claimResult == null) {
       _showError('Código de acesso inválido ou revogado.');

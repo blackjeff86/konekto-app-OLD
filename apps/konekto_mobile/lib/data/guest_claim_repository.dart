@@ -40,7 +40,10 @@ class GuestClaimRepository {
       await prefs.setString(_tokenKey, body['token'] as String);
 
       return body;
-    } on http.ClientException {
+    } on Exception {
+      // Rede fora do ar, resposta malformada, storage bloqueado pelo
+      // navegador, etc. — qualquer falha aqui deve cair no mesmo
+      // "código inválido" genérico, nunca travar a tela de entrada.
       return null;
     }
   }
