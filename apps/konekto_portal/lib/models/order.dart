@@ -60,7 +60,7 @@ class Order {
       quantity: json['quantity'] as int? ?? 1,
       price: (json['price'] as num?)?.toDouble(),
       status: OrderStatus.fromString(json['status'] as String),
-      guestName: guest['name'] as String,
+      guestName: '${guest['firstName']} ${guest['lastName']}',
       guestRoomNumber: guest['roomNumber'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );

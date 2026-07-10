@@ -14,11 +14,11 @@ import 'package:konekto/widgets/tenant_image.dart';
 /// `item.price == null` → item não é comprável (evento/passeio/reserva) e
 /// mostra "Solicitar" no lugar.
 ///
-/// Pedido real: se o hóspede entrou por código individual (tem guest token
-/// salvo — ver `GuestClaimRepository`), o botão faz um `POST /api/orders`
-/// de verdade. Se entrou pelo fluxo antigo de código de hotel (sem
-/// identidade), não há hóspede pra vincular o pedido — mantém o SnackBar
-/// de simulação que a tela já tinha, sem regressão.
+/// Pedido real: faz um `POST /api/orders` de verdade usando o guest token
+/// salvo em `GuestClaimRepository`. Só cai no SnackBar de simulação no modo
+/// asset (`USE_API=false`, sem backend real pra vincular o pedido) — no
+/// modo API (produção) o hóspede sempre tem token, já que a entrada no app
+/// exige um claim bem-sucedido.
 class ServiceItemDetailPage extends StatefulWidget {
   final Map<String, dynamic> tenantConfig;
   final String serviceId;

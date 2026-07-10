@@ -26,13 +26,12 @@ class GuestsRepository {
   Future<Guest> createGuest({
     required String hotelId,
     required String token,
-    required String name,
-    required String roomNumber,
+    required NewGuestInput input,
   }) async {
     final response = await _client.post(
       Uri.parse('$apiBaseUrl/api/hotels/$hotelId/guests'),
       headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-      body: jsonEncode({'name': name, 'roomNumber': roomNumber}),
+      body: jsonEncode(input.toJson()),
     );
     if (response.statusCode != 201) {
       throw StateError('Falha ao criar hóspede (status ${response.statusCode}).');

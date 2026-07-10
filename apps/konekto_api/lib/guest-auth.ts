@@ -3,7 +3,8 @@ import { SignJWT, jwtVerify } from 'jose'
 export interface GuestTokenPayload {
   sub: string
   hotelId: string
-  name: string
+  firstName: string
+  lastName: string
   roomNumber: string
 }
 

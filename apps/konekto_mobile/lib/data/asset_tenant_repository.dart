@@ -27,9 +27,6 @@ class AssetTenantRepository implements TenantRepository {
   Future<Map<String, dynamic>> getTenantConfig(String hotelId) => _loadJson(_hotelPath(hotelId, 'tenant_config.json'));
 
   @override
-  Future<Map<String, dynamic>> getGuestInfo(String hotelId) => _loadJson(_hotelPath(hotelId, 'guest_info.json'));
-
-  @override
   Future<Map<String, dynamic>> getServicesPageConfig(String hotelId) =>
       _loadJson(_hotelPath(hotelId, 'services_page.json'));
 
@@ -217,14 +214,6 @@ class AssetTenantRepository implements TenantRepository {
       orElse: () => throw StateError('Serviço "$serviceId" não encontrado.'),
     );
     return service;
-  }
-}
-
-class AssetTenantsDirectoryRepository implements TenantsDirectoryRepository {
-  @override
-  Future<List<dynamic>> getTenantsList() async {
-    final String jsonString = await rootBundle.loadString('assets/data/tenants.json');
-    return json.decode(jsonString) as List<dynamic>;
   }
 }
 

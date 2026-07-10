@@ -7,6 +7,11 @@ export const runtime = 'nodejs'
 
 const claimSchema = z.object({ code: z.string().min(1) })
 
+interface HotelWifi {
+  network_name?: string
+  password?: string
+}
+
 export async function POST(request: NextRequest) {
   const parsed = claimSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
@@ -24,12 +29,32 @@ export async function POST(request: NextRequest) {
   const token = await signGuestToken({
     sub: guest.id,
     hotelId: guest.hotelId,
-    name: guest.name,
+    firstName: guest.firstName,
+    lastName: guest.lastName,
     roomNumber: guest.roomNumber,
   })
 
+  // Nome da rede de wifi é sempre do hotel; a senha pode ser sobrescrita
+  // por hóspede (guest.wifiPassword), com fallback pra senha padrão do
+  // hotel quando não for definida.
+  const hotelGuestInfo = await prisma.hotelContent.findUnique({
+    where: { hotelId_docName: { hotelId: guest.hotelId, docName: 'guestInfo' } },
+  })
+  const hotelWifi = (hotelGuestInfo?.data as { wifi?: HotelWifi } | null)?.wifi
+  const wifiNetworkName = hotelWifi?.network_name ?? null
+  const wifiPassword = guest.wifiPassword ?? hotelWifi?.password ?? null
+
   return NextResponse.json({
     token,
-    guest: { name: guest.name, roomNumber: guest.roomNumber, hotelId: guest.hotelId },
+    guest: {
+      firstName: guest.firstName,
+      lastName: guest.lastName,
+      roomNumber: guest.roomNumber,
+      hotelId: guest.hotelId,
+      checkInDate: guest.checkInDate,
+      checkOutDate: guest.checkOutDate,
+      wifiNetworkName,
+      wifiPassword,
+    },
   })
 }

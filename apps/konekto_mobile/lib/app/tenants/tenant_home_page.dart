@@ -56,16 +56,22 @@ class TenantConfig {
 class TenantHomePage extends StatefulWidget {
   final String tenantId;
 
-  /// Nome/quarto reais de um hóspede que entrou com código individual
-  /// (ver `GuestClaimRepository`) — quando presentes, substituem o
-  /// registro estático/compartilhado de `getGuestInfo` só pra exibição
-  /// (o wifi continua vindo do `guestInfo` do hotel, que é legitimamente
-  /// compartilhado). `null` preserva o comportamento de hoje (fluxo de
-  /// código único por hotel).
-  final String? guestName;
-  final String? guestRoomNumber;
+  /// Identidade real do hóspede — sempre vem do `GuestClaimRepository`
+  /// (código individual gerado pela recepção); não existe mais um fluxo
+  /// de acesso sem hóspede identificado.
+  final String guestName;
+  final String guestRoomNumber;
+  final String? wifiNetworkName;
+  final String? wifiPassword;
 
-  const TenantHomePage({super.key, required this.tenantId, this.guestName, this.guestRoomNumber});
+  const TenantHomePage({
+    super.key,
+    required this.tenantId,
+    required this.guestName,
+    required this.guestRoomNumber,
+    this.wifiNetworkName,
+    this.wifiPassword,
+  });
 
   @override
   State<TenantHomePage> createState() => _TenantHomePageState();
@@ -104,22 +110,17 @@ class _TenantHomePageState extends State<TenantHomePage> {
 
   Future<Map<String, dynamic>> _loadTenantData() async {
     final Map<String, dynamic> tenantConfigMap = await _repository.getTenantConfig(widget.tenantId);
-    final Map<String, dynamic> guestInfoMap = await _repository.getGuestInfo(widget.tenantId);
 
     _widgetMapping = {
-      'home': (data, _) {
-        final guestData = data['guestInfo']['guest'];
-        final wifiData = data['guestInfo']['wifi'];
-        return TenantHomeBody(
-          tenantId: widget.tenantId,
-          userName: widget.guestName ?? guestData['name'] ?? 'Hóspede',
-          roomNumber: widget.guestRoomNumber ?? guestData['room_number'] ?? 'N/A',
-          wifiNetworkName: wifiData['network_name'] ?? 'Não disponível',
-          wifiPassword: wifiData['password'] ?? 'Não disponível',
-          tenantConfig: data['tenantConfig'],
-          iconMapping: _iconMapping,
-        );
-      },
+      'home': (data, _) => TenantHomeBody(
+        tenantId: widget.tenantId,
+        userName: widget.guestName,
+        roomNumber: widget.guestRoomNumber,
+        wifiNetworkName: widget.wifiNetworkName ?? 'Não disponível',
+        wifiPassword: widget.wifiPassword ?? 'Não disponível',
+        tenantConfig: data['tenantConfig'],
+        iconMapping: _iconMapping,
+      ),
       'services': (data, _) => ServicesPage(
         tenantConfig: data['tenantConfig'],
       ),
@@ -129,14 +130,14 @@ class _TenantHomePageState extends State<TenantHomePage> {
       ),
       'profile': (data, _) => ProfilePage(
         tenantConfig: data['tenantConfig'],
-        guestInfo: data['guestInfo'],
+        guestName: widget.guestName,
+        roomNumber: widget.guestRoomNumber,
         onEndSession: () => Navigator.of(context).popUntil((route) => route.isFirst),
       ),
     };
 
     return {
       'tenantConfig': tenantConfigMap,
-      'guestInfo': guestInfoMap,
     };
   }
 
@@ -773,10 +774,17 @@ class BookingsPage extends StatelessWidget {
 
 class ProfilePage extends StatelessWidget {
   final Map<String, dynamic> tenantConfig;
-  final Map<String, dynamic>? guestInfo;
+  final String guestName;
+  final String roomNumber;
   final VoidCallback? onEndSession;
 
-  const ProfilePage({super.key, required this.tenantConfig, this.guestInfo, this.onEndSession});
+  const ProfilePage({
+    super.key,
+    required this.tenantConfig,
+    required this.guestName,
+    required this.roomNumber,
+    this.onEndSession,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -786,9 +794,6 @@ class ProfilePage extends StatelessWidget {
     final Color cardBackgroundColor = hexToColor(tenantConfig['colorPalette']['cardBackground']);
     final String hotelName = tenantConfig['hotelInfo']?['name'] ?? '';
 
-    final Map<String, dynamic> guest = guestInfo?['guest'] ?? {};
-    final String guestName = guest['name'] ?? 'Hóspede';
-    final String roomNumber = guest['room_number'] ?? 'N/A';
     final String initials = guestName.trim().isNotEmpty
         ? guestName.trim().split(' ').where((p) => p.isNotEmpty).take(2).map((p) => p[0]).join().toUpperCase()
         : '?';

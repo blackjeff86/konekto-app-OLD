@@ -6,8 +6,16 @@ import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
 
 export const runtime = 'nodejs'
 
-function generateAccessCode(): string {
-  return crypto.randomBytes(5).toString('hex').toUpperCase()
+// Prefixo derivado do próprio hotelId (ex: "hotel_1" -> "HOTEL1") — não
+// resolve unicidade sozinho (a coluna já é @unique), é só pra deixar
+// auditável a olho nu de qual hotel é cada código, evitando qualquer
+// confusão entre códigos de hotéis diferentes.
+function hotelTag(hotelId: string): string {
+  return hotelId.toUpperCase().replace(/[^A-Z0-9]/g, '')
+}
+
+function generateAccessCode(hotelId: string): string {
+  return `${hotelTag(hotelId)}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ hotelId: string }> }) {
@@ -32,8 +40,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 const createGuestSchema = z.object({
-  name: z.string().min(1),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  documentType: z.enum(['cpf', 'passport', 'other']),
+  documentNumber: z.string().min(1),
+  phoneCountryCode: z.string().min(1),
+  phoneNumber: z.string().min(1),
+  whatsappCountryCode: z.string().min(1).optional(),
+  whatsappNumber: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  address: z.string().min(1).optional(),
+  country: z.string().min(1),
+  checkInDate: z.coerce.date(),
+  checkOutDate: z.coerce.date(),
   roomNumber: z.string().min(1),
+  wifiPassword: z.string().min(1).optional(),
 })
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ hotelId: string }> }) {
@@ -56,7 +77,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const guest = await prisma.guest.create({
-    data: { hotelId, name: parsed.data.name, roomNumber: parsed.data.roomNumber, accessCode: generateAccessCode() },
+    data: { hotelId, ...parsed.data, accessCode: generateAccessCode(hotelId) },
   })
   return NextResponse.json(guest, { status: 201 })
 }

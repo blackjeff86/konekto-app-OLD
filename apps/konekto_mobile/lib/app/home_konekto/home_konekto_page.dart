@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:konekto/app/home_konekto/history_page.dart';
 import 'package:konekto/app/home_konekto/profile_page.dart';
-import 'package:konekto/app/navigation/checkin_status_page.dart';
 import 'package:konekto/app/navigation/qr_scanner_page.dart';
 import 'package:konekto/app/tenants/tenant_home_page.dart' show TenantHomePage;
 import 'package:konekto/theme/konekto_brand.dart';
@@ -23,21 +22,6 @@ class Promotion {
       title: json['title'],
       subtitle: json['subtitle'],
       imagePath: json['imagePath'],
-    );
-  }
-}
-
-// Modelo de dados para os tenants
-class Tenant {
-  final String id;
-  final String name;
-
-  Tenant({required this.id, required this.name});
-
-  factory Tenant.fromJson(Map<String, dynamic> json) {
-    return Tenant(
-      id: json['id'],
-      name: json['name'],
     );
   }
 }
@@ -115,7 +99,6 @@ class _HomePageBodyState extends State<_HomePageBody> {
   bool _isValidating = false;
   late Future<List<Promotion>> _promotionsFuture;
   late List<Promotion> _promotions;
-  final TenantsDirectoryRepository _tenantsDirectory = createTenantsDirectoryRepository();
   final PromotionsRepository _promotionsRepository = createPromotionsRepository();
   final GuestClaimRepository _guestClaimRepository = GuestClaimRepository();
 
@@ -143,11 +126,6 @@ class _HomePageBodyState extends State<_HomePageBody> {
     });
   }
 
-  Future<List<Tenant>> _loadTenants() async {
-    final List<dynamic> jsonList = await _tenantsDirectory.getTenantsList();
-    return jsonList.map((json) => Tenant.fromJson(json)).toList();
-  }
-
   Future<void> _scanQrCode() async {
     final String? scannedValue = await Navigator.push<String>(
       context,
@@ -168,54 +146,28 @@ class _HomePageBodyState extends State<_HomePageBody> {
 
     setState(() => _isValidating = true);
 
-    // Tenta primeiro como código INDIVIDUAL de hóspede (criado pela
-    // recepção) — se não for (código de hotel, ou app sem API), cai no
-    // fluxo antigo de código único por hotel, sem nenhuma mudança de
-    // comportamento nesse caso.
     final claimResult = await _guestClaimRepository.claim(rawInput);
-    if (claimResult != null) {
-      if (!mounted) return;
-      setState(() => _isValidating = false);
-      final guest = claimResult['guest'] as Map<String, dynamic>;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TenantHomePage(
-            tenantId: guest['hotelId'] as String,
-            guestName: guest['name'] as String,
-            guestRoomNumber: guest['roomNumber'] as String,
-          ),
-        ),
-      );
-      return;
-    }
-
-    final userInput = rawInput.toLowerCase();
-    final tenants = await _loadTenants();
-    bool isValid = false;
-    String? foundTenantId;
-
-    for (var tenant in tenants) {
-      if (tenant.id.toLowerCase() == userInput || tenant.name.toLowerCase() == userInput) {
-        isValid = true;
-        foundTenantId = tenant.id;
-        break;
-      }
-    }
-
     if (!mounted) return;
     setState(() => _isValidating = false);
 
-    if (isValid) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CheckinStatusPage(tenantId: foundTenantId!),
-        ),
-      );
-    } else {
-      _showError('Código de acesso ou nome do hotel inválido.');
+    if (claimResult == null) {
+      _showError('Código de acesso inválido ou revogado.');
+      return;
     }
+
+    final guest = claimResult['guest'] as Map<String, dynamic>;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TenantHomePage(
+          tenantId: guest['hotelId'] as String,
+          guestName: '${guest['firstName']} ${guest['lastName']}',
+          guestRoomNumber: guest['roomNumber'] as String,
+          wifiNetworkName: guest['wifiNetworkName'] as String?,
+          wifiPassword: guest['wifiPassword'] as String?,
+        ),
+      ),
+    );
   }
 
   void _showError(String message) {

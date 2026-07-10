@@ -89,21 +89,49 @@ enum GuestStatus {
   revoked
 }
 
-/// Hóspede individual de um hotel — substitui o código único-por-hotel
-/// (compartilhado por qualquer pessoa) por um código pessoal ligado a um
-/// nome+quarto específico, que a recepção pode revogar no check-out.
-/// `status: revoked` em vez de apagar a linha — preserva o registro pra
-/// quando Pedidos existir (um pedido vai referenciar um Guest).
+enum DocumentType {
+  cpf
+  passport
+  other
+}
+
+/// Hóspede individual de um hotel — cadastro completo (nome, documento,
+/// contato, estadia), substitui o código único-por-hotel (compartilhado
+/// por qualquer pessoa) por um código pessoal que a recepção pode revogar
+/// no check-out. `status: revoked` em vez de apagar a linha — preserva o
+/// registro pra Pedidos (um pedido referencia um Guest).
+///
+/// `accessCode` é prefixado com uma tag derivada do próprio `hotelId` (ex:
+/// "HOTEL1-8F3A2B1C") — puramente pra deixar auditável/visível de qual
+/// hotel é cada código a olho nu; a unicidade em si já é garantida pela
+/// constraint `@unique` sozinha, independente do prefixo.
+///
+/// `wifiPassword: null` = usa a senha padrão do hotel (vinda do doc
+/// `guestInfo` em HotelContent) — só sobrescreve quando o hotel quer dar
+/// uma senha individual pra esse hóspede.
 model Guest {
-  id         String      @id @default(cuid())
-  hotelId    String
-  name       String
-  roomNumber String
-  accessCode String      @unique
-  status     GuestStatus @default(active)
-  createdAt  DateTime    @default(now())
-  hotel      Hotel       @relation(fields: [hotelId], references: [id])
-  orders     Order[]
+  id                  String       @id @default(cuid())
+  hotelId             String
+  firstName           String
+  lastName            String
+  documentType        DocumentType
+  documentNumber      String
+  phoneCountryCode    String
+  phoneNumber         String
+  whatsappCountryCode String?
+  whatsappNumber      String?
+  email               String?
+  address             String?
+  country             String
+  checkInDate         DateTime
+  checkOutDate        DateTime
+  roomNumber          String
+  wifiPassword        String?
+  accessCode          String       @unique
+  status              GuestStatus  @default(active)
+  createdAt           DateTime     @default(now())
+  hotel               Hotel        @relation(fields: [hotelId], references: [id])
+  orders              Order[]
 
   @@index([hotelId])
   @@map("guests")

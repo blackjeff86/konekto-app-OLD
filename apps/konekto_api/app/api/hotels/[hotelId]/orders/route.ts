@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const orders = await prisma.order.findMany({
     where: { hotelId },
     orderBy: { createdAt: 'desc' },
-    include: { guest: { select: { name: true, roomNumber: true } } },
+    include: { guest: { select: { firstName: true, lastName: true, roomNumber: true } } },
   })
   return NextResponse.json(orders)
 }

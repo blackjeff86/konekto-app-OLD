@@ -13,8 +13,5 @@ const bool useApi = bool.fromEnvironment('USE_API', defaultValue: false);
 
 TenantRepository createTenantRepository() => useApi ? HttpTenantRepository() : AssetTenantRepository();
 
-TenantsDirectoryRepository createTenantsDirectoryRepository() =>
-    useApi ? HttpTenantsDirectoryRepository() : AssetTenantsDirectoryRepository();
-
 PromotionsRepository createPromotionsRepository() =>
     useApi ? HttpPromotionsRepository() : AssetPromotionsRepository();

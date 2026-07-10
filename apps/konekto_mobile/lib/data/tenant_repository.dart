@@ -6,7 +6,6 @@
 /// de dados seja invisível para a camada de UI.
 abstract class TenantRepository {
   Future<Map<String, dynamic>> getTenantConfig(String hotelId);
-  Future<Map<String, dynamic>> getGuestInfo(String hotelId);
   Future<Map<String, dynamic>> getServicesPageConfig(String hotelId);
   Future<Map<String, dynamic>> getMapaData(String hotelId);
 
@@ -16,13 +15,6 @@ abstract class TenantRepository {
   /// getSpaServices, getRestaurants, getEventos, getPasseios).
   Future<List<dynamic>> getServices(String hotelId);
   Future<Map<String, dynamic>> getService(String hotelId, String serviceId);
-}
-
-/// Diretório global (não específico de um hotel) usado na tela de acesso
-/// pra validar o código de hotel digitado/escaneado pelo hóspede.
-abstract class TenantsDirectoryRepository {
-  /// Lista bruta no formato `[{"id": ..., "name": ...}, ...]`.
-  Future<List<dynamic>> getTenantsList();
 }
 
 /// Promoções da marca Konekto (não específicas de um hotel), mostradas na

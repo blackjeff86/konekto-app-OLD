@@ -288,6 +288,28 @@ Hoje o app do hóspede não tem NENHUM conceito de identidade individual: a "ent
 
 - Formato exato de `eventos_data.json`/`passeios_data.json` (Tasks 10–11) — confirmar a chave do array e o shape do item antes de implementar (só vi o `pageConfig` no preview).
 
+## Fase Hóspedes 2.0 — cadastro completo (substitui o cadastro mínimo nome+quarto)
+
+Motivação: o cadastro mínimo (nome + quarto) da Fase Hóspedes original não bastava — precisava dos dados reais que um hotel coleta no check-in, e o fluxo antigo de "código único por hotel" (digitar `hotel_1` e cair direto como um hóspede fake fixo "Jeff Brito") ainda existia em paralelo, criando confusão. Resolvido:
+
+**Decisões confirmadas com o usuário:**
+1. Fluxo antigo de código de hotel **desativado de vez** — a única forma de entrar no app agora é um código individual de hóspede.
+2. Senha de wifi pode ser **por hóspede** (opcional), com fallback pra senha padrão do hotel quando não definida.
+3. Documento: **seletor de tipo (CPF/Passaporte/Outro) + campo de número**, não texto livre.
+
+**Backend:**
+- `Guest` expandido: `firstName`/`lastName`, `documentType` (enum) + `documentNumber`, `phoneCountryCode`/`phoneNumber`, `whatsappCountryCode`/`whatsappNumber` (opcionais), `email`/`address` (opcionais), `country`, `checkInDate`/`checkOutDate`, `wifiPassword` (opcional). Migration `20260710020533_expand_guest_profile` — limpou os 6 hóspedes/3 pedidos de teste antes de migrar (só dados de curl desta sessão, nenhum hotel real).
+- `accessCode` agora prefixado com uma tag do próprio `hotelId` (ex: `HOTEL1-8F3A2B1C`) — só auditoria visual, a unicidade real já vem do `@unique`.
+- `POST /api/guest/claim` resolve wifi: `guest.wifiPassword ?? hotel.guestInfo.wifi.password`; nome da rede sempre do hotel. Retorna perfil completo (nome, quarto, datas de estadia, wifi resolvido).
+- `GuestTokenPayload`/rotas de staff atualizadas pra `firstName`/`lastName`.
+
+**Portal:** formulário de cadastro completo (`intl_phone_field` pra telefone/WhatsApp com bandeira+código do país, seletor de tipo de documento, date pickers de check-in/check-out, checkbox "WhatsApp é o mesmo número"). Lista de hóspedes agora tem um "ver detalhes" (clique na linha) mostrando o cadastro inteiro.
+
+**App do hóspede — remoção do fluxo antigo:** deletado `checkin_status_page.dart` e toda a lógica de casar "código de hotel" contra uma lista de tenants (`Tenant` model, `TenantsDirectoryRepository` + as duas implementações, `assets/data/tenants.json`) — nada mais referenciava esses símbolos fora do único call site removido. `TenantHomePage`/`ProfilePage` pararam de chamar `getGuestInfo` (removido de `TenantRepository` e ambas implementações) — `guestName`/`guestRoomNumber` viraram obrigatórios, e wifi passou a vir do claim em vez de um doc estático compartilhado.
+  - **Consequência aceita**: o modo asset (`USE_API=false`, padrão sem dart-define) agora não leva a lugar nenhum além da tela de entrada — não há hóspedes cadastrados sem um backend real pra resolver contra. Isso é o resultado direto e esperado da decisão de desativar o fluxo antigo, não um bug.
+
+**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web` (2 modos) limpos nos dois apps Flutter, `npm run build` limpo na API — mesmos 8 lints pré-existentes de sempre, nenhum novo. Ciclo ponta a ponta via curl: criar hóspede com cadastro completo → claim (nome/quarto/wifi resolvido corretos) → pedido real → aparece no portal com o nome certo. Ainda **não deployado em produção** (só validado local) e sem clique manual no navegador (sem browser automation nesta sessão).
+
 ## Itens abertos (pendências conhecidas, não bloqueiam)
 
 - **Imagem de item com URL externa não carrega no app do hóspede** (`TenantImage`, `apps/konekto_mobile/lib/widgets/tenant_image.dart`): criamos o widget que decide entre `Image.asset` (conteúdo semeado) e `Image.network` (itens novos do portal), mas testando com uma URL real (`fontagua.com.br`) a imagem não carregou — provavelmente CORS do host de origem, hotlink bloqueado, ou renderer CanvasKit do Flutter Web exigindo CORS pra decodificar a imagem em textura. Investigar depois: (1) testar com uma URL de imagem de um host que permite CORS/hotlink (ex: Unsplash, Cloudinary), (2) considerar um proxy de imagem no backend, ou (3) adicionar upload de imagem pro próprio `konekto_api`/storage em vez de depender de URL externa.

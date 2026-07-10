@@ -34,9 +34,6 @@ class HttpTenantRepository implements TenantRepository {
   Future<Map<String, dynamic>> getTenantConfig(String hotelId) => _get('/api/hotels/$hotelId');
 
   @override
-  Future<Map<String, dynamic>> getGuestInfo(String hotelId) => _getContent(hotelId, 'guestInfo');
-
-  @override
   Future<Map<String, dynamic>> getServicesPageConfig(String hotelId) => _getContent(hotelId, 'servicesPage');
 
   @override
@@ -48,21 +45,6 @@ class HttpTenantRepository implements TenantRepository {
   @override
   Future<Map<String, dynamic>> getService(String hotelId, String serviceId) =>
       _get('/api/hotels/$hotelId/services/$serviceId');
-}
-
-class HttpTenantsDirectoryRepository implements TenantsDirectoryRepository {
-  final http.Client _client;
-
-  HttpTenantsDirectoryRepository({http.Client? client}) : _client = client ?? http.Client();
-
-  @override
-  Future<List<dynamic>> getTenantsList() async {
-    final response = await _client.get(Uri.parse('$apiBaseUrl/api/hotels'));
-    if (response.statusCode != 200) {
-      throw StateError('Falha ao carregar lista de hotéis (status ${response.statusCode}).');
-    }
-    return json.decode(response.body) as List<dynamic>;
-  }
 }
 
 class HttpPromotionsRepository implements PromotionsRepository {

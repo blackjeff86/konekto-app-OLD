@@ -7,12 +7,11 @@ import 'package:konekto/data/tenant_repository_provider.dart';
 /// Resolve um código de acesso INDIVIDUAL de hóspede (criado pela recepção
 /// no portal) contra `POST /api/guest/claim` — separado de
 /// [TenantRepository] porque isso é autenticação de hóspede, não conteúdo
-/// de tenant.
+/// de tenant. Essa é a ÚNICA forma de entrar no app — não existe mais um
+/// fluxo de código de hotel sem hóspede identificado.
 ///
 /// Em modo asset (`useApi == false`, sem backend real) não existe tabela de
-/// hóspedes pra resolver contra, então [claim] sempre devolve `null` — o
-/// chamador cai de volta no fluxo antigo de código único por hotel, sem
-/// nenhuma mudança de comportamento nesse modo.
+/// hóspedes pra resolver contra, então [claim] sempre devolve `null`.
 class GuestClaimRepository {
   static const _tokenKey = 'konekto_guest_token';
 
@@ -20,10 +19,11 @@ class GuestClaimRepository {
 
   GuestClaimRepository({http.Client? client}) : _client = client ?? http.Client();
 
-  /// Retorna `{token, guest: {name, roomNumber, hotelId}}` se o código for
-  /// de um hóspede ativo, ou `null` se não for (código desconhecido,
-  /// revogado, ou app rodando sem API) — nunca lança exceção, pra permitir
-  /// o fallback silencioso pro fluxo de código de hotel.
+  /// Retorna `{token, guest: {firstName, lastName, roomNumber, hotelId,
+  /// checkInDate, checkOutDate, wifiNetworkName, wifiPassword}}` se o
+  /// código for de um hóspede ativo, ou `null` se não for (código
+  /// desconhecido, revogado, ou app rodando sem API) — nunca lança
+  /// exceção, o chamador mostra uma mensagem de erro genérica.
   Future<Map<String, dynamic>?> claim(String code) async {
     if (!useApi) return null;
 
@@ -47,8 +47,7 @@ class GuestClaimRepository {
 
   /// Token do hóspede salvo por [claim], se algum já foi feito com sucesso
   /// nesta instalação — usado por [OrdersRepository] pra autenticar a
-  /// criação de pedidos. `null` se o hóspede entrou pelo fluxo antigo de
-  /// código de hotel (sem identidade individual).
+  /// criação de pedidos.
   Future<String?> getStoredToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_tokenKey);
