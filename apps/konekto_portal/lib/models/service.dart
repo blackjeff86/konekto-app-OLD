@@ -74,9 +74,43 @@ class ServiceItem {
   }
 }
 
+/// Decide o comportamento do serviço no app do hóspede:
+/// - `roomService`: cardápio pedido item a item (quantidade + observação).
+/// - `restaurant`: cardápio só informativo; reserva é da MESA como um todo
+///   (um botão único abaixo da lista), não por prato.
+/// - `activity`: qualquer experiência agendável item a item (spa, eventos,
+///   passeios, ou algo novo) — cada item abre o modal de dia/hora.
+enum ServiceType {
+  roomService,
+  restaurant,
+  activity;
+
+  static ServiceType fromString(String value) {
+    return switch (value) {
+      'room_service' => ServiceType.roomService,
+      'restaurant' => ServiceType.restaurant,
+      'activity' => ServiceType.activity,
+      _ => throw ArgumentError('Tipo de serviço desconhecido: "$value"'),
+    };
+  }
+
+  String get apiValue => switch (this) {
+        ServiceType.roomService => 'room_service',
+        ServiceType.restaurant => 'restaurant',
+        ServiceType.activity => 'activity',
+      };
+
+  String get label => switch (this) {
+        ServiceType.roomService => 'Serviço de Quarto',
+        ServiceType.restaurant => 'Restaurante',
+        ServiceType.activity => 'Passeio / Atividade',
+      };
+}
+
 /// Serviço criado pelo hotel (Room Service, Spa, um restaurante específico,
 /// ou algo totalmente novo) — o hotel define nome/ícone/descrição, sem
-/// tipos fixos no código.
+/// tipos fixos no código. `type` decide o comportamento no app do hóspede
+/// e é definido na criação, sem edição depois (mesmo padrão do `slug`).
 class Service {
   final String id;
   final String hotelId;
@@ -84,6 +118,7 @@ class Service {
   final String slug;
   final String icon;
   final String description;
+  final ServiceType type;
   final String? bannerImageUrl;
   final int position;
   final bool enabled;
@@ -96,6 +131,7 @@ class Service {
     required this.slug,
     required this.icon,
     required this.description,
+    required this.type,
     this.bannerImageUrl,
     required this.position,
     required this.enabled,
@@ -111,6 +147,7 @@ class Service {
       slug: json['slug'] as String,
       icon: json['icon'] as String,
       description: json['description'] as String,
+      type: ServiceType.fromString(json['type'] as String),
       bannerImageUrl: json['bannerImageUrl'] as String?,
       position: json['position'] as int? ?? 0,
       enabled: json['enabled'] as bool? ?? true,

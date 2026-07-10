@@ -12,15 +12,19 @@ import 'package:konekto/widgets/tenant_image.dart';
 /// (room_service_detail, spa_detail, restaurant_detail, event_detail,
 /// passeios_detail) por uma única tela genérica.
 ///
-/// Dois fluxos de confirmação, escolhidos por [isRoomService]:
-/// - **Serviço de Quarto**: [showOrderQuantityNoteSheet] (quantidade +
+/// Comportamento escolhido por [serviceType]:
+/// - **`roomService`**: [showOrderQuantityNoteSheet] (quantidade +
 ///   observação) — `item.price != null` mostra "Adicionar ao pedido",
 ///   `item.price == null` mostra "Solicitar".
-/// - **Todo o resto** (restaurantes, spa, eventos, passeios):
-///   [showBookingSheet] (dia + horário) — botão sempre "Reservar". O
-///   seletor de "pessoa alocada no quarto" ainda não existe aqui — depende
-///   da entidade Stay (reserva de quarto), planejada pra depois; por
-///   enquanto a reserva sempre fica em nome de quem está logado.
+/// - **`activity`** (spa, eventos, passeios): [showBookingSheet] (dia +
+///   horário) — botão sempre "Reservar".
+/// - **`restaurant`**: só informativo, sem botão — o cardápio é pra
+///   consulta; a reserva é da MESA como um todo, feita pelo botão no
+///   rodapé de `ServiceItemsListPage`, não item a item.
+///
+/// O seletor de "pessoa alocada no quarto" ainda não existe aqui — depende
+/// da entidade Stay (reserva de quarto), planejada pra depois; por
+/// enquanto a reserva sempre fica em nome de quem está logado.
 ///
 /// Pedido real: faz um `POST /api/orders` de verdade usando o guest token
 /// salvo em `GuestClaimRepository`. Só cai no SnackBar de simulação no modo
@@ -31,7 +35,7 @@ class ServiceItemDetailPage extends StatefulWidget {
   final Map<String, dynamic> tenantConfig;
   final String serviceId;
   final String serviceName;
-  final bool isRoomService;
+  final ServiceType serviceType;
   final ServiceItem item;
   final String hotelId;
 
@@ -40,7 +44,7 @@ class ServiceItemDetailPage extends StatefulWidget {
     required this.tenantConfig,
     required this.serviceId,
     required this.serviceName,
-    required this.isRoomService,
+    required this.serviceType,
     required this.item,
     required this.hotelId,
   });
@@ -58,10 +62,13 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
   ServiceItem get item => widget.item;
 
   Future<void> _confirm(BuildContext context) async {
-    if (widget.isRoomService) {
-      await _confirmOrder(context);
-    } else {
-      await _confirmBooking(context);
+    switch (widget.serviceType) {
+      case ServiceType.roomService:
+        await _confirmOrder(context);
+      case ServiceType.activity:
+        await _confirmBooking(context);
+      case ServiceType.restaurant:
+        break;
     }
   }
 
@@ -247,32 +254,36 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
                     const SizedBox(height: 8),
                     _DetailRow(icon: Icons.info_outline, label: item.extraInfo!, color: primaryColor, fontFamily: fontFamily),
                   ],
-                  const SizedBox(height: 28),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isSubmitting ? null : () => _confirm(context),
-                      icon: _isSubmitting
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : Icon(
-                              widget.isRoomService
-                                  ? (isPurchasable ? Icons.shopping_cart : Icons.event_available_outlined)
-                                  : Icons.calendar_month_outlined,
-                              size: 22,
-                            ),
-                      label: Text(
-                        widget.isRoomService ? (isPurchasable ? 'Adicionar ao pedido' : 'Solicitar') : 'Reservar',
-                        style: GoogleFonts.getFont(fontFamily, fontSize: 16),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  if (widget.serviceType != ServiceType.restaurant) ...[
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSubmitting ? null : () => _confirm(context),
+                        icon: _isSubmitting
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : Icon(
+                                widget.serviceType == ServiceType.roomService
+                                    ? (isPurchasable ? Icons.shopping_cart : Icons.event_available_outlined)
+                                    : Icons.calendar_month_outlined,
+                                size: 22,
+                              ),
+                        label: Text(
+                          widget.serviceType == ServiceType.roomService
+                              ? (isPurchasable ? 'Adicionar ao pedido' : 'Solicitar')
+                              : 'Reservar',
+                          style: GoogleFonts.getFont(fontFamily, fontSize: 16),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

@@ -338,6 +338,23 @@ Motivação: (1) a tela de Hóspedes do portal só abria um modal com os dados c
 
 **Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web` limpos nos dois apps Flutter (mesmos 8 lints pré-existentes, nenhum novo), `npm run build` limpo na API com todas as rotas novas geradas. Ciclo ponta a ponta via curl contra um servidor local apontando pro banco de produção: criar Stay → 2 hóspedes vinculados → claim de ambos → aviso enviado pela recepção → **ambos** leem o mesmo aviso → detalhe da Stay mostra os 2 hóspedes → fechar conta → claim de qualquer um dos dois falha com `access_revoked`. Deployado em produção (API + konekto-guest + konekto-portal), verificado via curl que os 3 domínios respondem corretamente pós-deploy.
 
+## Fase Serviços 2.0 — tipo de serviço explícito (Serviço de Quarto / Restaurante / Atividade)
+
+**Status: concluído e em produção.**
+
+Motivação: o app do hóspede distinguia "Serviço de Quarto" do resto só comparando `slug == 'room-service'` client-side — funcionava por acidente (só existe um slug assim), mas não refletia uma decisão real do hotel nem permitia um terceiro comportamento. O usuário pediu 3 comportamentos distintos por tipo de serviço: Serviço de Quarto (pedido item a item, como já era), Restaurante (cardápio só informativo + um único botão "Reservar mesa" abaixo da lista, não por prato) e Passeio/Atividade (modal de dia/hora dentro de cada item, como já era pro resto).
+
+**Backend:**
+- Novo `enum ServiceType { room_service, restaurant, activity }` e `Service.type` (obrigatório, definido na criação, sem edição depois — mesmo padrão do `slug` imutável). Migration `20260710142343_add_service_type` — backfill dos 7 serviços já existentes (`slug='room-service'` → `room_service`, `icon='restaurant'` → `restaurant`, resto → `activity`), verificado correto via curl pós-deploy.
+- Novo `ServiceItem.hidden` (Boolean, default false) — marca um item técnico que nunca aparece em nenhuma listagem (portal ou hóspede). `GET /api/hotels/:hotelId/services/:serviceId` agora filtra `hidden: false` nos itens embutidos.
+- `POST /api/orders`: `serviceItemId` virou opcional. Se omitido, só vale pra um `Service` do tipo `restaurant` (senão 404) e exige `scheduledFor` (senão 400) — reserva a MESA do restaurante, resolvendo/criando (find-or-create) um `ServiceItem` oculto "Reserva de mesa" reaproveitado entre reservas do mesmo restaurante, reusando o `Order` existente sem tabela nova.
+
+**Portal:** modelo `Service` ganhou `type` (`ServiceType` enum Dart espelhando o backend). Tela de Serviços agora agrupa a lista em 3 seções por tipo; "Criar serviço" ganhou um seletor de tipo (chips) só na criação — ao editar, o tipo aparece como rótulo fixo, não editável.
+
+**App do hóspede:** `Service.type` substitui o antigo getter `isRoomService` baseado em slug. `ServiceItemDetailPage` ramifica em 3: `roomService` (quantidade+observação, inalterado), `activity` (dia/hora por item, inalterado), `restaurant` (sem botão nenhum — só informativo). `ServiceItemsListPage` ganhou um botão fixo "Reservar mesa" no rodapé quando `type == restaurant`, abrindo o `showBookingSheet` (dia/hora) e chamando `OrdersRepository.createTableReservation` (novo método, POST sem `serviceItemId`).
+
+**Checkpoint:** `flutter analyze`/`flutter test` limpos nos dois apps, `npm run build` limpo na API. Ciclo ponta a ponta via curl contra servidor local (banco de produção): backfill dos 7 serviços confirmado correto → reserva de mesa criada duas vezes reaproveitando o mesmo item oculto (sem duplicar) → item oculto nunca aparece no cardápio (contagem de itens visíveis inalterada) → reserva de mesa contra um serviço não-restaurante rejeitada com 404 → as 2 reservas aparecem certas em "Meus Pedidos". Deployado em produção (API + konekto-guest + konekto-portal), verificado via curl que os 3 domínios respondem corretamente pós-deploy, incluindo o `type` de cada serviço já correto na resposta pública.
+
 ## Itens abertos (pendências conhecidas, não bloqueiam)
 
 - **Imagem de item com URL externa não carrega no app do hóspede** (`TenantImage`, `apps/konekto_mobile/lib/widgets/tenant_image.dart`): criamos o widget que decide entre `Image.asset` (conteúdo semeado) e `Image.network` (itens novos do portal), mas testando com uma URL real (`fontagua.com.br`) a imagem não carregou — provavelmente CORS do host de origem, hotlink bloqueado, ou renderer CanvasKit do Flutter Web exigindo CORS pra decodificar a imagem em textura. Investigar depois: (1) testar com uma URL de imagem de um host que permite CORS/hotlink (ex: Unsplash, Cloudinary), (2) considerar um proxy de imagem no backend, ou (3) adicionar upload de imagem pro próprio `konekto_api`/storage em vez de depender de URL externa.

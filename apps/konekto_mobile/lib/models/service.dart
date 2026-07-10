@@ -36,6 +36,26 @@ class ServiceItem {
   }
 }
 
+/// Decide o comportamento do serviço nesta tela:
+/// - `roomService`: pedido item a item (quantidade + observação).
+/// - `restaurant`: cardápio só informativo; reserva é da MESA como um todo
+///   (um botão único abaixo da lista), não por prato.
+/// - `activity`: cada item abre o modal de dia/hora (spa, eventos, passeios).
+enum ServiceType {
+  roomService,
+  restaurant,
+  activity;
+
+  static ServiceType fromString(String value) {
+    return switch (value) {
+      'room_service' => ServiceType.roomService,
+      'restaurant' => ServiceType.restaurant,
+      'activity' => ServiceType.activity,
+      _ => throw ArgumentError('Tipo de serviço desconhecido: "$value"'),
+    };
+  }
+}
+
 /// Serviço criado pelo hotel (Room Service, Spa, um restaurante específico,
 /// ou algo totalmente novo) — sem tipos fixos no código do app.
 class Service {
@@ -44,6 +64,7 @@ class Service {
   final String slug;
   final String icon;
   final String description;
+  final ServiceType type;
   final String? bannerImageUrl;
   final List<ServiceItem> items;
 
@@ -53,16 +74,10 @@ class Service {
     required this.slug,
     required this.icon,
     required this.description,
+    required this.type,
     this.bannerImageUrl,
     this.items = const [],
   });
-
-  /// Room Service é o único serviço com pedido "direto" (quantidade +
-  /// observação) — todo o resto (restaurantes, spa, eventos, passeios) usa o
-  /// fluxo de agendamento (dia + horário). Comparado pelo `slug` (estável e
-  /// exclusivo do Room Service), não pelo `icon` (reaproveitado por vários
-  /// serviços, ex: os 3 restaurantes usam o mesmo ícone).
-  bool get isRoomService => slug == 'room-service';
 
   factory Service.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List<dynamic>?;
@@ -72,6 +87,7 @@ class Service {
       slug: json['slug'] as String,
       icon: json['icon'] as String,
       description: json['description'] as String? ?? '',
+      type: ServiceType.fromString(json['type'] as String),
       bannerImageUrl: json['bannerImageUrl'] as String?,
       items: rawItems == null
           ? const []

@@ -25,7 +25,7 @@ export async function GET(
   const { hotelId, serviceId } = await params
   const service = await prisma.service.findUnique({
     where: { id: serviceId, hotelId },
-    include: { items: { orderBy: { position: 'asc' } } },
+    include: { items: { where: { hidden: false }, orderBy: { position: 'asc' } } },
   })
   if (!service) {
     return NextResponse.json({ error: 'service_not_found' }, { status: 404 })

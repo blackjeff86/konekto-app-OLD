@@ -77,6 +77,7 @@ class _ServicesListPageState extends State<ServicesListPage> {
           slug: result.slug,
           icon: result.icon,
           description: result.description,
+          type: result.type,
         );
       } else {
         await _repository.updateService(
@@ -204,17 +205,26 @@ class _ServicesListPageState extends State<ServicesListPage> {
               child: Text('Nenhum serviço criado ainda.', style: KonektoBrand.body(fontSize: 13.5)),
             )
           else
-            for (final service in _services)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: _ServiceRow(
-                  service: service,
-                  onManageItems: () => setState(() => _managingServiceId = service.id),
-                  onEdit: () => _createOrEditService(existing: service),
-                  onToggleEnabled: () => _toggleEnabled(service),
-                  onDelete: () => _deleteService(service),
+            for (final type in ServiceType.values) ...[
+              if (_services.any((service) => service.type == type)) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(type.label, style: KonektoBrand.body(fontSize: 13, fontWeight: FontWeight.w700, color: KonektoBrand.slate)),
                 ),
-              ),
+                for (final service in _services.where((service) => service.type == type))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: _ServiceRow(
+                      service: service,
+                      onManageItems: () => setState(() => _managingServiceId = service.id),
+                      onEdit: () => _createOrEditService(existing: service),
+                      onToggleEnabled: () => _toggleEnabled(service),
+                      onDelete: () => _deleteService(service),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+              ],
+            ],
         ],
       ),
     );
@@ -306,8 +316,15 @@ class _ServiceFormResult {
   final String slug;
   final String icon;
   final String description;
+  final ServiceType type;
 
-  const _ServiceFormResult({required this.name, required this.slug, required this.icon, required this.description});
+  const _ServiceFormResult({
+    required this.name,
+    required this.slug,
+    required this.icon,
+    required this.description,
+    required this.type,
+  });
 }
 
 class _ServiceFormDialog extends StatefulWidget {
@@ -323,6 +340,7 @@ class _ServiceFormDialogState extends State<_ServiceFormDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late String _icon;
+  late ServiceType _type;
 
   @override
   void initState() {
@@ -331,6 +349,7 @@ class _ServiceFormDialogState extends State<_ServiceFormDialog> {
     _nameController = TextEditingController(text: existing?.name ?? '');
     _descriptionController = TextEditingController(text: existing?.description ?? '');
     _icon = existing?.icon ?? kServiceIconOptions.keys.first;
+    _type = existing?.type ?? ServiceType.activity;
   }
 
   @override
@@ -355,6 +374,7 @@ class _ServiceFormDialogState extends State<_ServiceFormDialog> {
         slug: widget.existing?.slug ?? _slugify(name),
         icon: _icon,
         description: _descriptionController.text.trim(),
+        type: widget.existing?.type ?? _type,
       ),
     );
   }
@@ -369,6 +389,48 @@ class _ServiceFormDialogState extends State<_ServiceFormDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (widget.existing == null) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Tipo de serviço', style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final type in ServiceType.values)
+                    ChoiceChip(
+                      label: Text(type.label),
+                      selected: _type == type,
+                      onSelected: (_) => setState(() => _type = type),
+                      selectedColor: KonektoBrand.gold.withValues(alpha: 0.18),
+                      backgroundColor: Colors.transparent,
+                      side: BorderSide(color: _type == type ? KonektoBrand.gold.withValues(alpha: 0.6) : KonektoBrand.borderStrong),
+                      labelStyle: KonektoBrand.body(fontSize: 12.5, color: _type == type ? KonektoBrand.goldLight : KonektoBrand.slate),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                switch (_type) {
+                  ServiceType.roomService => 'Item por item, com quantidade e observação (ex: cardápio de quarto).',
+                  ServiceType.restaurant => 'Cardápio só informativo — a reserva é de uma mesa, não de um prato.',
+                  ServiceType.activity => 'Cada item abre um modal de dia/horário (ex: spa, eventos, passeios).',
+                },
+                style: KonektoBrand.body(fontSize: 11.5, color: KonektoBrand.slateSoft),
+              ),
+              const SizedBox(height: 14),
+            ] else ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Tipo: ${widget.existing!.type.label}',
+                  style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
             TextField(
               controller: _nameController,
               style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),

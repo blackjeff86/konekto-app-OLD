@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:konekto/app/tenants/booking_sheet.dart';
 import 'package:konekto/app/tenants/service_item_detail_page.dart';
 import 'package:konekto/app/tenants/services_page.dart' show hexToColor;
+import 'package:konekto/data/guest_claim_repository.dart';
+import 'package:konekto/data/orders_repository.dart';
 import 'package:konekto/data/tenant_repository.dart';
 import 'package:konekto/data/tenant_repository_provider.dart';
 import 'package:konekto/models/service.dart';
@@ -24,7 +27,10 @@ class ServiceItemsListPage extends StatefulWidget {
 
 class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
   final TenantRepository _repository = createTenantRepository();
+  final GuestClaimRepository _guestClaimRepository = GuestClaimRepository();
+  final OrdersRepository _ordersRepository = OrdersRepository();
   late final Future<Service> _serviceFuture;
+  bool _isReservingTable = false;
 
   String get _hotelId => widget.tenantConfig['id'] ?? 'hotel_1';
 
@@ -37,6 +43,54 @@ class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
   Future<Service> _load() async {
     final raw = await _repository.getService(_hotelId, widget.serviceId);
     return Service.fromJson(raw);
+  }
+
+  Future<void> _reserveTable(BuildContext context, Service service) async {
+    final String fontFamily = widget.tenantConfig['typography']['fontFamily'];
+    final Color primaryColor = hexToColor(widget.tenantConfig['colorPalette']['primary']);
+    final Color backgroundColor = hexToColor(widget.tenantConfig['colorPalette']['background']);
+    final Color bodyTextColor = hexToColor(widget.tenantConfig['typography']['bodyText']['color']);
+
+    final result = await showBookingSheet(
+      context,
+      itemName: 'Mesa em ${service.name}',
+      fontFamily: fontFamily,
+      primaryColor: primaryColor,
+      backgroundColor: backgroundColor,
+      bodyTextColor: bodyTextColor,
+      confirmLabel: 'Reservar mesa',
+    );
+    if (result == null) return;
+    if (!context.mounted) return;
+
+    final guestToken = await _guestClaimRepository.getStoredToken();
+    if (guestToken == null) {
+      if (!context.mounted) return;
+      _showSnackBar(context, message: 'Reserva confirmada! A recepção foi notificada.', fontFamily: fontFamily, color: primaryColor);
+      return;
+    }
+
+    setState(() => _isReservingTable = true);
+    try {
+      await _ordersRepository.createTableReservation(serviceId: widget.serviceId, token: guestToken, scheduledFor: result.dateTime);
+      if (!context.mounted) return;
+      _showSnackBar(context, message: 'Reserva confirmada! A recepção foi notificada.', fontFamily: fontFamily, color: primaryColor);
+    } on StateError catch (error) {
+      if (!context.mounted) return;
+      _showSnackBar(context, message: error.message, fontFamily: fontFamily, color: Colors.red.shade700);
+    } finally {
+      if (mounted) setState(() => _isReservingTable = false);
+    }
+  }
+
+  void _showSnackBar(BuildContext context, {required String message, required String fontFamily, required Color color}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: GoogleFonts.getFont(fontFamily, color: Colors.white)),
+        backgroundColor: color,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -111,7 +165,7 @@ class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
                                       tenantConfig: widget.tenantConfig,
                                       serviceId: widget.serviceId,
                                       serviceName: service.name,
-                                      isRoomService: service.isRoomService,
+                                      serviceType: service.type,
                                       item: item,
                                       hotelId: _hotelId,
                                     ),
@@ -122,6 +176,27 @@ class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
                           },
                         ),
                 ),
+                if (service.type == ServiceType.restaurant)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isReservingTable ? null : () => _reserveTable(context, service),
+                        icon: _isReservingTable
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.table_bar_outlined, size: 20),
+                        label: Text('Reservar mesa', style: GoogleFonts.getFont(fontFamily, fontSize: 16)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             );
           },

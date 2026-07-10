@@ -231,10 +231,26 @@ model BrandContent {
   @@map("brand_content")
 }
 
+enum ServiceType {
+  /// Cardápio pedido pro quarto — item por item, com quantidade e
+  /// observação (app do hóspede usa o fluxo de "Adicionar ao pedido").
+  room_service
+  /// O cardápio é só informativo; a reserva é da MESA do restaurante como
+  /// um todo (um botão único abaixo da lista de itens), não por prato.
+  restaurant
+  /// Qualquer experiência agendável item a item (spa, eventos, passeios,
+  /// ou algo novo que o hotel crie) — cada item abre o modal de dia/hora.
+  activity
+}
+
 /// Serviço criado pelo hotel (Room Service, Spa, um restaurante específico,
 /// ou algo totalmente novo como "Aluguel de Bicicleta") — substitui os 5
 /// tipos fixos que existiam antes no código. Cada restaurante é seu próprio
 /// Service (não um Service "Restaurantes" com um nível extra dentro).
+///
+/// `type` decide o comportamento no app do hóspede (ver [ServiceType]) —
+/// definido na criação e não muda depois (trocar o tipo de um serviço já
+/// em uso não faz sentido operacional, mesmo padrão do `slug` imutável).
 model Service {
   id             String        @id @default(cuid())
   hotelId        String
@@ -242,6 +258,7 @@ model Service {
   slug           String
   icon           String // nome do ícone Material (ex: "room_service", "spa", "restaurant")
   description    String
+  type           ServiceType
   bannerImageUrl String?
   position       Int           @default(0)
   enabled        Boolean       @default(true)
@@ -259,6 +276,12 @@ model Service {
 /// passeio...). `price: null` = não é "comprável" (eventos/passeios só têm
 /// "solicitar"/"reservar", sem preço) — a UI decide o que mostrar com base
 /// nisso, sem precisar de um campo separado tipo "buttonText".
+///
+/// `hidden: true` marca um item técnico/sintético que nunca aparece em
+/// nenhuma listagem (portal ou app do hóspede) — hoje só usado pro item
+/// "Reserva de mesa" auto-criado por trás de um `Service` do tipo
+/// `restaurant`, pra reaproveitar o modelo `Order` existente sem precisar
+/// de uma tabela nova só pra reservas de mesa.
 model ServiceItem {
   id          String   @id @default(cuid())
   serviceId   String
@@ -270,6 +293,7 @@ model ServiceItem {
   category    String? // agrupamento opcional (usado por room service: Entradas/Pratos/etc.)
   extraInfo   String? // rótulo livre (tempo de preparo, duração, etc.)
   position    Int      @default(0)
+  hidden      Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)

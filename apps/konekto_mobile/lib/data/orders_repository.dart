@@ -36,6 +36,24 @@ class OrdersRepository {
     }
   }
 
+  /// Reserva a MESA de um restaurante (não um prato do cardápio) — sem
+  /// `serviceItemId`, a API resolve/cria o item oculto "Reserva de mesa"
+  /// por trás. Só vale pra `Service` do tipo `restaurant`.
+  Future<void> createTableReservation({
+    required String serviceId,
+    required String token,
+    required DateTime scheduledFor,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('$apiBaseUrl/api/orders'),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      body: jsonEncode({'serviceId': serviceId, 'scheduledFor': scheduledFor.toIso8601String()}),
+    );
+    if (response.statusCode != 201) {
+      throw StateError('Falha ao reservar a mesa (status ${response.statusCode}).');
+    }
+  }
+
   Future<List<GuestOrder>> getMyOrders({required String token}) async {
     final response = await _client.get(
       Uri.parse('$apiBaseUrl/api/orders'),

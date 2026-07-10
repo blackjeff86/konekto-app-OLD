@@ -51,6 +51,7 @@ interface ServiceSeedDefinition {
   name: string
   icon: string
   description: string
+  type: 'room_service' | 'restaurant' | 'activity'
   bannerImageUrl: string | null
   items: ServiceSeedItem[]
 }
@@ -102,6 +103,7 @@ function buildRoomServiceDefinition(hotelDir: string): ServiceSeedDefinition | n
     name: (pageConfig?.title as string) ?? 'Serviço de Quarto',
     icon: 'room_service',
     description: 'Cardápio de room service.',
+    type: 'room_service',
     bannerImageUrl: (pageConfig?.headerImage as string) ?? null,
     items,
   }
@@ -125,6 +127,7 @@ function buildSpaDefinition(hotelDir: string): ServiceSeedDefinition | null {
     name: (pageConfig?.title as string) ?? 'SPA',
     icon: 'spa',
     description: 'Serviços de spa.',
+    type: 'activity',
     bannerImageUrl: (pageConfig?.bannerImageUrl as string) ?? null,
     items,
   }
@@ -142,6 +145,7 @@ function buildRestaurantDefinitions(hotelDir: string): ServiceSeedDefinition[] {
       name: (restaurant.name as string) ?? 'Restaurante',
       icon: 'restaurant',
       description: (restaurant.description as string) ?? '',
+      type: 'restaurant',
       bannerImageUrl: (restaurant.imageUrl as string) ?? null,
       items: menuItems.map((item) => ({
         name: (item.name as string) ?? '',
@@ -172,6 +176,7 @@ function buildEventosDefinition(hotelId: string, hotelDir: string): ServiceSeedD
     name: (pageConfig?.title as string) ?? 'Eventos',
     icon: 'event',
     description: 'Eventos do hotel.',
+    type: 'activity',
     bannerImageUrl: (pageConfig?.bannerImageUrl as string) ?? null,
     items,
   }
@@ -196,6 +201,7 @@ function buildPasseiosDefinition(hotelId: string, hotelDir: string): ServiceSeed
     name: (pageConfig?.title as string) ?? 'Passeios',
     icon: 'sports_soccer',
     description: 'Passeios e atividades locais.',
+    type: 'activity',
     bannerImageUrl: (pageConfig?.bannerImageUrl as string) ?? null,
     items,
   }
@@ -217,6 +223,7 @@ async function seedService(hotelId: string, position: number, definition: Servic
       name: definition.name,
       icon: definition.icon,
       description: definition.description,
+      type: definition.type,
       bannerImageUrl: definition.bannerImageUrl,
       position,
     },
