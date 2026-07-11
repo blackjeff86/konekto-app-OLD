@@ -27,6 +27,7 @@ model Hotel {
   guests       Guest[]
   orders       Order[]
   stays        Stay[]
+  rooms        Room[]
 
   @@map("hotels")
 }
@@ -85,15 +86,35 @@ model StaffInvite {
   @@map("staff_invites")
 }
 
+/// Quarto físico do hotel — cadastro em Configurações, fonte de verdade
+/// pro mapa de quartos (livre/ocupado). `number` é único por hotel;
+/// `description` é livre (tipo, comodidades, o que o gerente quiser
+/// anotar). Um quarto só pode ser removido se não tiver nenhuma `Stay`
+/// vinculada (ver `DELETE /api/hotels/:hotelId/rooms/:roomId`).
+model Room {
+  id          String   @id @default(cuid())
+  hotelId     String
+  number      String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  hotel       Hotel    @relation(fields: [hotelId], references: [id])
+  stays       Stay[]
+
+  @@unique([hotelId, number])
+  @@index([hotelId])
+  @@map("rooms")
+}
+
 enum StayStatus {
   active
   closed
 }
 
 /// Reserva de um quarto — agrupa um ou mais hóspedes (marido, esposa,
-/// filhos) sob a mesma estadia. `roomNumber`/`checkInDate`/`checkOutDate`
-/// vivem aqui (não em `Guest`) porque são dados do QUARTO, compartilhados
-/// por todo mundo que está nele; cada `Guest` individual só guarda seus
+/// filhos) sob a mesma estadia. `checkInDate`/`checkOutDate` vivem aqui
+/// (não em `Guest`) porque são dados da ESTADIA, compartilhados por todo
+/// mundo que está no quarto; cada `Guest` individual só guarda seus
 /// próprios dados pessoais + código de acesso.
 ///
 /// "Fechar a conta" = marcar `status: closed` e revogar (`status: revoked`)
@@ -102,17 +123,19 @@ enum StayStatus {
 model Stay {
   id           String       @id @default(cuid())
   hotelId      String
-  roomNumber   String
+  roomId       String
   checkInDate  DateTime
   checkOutDate DateTime
   status       StayStatus   @default(active)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   hotel        Hotel        @relation(fields: [hotelId], references: [id])
+  room         Room         @relation(fields: [roomId], references: [id])
   guests       Guest[]
   notices      StayNotice[]
 
   @@index([hotelId])
+  @@index([roomId])
   @@map("stays")
 }
 

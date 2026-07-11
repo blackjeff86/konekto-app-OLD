@@ -372,3 +372,24 @@ Motivação: logo depois de shippar os 3 `ServiceType` fixos como seções da li
 ## Itens abertos (pendências conhecidas, não bloqueiam)
 
 - **Imagem de item com URL externa não carrega no app do hóspede** (`TenantImage`, `apps/konekto_mobile/lib/widgets/tenant_image.dart`): criamos o widget que decide entre `Image.asset` (conteúdo semeado) e `Image.network` (itens novos do portal), mas testando com uma URL real (`fontagua.com.br`) a imagem não carregou — provavelmente CORS do host de origem, hotlink bloqueado, ou renderer CanvasKit do Flutter Web exigindo CORS pra decodificar a imagem em textura. Investigar depois: (1) testar com uma URL de imagem de um host que permite CORS/hotlink (ex: Unsplash, Cloudinary), (2) considerar um proxy de imagem no backend, ou (3) adicionar upload de imagem pro próprio `konekto_api`/storage em vez de depender de URL externa.
+
+## Fase Quartos 2.0 — cadastro de quarto físico, mapa visual, edição de hóspede
+
+**Status: concluído e em produção.**
+
+Motivação: três pedidos do usuário na mesma leva — (1) editar o cadastro de um hóspede já existente (só dava pra revogar, não corrigir um dado errado); (2) a tela "Quartos" listava estadias, não tinha noção de "quarto livre" (só existiam quartos que alguém já tinha ocupado alguma vez); (3) não existia um cadastro de quartos físicos do hotel em si — `Stay.roomNumber` era texto livre digitado toda vez.
+
+**Decisão confirmada com o usuário:** `Room` vira uma entidade real (cadastro em Configurações), e `Stay` passa a referenciar um `Room` via FK — "Nova estadia" escolhe um quarto já cadastrado em vez de digitar o número. Isso é o que torna o mapa de quartos coerente (todo quarto que existe no mapa é um quarto de verdade, cadastrado).
+
+**Backend:**
+- Novo model `Room` (`number` único por hotel, `description` livre). `Stay.roomNumber` virou `Stay.roomId` (FK). Migration `20260711032854_add_room_entity` — backfill: um `Room` por par (hotelId, roomNumber) distinto já usado em alguma Stay (4 quartos reais migrados sem perda: 210/305/412/701), verificado correto via query direta pós-migração.
+- Novo helper `lib/stay-shape.ts` (`flattenStayRoomNumber`) — todo lugar que retorna uma Stay (ou um Guest/Order com Stay aninhada) inclui `room: {select:{number}}` e achata de volta pra `roomNumber` na resposta, mantendo o formato que os 3 apps já esperavam sem precisar mexer em nenhum modelo Dart além do que já mudou de qualquer forma.
+- Novas rotas: `GET/POST /api/hotels/:hotelId/rooms` (lista já vem com a estadia ATIVA de cada quarto, incluindo hóspedes+pedidos — dá pro mapa mostrar livre/ocupado e o valor em aberto numa chamada só), `PATCH/DELETE /api/hotels/:hotelId/rooms/:roomId` (`DELETE` rejeita com 409 se o quarto já teve alguma Stay, histórica ou ativa). `POST /api/hotels/:hotelId/stays` e `PATCH .../stays/:stayId` trocaram `roomNumber` por `roomId` (valida que o quarto existe e pertence ao hotel).
+- Novo `PATCH /api/hotels/:hotelId/guests/:guestId` — edita só dados pessoais (nome, documento, contato, wifi); não mexe em `stayId`/quarto (mover hóspede de quarto fica pra outra hora) nem `accessCode`/`status` (fluxos próprios).
+
+**Portal:**
+- Configurações ganhou uma 4ª aba "Quartos" (`room_registry_page.dart`) — CRUD simples de quarto físico (número + descrição livre), mesmo padrão visual da lista de Serviços.
+- `GuestDetailPage` ganhou um botão "Editar cadastro" na seção Cadastro, abrindo um formulário pré-preenchido (mesmos campos pessoais da criação, sem quarto/estadia).
+- `RoomsPage` (aba principal "Quartos") virou um mapa visual — grade de cards por quarto, ícone+badge livre/ocupado, e pra quartos ocupados já mostra hóspedes+valor em aberto no próprio card. Tocar num quarto ocupado abre `StayDetailPage` (que ganhou um "Valor em aberto" permanente no corpo — não só na confirmação de fechar conta — e um botão "Estender estadia" que só troca o `checkOutDate`); tocar num quarto livre abre um atalho simples "Iniciar nova estadia" (dia de check-in/check-out, quarto já fixo).
+
+**Checkpoint:** `flutter analyze`/`flutter test` limpos no portal, `tsc --noEmit`/`next build` limpos na API. Ciclo ponta a ponta via curl contra servidor local (banco de produção): quarto novo criado → número duplicado rejeitado com 409 → Stay criada nele via `roomId` → quarto aparece OCUPADO no mapa → estender estadia (`checkOutDate` novo) → tentativa de apagar quarto com Stay vinculada rejeitada com 409 → edição de cadastro de hóspede (nome+e-mail) aplicada e revertida corretamente, `stay.roomNumber` continua achatado certo na resposta. Deployado em produção (API + konekto-portal — app do hóspede não precisou de rebuild, o achatamento de `roomNumber` mantém o contrato que ele já espera).

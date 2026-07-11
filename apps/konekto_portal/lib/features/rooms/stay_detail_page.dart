@@ -196,6 +196,26 @@ class _StayDetailPageState extends State<StayDetailPage> {
     }
   }
 
+  Future<void> _extendStay(Stay stay) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: stay.checkOutDate,
+      firstDate: stay.checkInDate,
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+      helpText: 'Nova data de saída',
+    );
+    if (picked == null) return;
+
+    final token = await _requireToken();
+    if (token == null) return;
+    try {
+      await _repository.extendStay(hotelId: widget.session.hotelId, stayId: widget.stayId, token: token, checkOutDate: picked);
+      await _load();
+    } on StateError catch (error) {
+      setState(() => _errorMessage = error.message);
+    }
+  }
+
   void _openGuestDetail(StayGuestSummary guestSummary) {
     setState(() => _viewingGuestId = guestSummary.id);
   }
@@ -290,19 +310,45 @@ class _StayDetailPageState extends State<StayDetailPage> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Text('Valor em aberto:', style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slate)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'R\$ ${_consumptionTotal(stay).toStringAsFixed(2)}',
+                        style: KonektoBrand.display(fontSize: 16, color: KonektoBrand.goldLight),
+                      ),
+                    ],
+                  ),
                   if (isActive) ...[
                     const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _closeAccount(stay),
-                        icon: const Icon(Icons.receipt_long_outlined, size: 16, color: Color(0xFFF1A6A0)),
-                        label: Text('Fechar conta', style: KonektoBrand.body(fontSize: 13, color: const Color(0xFFF1A6A0))),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0x4DDC2626)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _extendStay(stay),
+                            icon: const Icon(Icons.event_repeat_outlined, size: 16, color: KonektoBrand.goldLight),
+                            label: Text('Estender estadia', style: KonektoBrand.body(fontSize: 13, color: KonektoBrand.goldLight)),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: KonektoBrand.borderStrong),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _closeAccount(stay),
+                            icon: const Icon(Icons.receipt_long_outlined, size: 16, color: Color(0xFFF1A6A0)),
+                            label: Text('Fechar conta', style: KonektoBrand.body(fontSize: 13, color: const Color(0xFFF1A6A0))),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0x4DDC2626)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],

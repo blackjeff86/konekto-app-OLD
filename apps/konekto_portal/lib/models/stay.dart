@@ -183,17 +183,19 @@ class Stay {
 }
 
 /// Dados do formulário de criação de uma nova estadia (passo 1, antes de
-/// adicionar qualquer hóspede dentro dela).
+/// adicionar qualquer hóspede dentro dela). `roomId` referencia um quarto
+/// já cadastrado (ver `RoomsRepository`) — não dá mais pra digitar um
+/// número de quarto livre.
 class NewStayInput {
-  final String roomNumber;
+  final String roomId;
   final DateTime checkInDate;
   final DateTime checkOutDate;
 
-  const NewStayInput({required this.roomNumber, required this.checkInDate, required this.checkOutDate});
+  const NewStayInput({required this.roomId, required this.checkInDate, required this.checkOutDate});
 
   Map<String, dynamic> toJson() {
     return {
-      'roomNumber': roomNumber,
+      'roomId': roomId,
       'checkInDate': checkInDate.toIso8601String(),
       'checkOutDate': checkOutDate.toIso8601String(),
     };

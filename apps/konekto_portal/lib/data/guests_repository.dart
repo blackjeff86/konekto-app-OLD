@@ -50,6 +50,23 @@ class GuestsRepository {
     return Guest.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
   }
 
+  Future<Guest> updateGuest({
+    required String hotelId,
+    required String guestId,
+    required String token,
+    required GuestEditInput input,
+  }) async {
+    final response = await _client.patch(
+      Uri.parse('$apiBaseUrl/api/hotels/$hotelId/guests/$guestId'),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      body: jsonEncode(input.toJson()),
+    );
+    if (response.statusCode != 200) {
+      throw StateError('Falha ao atualizar o cadastro (status ${response.statusCode}).');
+    }
+    return Guest.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  }
+
   Future<void> revokeGuest({required String hotelId, required String guestId, required String token}) async {
     final response = await _client.delete(
       Uri.parse('$apiBaseUrl/api/hotels/$hotelId/guests/$guestId'),

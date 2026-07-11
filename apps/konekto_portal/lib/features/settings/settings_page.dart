@@ -7,11 +7,12 @@ import 'package:konekto_portal/auth/staff_role.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
 import 'package:konekto_portal/data/hotel_config_repository.dart';
 import 'package:konekto_portal/features/services/services_list_page.dart';
+import 'package:konekto_portal/features/settings/room_registry_page.dart';
 import 'package:konekto_portal/features/staff/invite_staff_page.dart';
 import 'package:konekto_portal/guest_app_config.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
 
-const List<String> _kConfigSections = ['Marca', 'Serviços', 'Equipe'];
+const List<String> _kConfigSections = ['Marca', 'Serviços', 'Quartos', 'Equipe'];
 
 /// Shell de Configurações — só `gerente` acessa. Alterna entre a edição de
 /// marca e a gestão de serviços dinâmicos (`ServicesListPage`).
@@ -71,7 +72,11 @@ class _SettingsPageState extends State<SettingsPage> {
               session: widget.session,
               authRepository: widget.authRepository,
             ),
-            2 => InviteStaffPage(
+            2 => RoomRegistryPage(
+              session: widget.session,
+              authRepository: widget.authRepository,
+            ),
+            3 => InviteStaffPage(
               session: widget.session,
               authRepository: widget.authRepository,
             ),

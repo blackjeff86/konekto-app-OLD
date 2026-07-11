@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
+import { flattenStayRoomNumber } from '@/lib/stay-shape'
 
 export const runtime = 'nodejs'
 
@@ -35,9 +36,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const guests = await prisma.guest.findMany({
     where: { hotelId },
     orderBy: { createdAt: 'desc' },
-    include: { stay: { select: { roomNumber: true, checkInDate: true, checkOutDate: true, status: true } } },
+    include: {
+      stay: { select: { room: { select: { number: true } }, checkInDate: true, checkOutDate: true, status: true } },
+    },
   })
-  return NextResponse.json(guests)
+  return NextResponse.json(guests.map((guest) => ({ ...guest, stay: flattenStayRoomNumber(guest.stay) })))
 }
 
 const createGuestSchema = z.object({
@@ -87,7 +90,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const guest = await prisma.guest.create({
     data: { hotelId, ...parsed.data, accessCode: generateAccessCode(hotelId) },
-    include: { stay: { select: { roomNumber: true, checkInDate: true, checkOutDate: true, status: true } } },
+    include: {
+      stay: { select: { room: { select: { number: true } }, checkInDate: true, checkOutDate: true, status: true } },
+    },
   })
-  return NextResponse.json(guest, { status: 201 })
+  return NextResponse.json({ ...guest, stay: flattenStayRoomNumber(guest.stay) }, { status: 201 })
 }

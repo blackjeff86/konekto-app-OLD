@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
   const guest = await prisma.guest.findUnique({
     where: { accessCode: parsed.data.code.trim().toUpperCase() },
-    include: { stay: true },
+    include: { stay: { include: { room: { select: { number: true } } } } },
   })
   if (!guest) {
     return NextResponse.json({ error: 'guest_not_found' }, { status: 404 })
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     hotelId: guest.hotelId,
     firstName: guest.firstName,
     lastName: guest.lastName,
-    roomNumber: guest.stay.roomNumber,
+    roomNumber: guest.stay.room.number,
   })
 
   // Nome da rede de wifi é sempre do hotel; a senha pode ser sobrescrita
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     guest: {
       firstName: guest.firstName,
       lastName: guest.lastName,
-      roomNumber: guest.stay.roomNumber,
+      roomNumber: guest.stay.room.number,
       hotelId: guest.hotelId,
       checkInDate: guest.stay.checkInDate,
       checkOutDate: guest.stay.checkOutDate,

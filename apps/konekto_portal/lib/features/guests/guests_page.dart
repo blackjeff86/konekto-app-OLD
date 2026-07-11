@@ -62,10 +62,9 @@ class _GuestPersonalInput {
 
 class _GuestFormResult {
   final _GuestPersonalInput personal;
-  final String? existingStayId;
-  final NewStayInput? newStay;
+  final String stayId;
 
-  const _GuestFormResult({required this.personal, this.existingStayId, this.newStay});
+  const _GuestFormResult({required this.personal, required this.stayId});
 }
 
 /// Tela "Hóspedes" — lista plana de todas as pessoas cadastradas (de
@@ -149,6 +148,13 @@ class _GuestsPageState extends State<GuestsPage> {
       return;
     }
 
+    if (activeStays.isEmpty) {
+      setState(
+        () => _errorMessage = 'Nenhum quarto ocupado ainda — abra um quarto na aba Quartos antes de cadastrar um hóspede.',
+      );
+      return;
+    }
+
     if (!mounted) return;
     final result = await showDialog<_GuestFormResult>(
       context: context,
@@ -157,23 +163,11 @@ class _GuestsPageState extends State<GuestsPage> {
     if (result == null) return;
 
     try {
-      String stayId;
-      if (result.newStay != null) {
-        final stay = await _staysRepository.createStay(
-          hotelId: widget.session.hotelId,
-          token: token,
-          input: result.newStay!,
-        );
-        stayId = stay.id;
-      } else {
-        stayId = result.existingStayId!;
-      }
-
       final guest = await _repository.createGuest(
         hotelId: widget.session.hotelId,
         token: token,
         input: NewGuestInput(
-          stayId: stayId,
+          stayId: result.stayId,
           firstName: result.personal.firstName,
           lastName: result.personal.lastName,
           documentType: result.personal.documentType,
@@ -487,10 +481,6 @@ class _GuestFormDialog extends StatefulWidget {
   State<_GuestFormDialog> createState() => _GuestFormDialogState();
 }
 
-/// Sentinela pro item "Novo quarto" no dropdown de estadias — distinto de
-/// qualquer `Stay.id` real.
-const _newStaySentinel = '__new_stay__';
-
 class _GuestFormDialogState extends State<_GuestFormDialog> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -498,22 +488,19 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
   final _countryController = TextEditingController();
-  final _roomController = TextEditingController();
   final _wifiPasswordController = TextEditingController();
 
   DocumentType _documentType = DocumentType.cpf;
   PhoneNumber? _phone;
   PhoneNumber? _whatsapp;
   bool _whatsappSameAsPhone = true;
-  DateTime? _checkInDate;
-  DateTime? _checkOutDate;
   String? _errorMessage;
   late String _selectedStayId;
 
   @override
   void initState() {
     super.initState();
-    _selectedStayId = widget.activeStays.isEmpty ? _newStaySentinel : widget.activeStays.first.id;
+    _selectedStayId = widget.activeStays.first.id;
   }
 
   @override
@@ -524,29 +511,8 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
     _emailController.dispose();
     _addressController.dispose();
     _countryController.dispose();
-    _roomController.dispose();
     _wifiPasswordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDate({required bool isCheckIn}) async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: isCheckIn
-          ? (_checkInDate ?? now)
-          : (_checkOutDate ?? _checkInDate ?? now),
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 2),
-    );
-    if (picked == null) return;
-    setState(() {
-      if (isCheckIn) {
-        _checkInDate = picked;
-      } else {
-        _checkOutDate = picked;
-      }
-    });
   }
 
   void _submit() {
@@ -555,10 +521,6 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
     final documentNumber = _documentNumberController.text.trim();
     final country = _countryController.text.trim();
     final phone = _phone;
-    final isNewStay = _selectedStayId == _newStaySentinel;
-    final roomNumber = _roomController.text.trim();
-    final checkInDate = _checkInDate;
-    final checkOutDate = _checkOutDate;
 
     if (firstName.isEmpty ||
         lastName.isEmpty ||
@@ -567,18 +529,6 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
         phone == null) {
       setState(
         () => _errorMessage = 'Preencha nome, sobrenome, documento, telefone e país.',
-      );
-      return;
-    }
-    if (isNewStay && (roomNumber.isEmpty || checkInDate == null || checkOutDate == null)) {
-      setState(
-        () => _errorMessage = 'Preencha o número do quarto e as datas de estadia.',
-      );
-      return;
-    }
-    if (isNewStay && checkOutDate!.isBefore(checkInDate!)) {
-      setState(
-        () => _errorMessage = 'A data de saída não pode ser antes da data de entrada.',
       );
       return;
     }
@@ -603,19 +553,11 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
       wifiPassword: wifiPassword.isEmpty ? null : wifiPassword,
     );
 
-    Navigator.of(context).pop(
-      isNewStay
-          ? _GuestFormResult(
-              personal: personal,
-              newStay: NewStayInput(roomNumber: roomNumber, checkInDate: checkInDate!, checkOutDate: checkOutDate!),
-            )
-          : _GuestFormResult(personal: personal, existingStayId: _selectedStayId),
-    );
+    Navigator.of(context).pop(_GuestFormResult(personal: personal, stayId: _selectedStayId));
   }
 
   @override
   Widget build(BuildContext context) {
-    final isNewStay = _selectedStayId == _newStaySentinel;
     return AlertDialog(
       backgroundColor: KonektoBrand.surface,
       title: Text('Criar hóspede', style: KonektoBrand.display(fontSize: 16)),
@@ -664,9 +606,8 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
                       value: stay.id,
                       child: Text('Quarto ${stay.roomNumber} (${stay.guests.length} hóspede${stay.guests.length == 1 ? '' : 's'})'),
                     ),
-                  const DropdownMenuItem(value: _newStaySentinel, child: Text('+ Novo quarto')),
                 ],
-                onChanged: (value) => setState(() => _selectedStayId = value ?? _newStaySentinel),
+                onChanged: (value) => setState(() => _selectedStayId = value ?? widget.activeStays.first.id),
               ),
               const SizedBox(height: 10),
               Row(
@@ -826,33 +767,6 @@ class _GuestFormDialogState extends State<_GuestFormDialog> {
                 label: 'País',
                 controller: _countryController,
               ),
-              if (isNewStay) ...[
-                const SizedBox(height: 10),
-                _FormField(
-                  label: 'Número do quarto',
-                  controller: _roomController,
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _DatePickerField(
-                        label: 'Check-in',
-                        date: _checkInDate,
-                        onTap: () => _pickDate(isCheckIn: true),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _DatePickerField(
-                        label: 'Check-out',
-                        date: _checkOutDate,
-                        onTap: () => _pickDate(isCheckIn: false),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
               const SizedBox(height: 10),
               _FormField(
                 label: 'Senha de wifi (opcional — vazio usa a padrão do hotel)',
@@ -905,56 +819,3 @@ class _FormField extends StatelessWidget {
   }
 }
 
-class _DatePickerField extends StatelessWidget {
-  final String label;
-  final DateTime? date;
-  final VoidCallback onTap;
-
-  const _DatePickerField({
-    required this.label,
-    required this.date,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: KonektoBrand.body(
-            fontSize: 12,
-            color: KonektoBrand.slate,
-          ),
-          isDense: true,
-          enabledBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: KonektoBrand.borderStrong),
-          ),
-          focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: KonektoBrand.gold),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              date != null ? _formatDate(date!) : 'Selecionar',
-              style: KonektoBrand.body(
-                fontSize: 13.5,
-                color: date != null
-                    ? KonektoBrand.cream
-                    : KonektoBrand.slateSoft,
-              ),
-            ),
-            const Icon(
-              Icons.calendar_today_outlined,
-              size: 15,
-              color: KonektoBrand.slate,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

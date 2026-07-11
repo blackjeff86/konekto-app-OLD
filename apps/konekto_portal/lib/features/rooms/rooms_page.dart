@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
+import 'package:konekto_portal/data/rooms_repository.dart';
 import 'package:konekto_portal/data/stays_repository.dart';
 import 'package:konekto_portal/features/rooms/stay_detail_page.dart';
+import 'package:konekto_portal/models/room.dart';
 import 'package:konekto_portal/models/stay.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
 
@@ -10,11 +12,11 @@ String _formatDate(DateTime date) {
   return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 }
 
-/// Tela "Quartos" — cada estadia agrupa um ou mais hóspedes (marido,
-/// esposa, filhos) do mesmo quarto, cada um com seu próprio código de
-/// acesso. Ponto de entrada pra criar uma reserva de quarto, ver todo
-/// mundo hospedado nela, mandar um aviso pra todos de uma vez, e fechar a
-/// conta no check-out.
+/// Tela "Quartos" — mapa visual de todos os quartos cadastrados (ver
+/// Configurações → Quartos), cada um mostrando livre/ocupado. Tocar num
+/// quarto ocupado abre o detalhe da estadia (`StayDetailPage`, com
+/// hóspedes, avisos, valor em aberto, estender/fechar conta); tocar num
+/// quarto livre abre um atalho pra iniciar uma nova estadia nele.
 class RoomsPage extends StatefulWidget {
   final StaffSession session;
   final AuthRepository authRepository;
@@ -26,12 +28,12 @@ class RoomsPage extends StatefulWidget {
 }
 
 class _RoomsPageState extends State<RoomsPage> {
-  final _repository = StaysRepository();
+  final _repository = RoomsRepository();
 
   bool _isLoading = true;
   String? _errorMessage;
-  List<Stay> _stays = const [];
-  String? _viewingStayId;
+  List<Room> _rooms = const [];
+  String? _viewingRoomId;
 
   @override
   void initState() {
@@ -58,8 +60,8 @@ class _RoomsPageState extends State<RoomsPage> {
       return;
     }
     try {
-      final stays = await _repository.listStays(hotelId: widget.session.hotelId, token: token);
-      setState(() => _stays = stays);
+      final rooms = await _repository.listRooms(hotelId: widget.session.hotelId, token: token);
+      setState(() => _rooms = rooms);
     } on StateError catch (error) {
       setState(() => _errorMessage = error.message);
     } finally {
@@ -67,41 +69,34 @@ class _RoomsPageState extends State<RoomsPage> {
     }
   }
 
-  Future<void> _createStay() async {
-    final input = await showDialog<NewStayInput>(
-      context: context,
-      builder: (context) => const _StayFormDialog(),
-    );
-    if (input == null) return;
-
-    final token = await _requireToken();
-    if (token == null) return;
-
-    try {
-      await _repository.createStay(hotelId: widget.session.hotelId, token: token, input: input);
-      await _load();
-    } on StateError catch (error) {
-      setState(() => _errorMessage = error.message);
-    }
-  }
-
-  void _openStay(Stay stay) {
-    setState(() => _viewingStayId = stay.id);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final viewingStayId = _viewingStayId;
-    if (viewingStayId != null) {
-      return StayDetailPage(
-        session: widget.session,
-        authRepository: widget.authRepository,
-        stayId: viewingStayId,
-        onBack: () {
-          setState(() => _viewingStayId = null);
-          _load();
-        },
-      );
+    final viewingRoomId = _viewingRoomId;
+    if (viewingRoomId != null) {
+      final matches = _rooms.where((room) => room.id == viewingRoomId);
+      final room = matches.isEmpty ? null : matches.first;
+      if (room == null) {
+        // Quarto sumiu da lista (removido em outra aba, ex.) — volta pro mapa.
+        _viewingRoomId = null;
+      } else if (room.isOccupied) {
+        return StayDetailPage(
+          session: widget.session,
+          authRepository: widget.authRepository,
+          stayId: room.activeStay!.id,
+          onBack: () {
+            setState(() => _viewingRoomId = null);
+            _load();
+          },
+        );
+      } else {
+        return _FreeRoomDetail(
+          session: widget.session,
+          authRepository: widget.authRepository,
+          room: room,
+          onBack: () => setState(() => _viewingRoomId = null),
+          onStayCreated: _load,
+        );
+      }
     }
 
     if (_isLoading) {
@@ -112,19 +107,10 @@ class _RoomsPageState extends State<RoomsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(child: Text('Quartos', style: KonektoBrand.display(fontSize: 18))),
-              TextButton.icon(
-                onPressed: _createStay,
-                icon: const Icon(Icons.add_home_outlined, size: 18, color: KonektoBrand.goldLight),
-                label: Text('Nova estadia', style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.goldLight)),
-              ),
-            ],
-          ),
+          Text('Quartos', style: KonektoBrand.display(fontSize: 18)),
           const SizedBox(height: 4),
           Text(
-            'Cada estadia é um quarto — adicione quantos hóspedes precisar dentro dela, cada um com seu próprio código.',
+            'Toque num quarto pra ver hóspedes, avisos e o valor em aberto — ou iniciar uma estadia se estiver livre.',
             style: KonektoBrand.body(fontSize: 12.5),
           ),
           const SizedBox(height: 20),
@@ -140,7 +126,7 @@ class _RoomsPageState extends State<RoomsPage> {
             ),
             const SizedBox(height: 16),
           ],
-          if (_stays.isEmpty)
+          if (_rooms.isEmpty)
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
@@ -148,24 +134,18 @@ class _RoomsPageState extends State<RoomsPage> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: KonektoBrand.borderStrong),
               ),
-              child: Text('Nenhuma estadia criada ainda.', style: KonektoBrand.body(fontSize: 13.5)),
+              child: Text(
+                'Nenhum quarto cadastrado ainda — cadastre em Configurações → Quartos.',
+                style: KonektoBrand.body(fontSize: 13.5),
+              ),
             )
           else
-            Container(
-              decoration: BoxDecoration(
-                color: KonektoBrand.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: KonektoBrand.borderStrong),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final stay in _stays) ...[
-                    if (stay != _stays.first) const Divider(height: 1, color: KonektoBrand.borderStrong),
-                    _StayRow(stay: stay, onTap: () => _openStay(stay)),
-                  ],
-                ],
-              ),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final room in _rooms) _RoomCard(room: room, onTap: () => setState(() => _viewingRoomId = room.id)),
+              ],
             ),
         ],
       ),
@@ -173,54 +153,76 @@ class _RoomsPageState extends State<RoomsPage> {
   }
 }
 
-class _StayRow extends StatelessWidget {
-  final Stay stay;
+class _RoomCard extends StatelessWidget {
+  final Room room;
   final VoidCallback onTap;
 
-  const _StayRow({required this.stay, required this.onTap});
+  const _RoomCard({required this.room, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final isActive = stay.status == StayStatus.active;
+    final occupied = room.isOccupied;
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        child: Row(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 172,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: KonektoBrand.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: occupied ? KonektoBrand.gold.withValues(alpha: 0.5) : KonektoBrand.borderStrong),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Quarto ${stay.roomNumber}',
-                    style: KonektoBrand.body(fontSize: 14, fontWeight: FontWeight.w700, color: KonektoBrand.cream),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${stay.guests.length} hóspede${stay.guests.length == 1 ? '' : 's'}  ·  ${_formatDate(stay.checkInDate)}–${_formatDate(stay.checkOutDate)}',
-                    style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: isActive ? KonektoBrand.gold.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                stay.status.label,
-                style: KonektoBrand.body(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? KonektoBrand.goldLight : KonektoBrand.slateSoft,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(
+                  occupied ? Icons.bed_outlined : Icons.meeting_room_outlined,
+                  size: 22,
+                  color: occupied ? KonektoBrand.goldLight : KonektoBrand.slate,
                 ),
-              ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: occupied ? KonektoBrand.gold.withValues(alpha: 0.14) : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    occupied ? 'Ocupado' : 'Livre',
+                    style: KonektoBrand.body(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      color: occupied ? KonektoBrand.goldLight : KonektoBrand.slateSoft,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 4),
-            const Icon(Icons.chevron_right, size: 18, color: KonektoBrand.slate),
+            const SizedBox(height: 12),
+            Text('Quarto ${room.number}', style: KonektoBrand.body(fontSize: 15, fontWeight: FontWeight.w700, color: KonektoBrand.cream)),
+            if (occupied) ...[
+              const SizedBox(height: 4),
+              Text(
+                '${room.activeStay!.guestCount} hóspede${room.activeStay!.guestCount == 1 ? '' : 's'}',
+                style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'R\$ ${room.activeStay!.consumptionTotal.toStringAsFixed(2)}',
+                style: KonektoBrand.body(fontSize: 12.5, fontWeight: FontWeight.w600, color: KonektoBrand.goldLight),
+              ),
+            ] else if (room.description != null && room.description!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                room.description!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+              ),
+            ],
           ],
         ),
       ),
@@ -228,24 +230,157 @@ class _StayRow extends StatelessWidget {
   }
 }
 
-class _StayFormDialog extends StatefulWidget {
-  const _StayFormDialog();
+/// Detalhe de um quarto LIVRE — sem estadia pra mostrar, só a opção de
+/// iniciar uma nova.
+class _FreeRoomDetail extends StatefulWidget {
+  final StaffSession session;
+  final AuthRepository authRepository;
+  final Room room;
+  final VoidCallback onBack;
+  final VoidCallback onStayCreated;
+
+  const _FreeRoomDetail({
+    required this.session,
+    required this.authRepository,
+    required this.room,
+    required this.onBack,
+    required this.onStayCreated,
+  });
 
   @override
-  State<_StayFormDialog> createState() => _StayFormDialogState();
+  State<_FreeRoomDetail> createState() => _FreeRoomDetailState();
 }
 
-class _StayFormDialogState extends State<_StayFormDialog> {
-  final _roomController = TextEditingController();
+class _FreeRoomDetailState extends State<_FreeRoomDetail> {
+  final _staysRepository = StaysRepository();
+  String? _errorMessage;
+  bool _isSubmitting = false;
+
+  Future<void> _startStay() async {
+    final dates = await showDialog<_StayDates>(context: context, builder: (context) => const _StayDatesDialog());
+    if (dates == null) return;
+
+    final token = await widget.authRepository.getStoredToken();
+    if (token == null) {
+      setState(() => _errorMessage = 'Sessão expirada — saia e entre novamente.');
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    try {
+      await _staysRepository.createStay(
+        hotelId: widget.session.hotelId,
+        token: token,
+        input: NewStayInput(roomId: widget.room.id, checkInDate: dates.checkIn, checkOutDate: dates.checkOut),
+      );
+      widget.onStayCreated();
+    } on StateError catch (error) {
+      setState(() => _errorMessage = error.message);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 640),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                IconButton(onPressed: widget.onBack, icon: const Icon(Icons.arrow_back, size: 18, color: KonektoBrand.slate)),
+                Expanded(child: Text('Quarto ${widget.room.number}', style: KonektoBrand.display(fontSize: 18))),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0x1ADC2626),
+                  border: Border.all(color: const Color(0x4DDC2626)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
+              ),
+              const SizedBox(height: 16),
+            ],
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: KonektoBrand.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: KonektoBrand.borderStrong),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: Text('Este quarto está livre.', style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream))),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(999)),
+                        child: Text(
+                          'Livre',
+                          style: KonektoBrand.body(fontSize: 11, fontWeight: FontWeight.w600, color: KonektoBrand.slateSoft),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (widget.room.description != null && widget.room.description!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(widget.room.description!, style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slate)),
+                  ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isSubmitting ? null : _startStay,
+                      icon: _isSubmitting
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: KonektoBrand.ink))
+                          : const Icon(Icons.login, size: 18),
+                      label: Text('Iniciar nova estadia', style: KonektoBrand.body(fontSize: 13.5, fontWeight: FontWeight.w700)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: KonektoBrand.gold,
+                        foregroundColor: KonektoBrand.ink,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StayDates {
+  final DateTime checkIn;
+  final DateTime checkOut;
+
+  const _StayDates({required this.checkIn, required this.checkOut});
+}
+
+class _StayDatesDialog extends StatefulWidget {
+  const _StayDatesDialog();
+
+  @override
+  State<_StayDatesDialog> createState() => _StayDatesDialogState();
+}
+
+class _StayDatesDialogState extends State<_StayDatesDialog> {
   DateTime? _checkInDate;
   DateTime? _checkOutDate;
   String? _errorMessage;
-
-  @override
-  void dispose() {
-    _roomController.dispose();
-    super.dispose();
-  }
 
   Future<void> _pickDate({required bool isCheckIn}) async {
     final now = DateTime.now();
@@ -266,29 +401,26 @@ class _StayFormDialogState extends State<_StayFormDialog> {
   }
 
   void _submit() {
-    final roomNumber = _roomController.text.trim();
     final checkInDate = _checkInDate;
     final checkOutDate = _checkOutDate;
-
-    if (roomNumber.isEmpty || checkInDate == null || checkOutDate == null) {
-      setState(() => _errorMessage = 'Preencha o número do quarto e as datas de estadia.');
+    if (checkInDate == null || checkOutDate == null) {
+      setState(() => _errorMessage = 'Preencha as datas de estadia.');
       return;
     }
     if (checkOutDate.isBefore(checkInDate)) {
       setState(() => _errorMessage = 'A data de saída não pode ser antes da data de entrada.');
       return;
     }
-
-    Navigator.of(context).pop(NewStayInput(roomNumber: roomNumber, checkInDate: checkInDate, checkOutDate: checkOutDate));
+    Navigator.of(context).pop(_StayDates(checkIn: checkInDate, checkOut: checkOutDate));
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: KonektoBrand.surface,
-      title: Text('Nova estadia', style: KonektoBrand.display(fontSize: 16)),
+      title: Text('Iniciar estadia', style: KonektoBrand.display(fontSize: 16)),
       content: SizedBox(
-        width: 360,
+        width: 340,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,18 +437,6 @@ class _StayFormDialogState extends State<_StayFormDialog> {
               ),
               const SizedBox(height: 14),
             ],
-            TextField(
-              controller: _roomController,
-              style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
-              decoration: InputDecoration(
-                labelText: 'Número do quarto',
-                labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
-                isDense: true,
-                enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
-                focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
-              ),
-            ),
-            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -333,7 +453,7 @@ class _StayFormDialogState extends State<_StayFormDialog> {
       ),
       actions: [
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-        TextButton(onPressed: _submit, child: const Text('Criar')),
+        TextButton(onPressed: _submit, child: const Text('Iniciar')),
       ],
     );
   }

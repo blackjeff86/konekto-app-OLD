@@ -46,6 +46,24 @@ class StaysRepository {
     return Stay.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
   }
 
+  /// Estende (ou antecipa) a saída — muda só a data de checkout, sem
+  /// mexer no resto da estadia.
+  Future<void> extendStay({
+    required String hotelId,
+    required String stayId,
+    required String token,
+    required DateTime checkOutDate,
+  }) async {
+    final response = await _client.patch(
+      Uri.parse('$apiBaseUrl/api/hotels/$hotelId/stays/$stayId'),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      body: jsonEncode({'checkOutDate': checkOutDate.toIso8601String()}),
+    );
+    if (response.statusCode != 200) {
+      throw StateError('Falha ao estender a estadia (status ${response.statusCode}).');
+    }
+  }
+
   /// Fecha a conta do quarto inteiro: marca a estadia como encerrada e
   /// revoga o código de acesso de todos os hóspedes vinculados a ela.
   Future<void> closeStay({required String hotelId, required String stayId, required String token}) async {

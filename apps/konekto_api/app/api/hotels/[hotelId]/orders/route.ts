@@ -21,15 +21,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const orders = await prisma.order.findMany({
     where: { hotelId },
     orderBy: { createdAt: 'desc' },
-    include: { guest: { select: { firstName: true, lastName: true, stay: { select: { roomNumber: true } } } } },
+    include: {
+      guest: { select: { firstName: true, lastName: true, stay: { select: { room: { select: { number: true } } } } } },
+    },
   })
 
-  // Achata `guest.stay.roomNumber` pra `guest.roomNumber` — mantém o
+  // Achata `guest.stay.room.number` pra `guest.roomNumber` — mantém o
   // formato de resposta que o portal já espera, sem precisar tocar no
-  // modelo Dart por causa da mudança de onde roomNumber mora no schema.
+  // modelo Dart por causa da mudança de onde o número do quarto mora no
+  // schema.
   const flattened = orders.map((order) => ({
     ...order,
-    guest: { firstName: order.guest.firstName, lastName: order.guest.lastName, roomNumber: order.guest.stay.roomNumber },
+    guest: { firstName: order.guest.firstName, lastName: order.guest.lastName, roomNumber: order.guest.stay.room.number },
   }))
   return NextResponse.json(flattened)
 }

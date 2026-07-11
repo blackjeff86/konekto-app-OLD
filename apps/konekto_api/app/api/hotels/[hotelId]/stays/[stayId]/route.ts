@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
+import { flattenStayRoomNumber } from '@/lib/stay-shape'
 
 export const runtime = 'nodejs'
 
@@ -29,6 +30,7 @@ export async function GET(
   const stay = await prisma.stay.findFirst({
     where: { id: stayId, hotelId },
     include: {
+      room: { select: { number: true } },
       guests: { include: { orders: { orderBy: { createdAt: 'desc' } } } },
       notices: { orderBy: { createdAt: 'desc' } },
     },
@@ -36,18 +38,18 @@ export async function GET(
   if (!stay) {
     return NextResponse.json({ error: 'stay_not_found' }, { status: 404 })
   }
-  return NextResponse.json(stay)
+  return NextResponse.json(flattenStayRoomNumber(stay))
 }
 
 const patchStaySchema = z
   .object({
-    roomNumber: z.string().min(1).optional(),
+    roomId: z.string().min(1).optional(),
     checkInDate: z.coerce.date().optional(),
     checkOutDate: z.coerce.date().optional(),
     close: z.boolean().optional(),
   })
   .refine(
-    (data) => data.close || data.roomNumber !== undefined || data.checkInDate !== undefined || data.checkOutDate !== undefined,
+    (data) => data.close || data.roomId !== undefined || data.checkInDate !== undefined || data.checkOutDate !== undefined,
     { message: 'no_fields_to_update' },
   )
 
@@ -84,19 +86,31 @@ export async function PATCH(
 
   if (parsed.data.close) {
     const [stay] = await prisma.$transaction([
-      prisma.stay.update({ where: { id: stayId }, data: { status: 'closed' } }),
+      prisma.stay.update({
+        where: { id: stayId },
+        data: { status: 'closed' },
+        include: { room: { select: { number: true } } },
+      }),
       prisma.guest.updateMany({ where: { stayId }, data: { status: 'revoked' } }),
     ])
-    return NextResponse.json(stay)
+    return NextResponse.json(flattenStayRoomNumber(stay))
+  }
+
+  if (parsed.data.roomId !== undefined) {
+    const room = await prisma.room.findFirst({ where: { id: parsed.data.roomId, hotelId } })
+    if (!room) {
+      return NextResponse.json({ error: 'room_not_found' }, { status: 404 })
+    }
   }
 
   const stay = await prisma.stay.update({
     where: { id: stayId },
     data: {
-      ...(parsed.data.roomNumber !== undefined ? { roomNumber: parsed.data.roomNumber } : {}),
+      ...(parsed.data.roomId !== undefined ? { roomId: parsed.data.roomId } : {}),
       ...(parsed.data.checkInDate !== undefined ? { checkInDate: parsed.data.checkInDate } : {}),
       ...(parsed.data.checkOutDate !== undefined ? { checkOutDate: parsed.data.checkOutDate } : {}),
     },
+    include: { room: { select: { number: true } } },
   })
-  return NextResponse.json(stay)
+  return NextResponse.json(flattenStayRoomNumber(stay))
 }
