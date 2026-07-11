@@ -37,11 +37,19 @@ class ServiceRepository {
     required String icon,
     required String description,
     required ServiceType type,
+    required String category,
   }) async {
     final response = await _client.post(
       Uri.parse('$apiBaseUrl/api/hotels/$hotelId/services'),
       headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-      body: jsonEncode({'name': name, 'slug': slug, 'icon': icon, 'description': description, 'type': type.apiValue}),
+      body: jsonEncode({
+        'name': name,
+        'slug': slug,
+        'icon': icon,
+        'description': description,
+        'type': type.apiValue,
+        'category': category,
+      }),
     );
     if (response.statusCode != 201) {
       throw StateError('Falha ao criar serviço (status ${response.statusCode}).');
@@ -56,6 +64,7 @@ class ServiceRepository {
     String? name,
     String? icon,
     String? description,
+    String? category,
     bool? enabled,
   }) async {
     final response = await _client.patch(
@@ -65,6 +74,7 @@ class ServiceRepository {
         if (name != null) 'name': name,
         if (icon != null) 'icon': icon,
         if (description != null) 'description': description,
+        if (category != null) 'category': category,
         if (enabled != null) 'enabled': enabled,
       }),
     );

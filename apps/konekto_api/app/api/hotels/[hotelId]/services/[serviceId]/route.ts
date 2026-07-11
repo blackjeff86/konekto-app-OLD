@@ -40,6 +40,9 @@ const patchServiceSchema = z.object({
   name: z.string().min(1).optional(),
   icon: z.string().min(1).optional(),
   description: z.string().optional(),
+  // `category` é só organização visual — pode mudar depois. `type`
+  // (comportamento) não está aqui de propósito: uma vez criado, não muda.
+  category: z.string().trim().min(1).optional(),
   bannerImageUrl: z.string().min(1).nullable().optional(),
   enabled: z.boolean().optional(),
   position: z.number().int().min(0).optional(),

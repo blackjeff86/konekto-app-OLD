@@ -38,6 +38,7 @@ const createServiceSchema = z.object({
   icon: z.string().min(1),
   description: z.string(),
   type: z.enum(['room_service', 'restaurant', 'activity']),
+  category: z.string().trim().min(1),
   bannerImageUrl: z.string().min(1).optional(),
 })
 

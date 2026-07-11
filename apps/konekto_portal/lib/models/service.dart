@@ -109,8 +109,16 @@ enum ServiceType {
 
 /// Serviço criado pelo hotel (Room Service, Spa, um restaurante específico,
 /// ou algo totalmente novo) — o hotel define nome/ícone/descrição, sem
-/// tipos fixos no código. `type` decide o comportamento no app do hóspede
-/// e é definido na criação, sem edição depois (mesmo padrão do `slug`).
+/// tipos fixos no código.
+///
+/// `type` decide o COMPORTAMENTO no app do hóspede — só 3 valores
+/// possíveis, definido na criação, sem edição depois (mesmo padrão do
+/// `slug`).
+///
+/// `category` é o rótulo livre que agrupa o serviço na lista do portal
+/// (ex: "Restaurante", "Lavanderia", "Transfer") — o hotel cria quantas
+/// quiser; cada categoria nova escolhe um dos 3 `type` por trás. Diferente
+/// de `type`, pode ser editada depois (é só organização visual).
 class Service {
   final String id;
   final String hotelId;
@@ -119,6 +127,7 @@ class Service {
   final String icon;
   final String description;
   final ServiceType type;
+  final String category;
   final String? bannerImageUrl;
   final int position;
   final bool enabled;
@@ -132,6 +141,7 @@ class Service {
     required this.icon,
     required this.description,
     required this.type,
+    required this.category,
     this.bannerImageUrl,
     required this.position,
     required this.enabled,
@@ -148,6 +158,7 @@ class Service {
       icon: json['icon'] as String,
       description: json['description'] as String,
       type: ServiceType.fromString(json['type'] as String),
+      category: json['category'] as String,
       bannerImageUrl: json['bannerImageUrl'] as String?,
       position: json['position'] as int? ?? 0,
       enabled: json['enabled'] as bool? ?? true,

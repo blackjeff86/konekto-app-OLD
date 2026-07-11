@@ -52,6 +52,7 @@ interface ServiceSeedDefinition {
   icon: string
   description: string
   type: 'room_service' | 'restaurant' | 'activity'
+  category: string
   bannerImageUrl: string | null
   items: ServiceSeedItem[]
 }
@@ -104,6 +105,7 @@ function buildRoomServiceDefinition(hotelDir: string): ServiceSeedDefinition | n
     icon: 'room_service',
     description: 'Cardápio de room service.',
     type: 'room_service',
+    category: 'Serviço de Quarto',
     bannerImageUrl: (pageConfig?.headerImage as string) ?? null,
     items,
   }
@@ -128,6 +130,7 @@ function buildSpaDefinition(hotelDir: string): ServiceSeedDefinition | null {
     icon: 'spa',
     description: 'Serviços de spa.',
     type: 'activity',
+    category: 'Passeio / Atividade',
     bannerImageUrl: (pageConfig?.bannerImageUrl as string) ?? null,
     items,
   }
@@ -146,6 +149,7 @@ function buildRestaurantDefinitions(hotelDir: string): ServiceSeedDefinition[] {
       icon: 'restaurant',
       description: (restaurant.description as string) ?? '',
       type: 'restaurant',
+      category: 'Restaurante',
       bannerImageUrl: (restaurant.imageUrl as string) ?? null,
       items: menuItems.map((item) => ({
         name: (item.name as string) ?? '',
@@ -177,6 +181,7 @@ function buildEventosDefinition(hotelId: string, hotelDir: string): ServiceSeedD
     icon: 'event',
     description: 'Eventos do hotel.',
     type: 'activity',
+    category: 'Passeio / Atividade',
     bannerImageUrl: (pageConfig?.bannerImageUrl as string) ?? null,
     items,
   }
@@ -202,6 +207,7 @@ function buildPasseiosDefinition(hotelId: string, hotelDir: string): ServiceSeed
     icon: 'sports_soccer',
     description: 'Passeios e atividades locais.',
     type: 'activity',
+    category: 'Passeio / Atividade',
     bannerImageUrl: (pageConfig?.bannerImageUrl as string) ?? null,
     items,
   }
@@ -214,6 +220,7 @@ async function seedService(hotelId: string, position: number, definition: Servic
       name: definition.name,
       icon: definition.icon,
       description: definition.description,
+      category: definition.category,
       bannerImageUrl: definition.bannerImageUrl,
       position,
     },
@@ -224,6 +231,7 @@ async function seedService(hotelId: string, position: number, definition: Servic
       icon: definition.icon,
       description: definition.description,
       type: definition.type,
+      category: definition.category,
       bannerImageUrl: definition.bannerImageUrl,
       position,
     },

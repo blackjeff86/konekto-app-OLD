@@ -248,9 +248,16 @@ enum ServiceType {
 /// tipos fixos que existiam antes no código. Cada restaurante é seu próprio
 /// Service (não um Service "Restaurantes" com um nível extra dentro).
 ///
-/// `type` decide o comportamento no app do hóspede (ver [ServiceType]) —
-/// definido na criação e não muda depois (trocar o tipo de um serviço já
-/// em uso não faz sentido operacional, mesmo padrão do `slug` imutável).
+/// `type` decide o COMPORTAMENTO no app do hóspede (ver [ServiceType]) —
+/// só 3 valores possíveis, definido na criação e não muda depois (trocar o
+/// comportamento de um serviço já em uso não faz sentido operacional,
+/// mesmo padrão do `slug` imutável).
+///
+/// `category` é o rótulo livre que agrupa o serviço na lista do portal
+/// (ex: "Restaurante", "Lavanderia", "Transfer") — o hotel pode criar
+/// quantas categorias quiser; cada uma delas escolhe um dos 3 `type`
+/// por trás. Diferente de `type`, `category` pode ser editada depois
+/// (é só organização visual, não muda nada no app).
 model Service {
   id             String        @id @default(cuid())
   hotelId        String
@@ -259,6 +266,7 @@ model Service {
   icon           String // nome do ícone Material (ex: "room_service", "spa", "restaurant")
   description    String
   type           ServiceType
+  category       String
   bannerImageUrl String?
   position       Int           @default(0)
   enabled        Boolean       @default(true)

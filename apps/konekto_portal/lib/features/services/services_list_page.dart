@@ -59,9 +59,10 @@ class _ServicesListPageState extends State<ServicesListPage> {
   }
 
   Future<void> _createOrEditService({Service? existing}) async {
+    final existingCategories = _services.map((service) => service.category).toSet().toList();
     final result = await showDialog<_ServiceFormResult>(
       context: context,
-      builder: (context) => _ServiceFormDialog(existing: existing),
+      builder: (context) => _ServiceFormDialog(existing: existing, existingCategories: existingCategories),
     );
     if (result == null) return;
 
@@ -78,6 +79,7 @@ class _ServicesListPageState extends State<ServicesListPage> {
           icon: result.icon,
           description: result.description,
           type: result.type,
+          category: result.category,
         );
       } else {
         await _repository.updateService(
@@ -87,6 +89,7 @@ class _ServicesListPageState extends State<ServicesListPage> {
           name: result.name,
           icon: result.icon,
           description: result.description,
+          category: result.category,
         );
       }
       await _load();
@@ -205,25 +208,23 @@ class _ServicesListPageState extends State<ServicesListPage> {
               child: Text('Nenhum serviço criado ainda.', style: KonektoBrand.body(fontSize: 13.5)),
             )
           else
-            for (final type in ServiceType.values) ...[
-              if (_services.any((service) => service.type == type)) ...[
+            for (final category in _services.map((service) => service.category).toSet()) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(category, style: KonektoBrand.body(fontSize: 13, fontWeight: FontWeight.w700, color: KonektoBrand.slate)),
+              ),
+              for (final service in _services.where((service) => service.category == category))
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(type.label, style: KonektoBrand.body(fontSize: 13, fontWeight: FontWeight.w700, color: KonektoBrand.slate)),
-                ),
-                for (final service in _services.where((service) => service.type == type))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: _ServiceRow(
-                      service: service,
-                      onManageItems: () => setState(() => _managingServiceId = service.id),
-                      onEdit: () => _createOrEditService(existing: service),
-                      onToggleEnabled: () => _toggleEnabled(service),
-                      onDelete: () => _deleteService(service),
-                    ),
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _ServiceRow(
+                    service: service,
+                    onManageItems: () => setState(() => _managingServiceId = service.id),
+                    onEdit: () => _createOrEditService(existing: service),
+                    onToggleEnabled: () => _toggleEnabled(service),
+                    onDelete: () => _deleteService(service),
                   ),
-                const SizedBox(height: 8),
-              ],
+                ),
+              const SizedBox(height: 8),
             ],
         ],
       ),
@@ -317,6 +318,7 @@ class _ServiceFormResult {
   final String icon;
   final String description;
   final ServiceType type;
+  final String category;
 
   const _ServiceFormResult({
     required this.name,
@@ -324,23 +326,32 @@ class _ServiceFormResult {
     required this.icon,
     required this.description,
     required this.type,
+    required this.category,
   });
 }
 
+/// Sentinela pro item "Nova categoria" no dropdown — distinto de qualquer
+/// nome de categoria real (mesmo padrão do seletor de estadia em
+/// `guests_page.dart`).
+const _newCategorySentinel = '__new_category__';
+
 class _ServiceFormDialog extends StatefulWidget {
   final Service? existing;
+  final List<String> existingCategories;
 
-  const _ServiceFormDialog({this.existing});
+  const _ServiceFormDialog({this.existing, required this.existingCategories});
 
   @override
   State<_ServiceFormDialog> createState() => _ServiceFormDialogState();
 }
 
 class _ServiceFormDialogState extends State<_ServiceFormDialog> {
+  final _categoryController = TextEditingController();
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late String _icon;
   late ServiceType _type;
+  late String _selectedCategory;
 
   @override
   void initState() {
@@ -350,12 +361,23 @@ class _ServiceFormDialogState extends State<_ServiceFormDialog> {
     _descriptionController = TextEditingController(text: existing?.description ?? '');
     _icon = existing?.icon ?? kServiceIconOptions.keys.first;
     _type = existing?.type ?? ServiceType.activity;
+
+    if (existing != null && !widget.existingCategories.contains(existing.category)) {
+      // Categoria do serviço editado pode já não estar na lista (ex: era a
+      // única com esse nome e foi renomeada em outro serviço); trata como
+      // "nova" pra não sumir do formulário.
+      _selectedCategory = _newCategorySentinel;
+      _categoryController.text = existing.category;
+    } else {
+      _selectedCategory = existing?.category ?? (widget.existingCategories.isEmpty ? _newCategorySentinel : widget.existingCategories.first);
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _categoryController.dispose();
     super.dispose();
   }
 
@@ -367,11 +389,13 @@ class _ServiceFormDialogState extends State<_ServiceFormDialog> {
 
   void _submit() {
     final name = _nameController.text.trim();
-    if (name.isEmpty) return;
+    final category = _selectedCategory == _newCategorySentinel ? _categoryController.text.trim() : _selectedCategory;
+    if (name.isEmpty || category.isEmpty) return;
     Navigator.of(context).pop(
       _ServiceFormResult(
         name: name,
         slug: widget.existing?.slug ?? _slugify(name),
+        category: category,
         icon: _icon,
         description: _descriptionController.text.trim(),
         type: widget.existing?.type ?? _type,
@@ -392,7 +416,7 @@ class _ServiceFormDialogState extends State<_ServiceFormDialog> {
             if (widget.existing == null) ...[
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Tipo de serviço', style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
+                child: Text('Comportamento no app do hóspede', style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -404,10 +428,15 @@ class _ServiceFormDialogState extends State<_ServiceFormDialog> {
                       label: Text(type.label),
                       selected: _type == type,
                       onSelected: (_) => setState(() => _type = type),
-                      selectedColor: KonektoBrand.gold.withValues(alpha: 0.18),
+                      selectedColor: KonektoBrand.gold,
+                      checkmarkColor: KonektoBrand.ink,
                       backgroundColor: Colors.transparent,
-                      side: BorderSide(color: _type == type ? KonektoBrand.gold.withValues(alpha: 0.6) : KonektoBrand.borderStrong),
-                      labelStyle: KonektoBrand.body(fontSize: 12.5, color: _type == type ? KonektoBrand.goldLight : KonektoBrand.slate),
+                      side: BorderSide(color: _type == type ? KonektoBrand.gold : KonektoBrand.borderStrong),
+                      labelStyle: KonektoBrand.body(
+                        fontSize: 12.5,
+                        fontWeight: _type == type ? FontWeight.w700 : FontWeight.w400,
+                        color: _type == type ? KonektoBrand.ink : KonektoBrand.slate,
+                      ),
                     ),
                 ],
               ),
@@ -425,12 +454,47 @@ class _ServiceFormDialogState extends State<_ServiceFormDialog> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Tipo: ${widget.existing!.type.label}',
+                  'Comportamento: ${widget.existing!.type.label}',
                   style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
                 ),
               ),
               const SizedBox(height: 14),
             ],
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Categoria', style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedCategory,
+              dropdownColor: KonektoBrand.surface,
+              style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+              decoration: InputDecoration(
+                isDense: true,
+                enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
+                focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+              ),
+              items: [
+                for (final category in widget.existingCategories) DropdownMenuItem(value: category, child: Text(category)),
+                const DropdownMenuItem(value: _newCategorySentinel, child: Text('+ Nova categoria')),
+              ],
+              onChanged: (value) => setState(() => _selectedCategory = value ?? _newCategorySentinel),
+            ),
+            if (_selectedCategory == _newCategorySentinel) ...[
+              const SizedBox(height: 10),
+              TextField(
+                controller: _categoryController,
+                style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                decoration: InputDecoration(
+                  labelText: 'Nome da nova categoria',
+                  labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                  isDense: true,
+                  enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
+                  focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
             TextField(
               controller: _nameController,
               style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
