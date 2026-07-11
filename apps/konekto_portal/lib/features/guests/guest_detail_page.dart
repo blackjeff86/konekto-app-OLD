@@ -17,19 +17,25 @@ String _formatDateTime(DateTime dateTime) {
   return '${_formatDate(dateTime)} às $hour:$minute';
 }
 
-/// Página de detalhe de um hóspede — substitui o modal antigo. Mostra o
-/// cadastro completo, o quarto/estadia, e todos os pedidos/reservas que
-/// esse hóspede já fez (serviço de quarto + agendamentos).
+/// Detalhe de um hóspede — substitui o modal antigo. Mostra o cadastro
+/// completo, o quarto/estadia, e todos os pedidos/reservas que esse
+/// hóspede já fez (serviço de quarto + agendamentos).
+///
+/// Renderizado NO LUGAR do conteúdo (não via `Navigator.push`) — mesmo
+/// padrão de `ServiceItemsPage`/`onBack` — pra manter o menu lateral do
+/// portal sempre visível.
 class GuestDetailPage extends StatefulWidget {
   final StaffSession session;
   final AuthRepository authRepository;
   final String guestId;
+  final VoidCallback onBack;
 
   const GuestDetailPage({
     super.key,
     required this.session,
     required this.authRepository,
     required this.guestId,
+    required this.onBack,
   });
 
   @override
@@ -106,32 +112,33 @@ class _GuestDetailPageState extends State<GuestDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: KonektoBrand.ink,
-      appBar: AppBar(
-        backgroundColor: KonektoBrand.ink,
-        elevation: 0,
-        title: Text(_guest?.fullName ?? 'Hóspede', style: KonektoBrand.display(fontSize: 17)),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: KonektoBrand.gold))
-          : _errorMessage != null && _guest == null
-              ? Center(
-                  child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 13.5)),
-                )
-              : _buildBody(_guest!),
-    );
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: KonektoBrand.gold));
+    }
+    if (_errorMessage != null && _guest == null) {
+      return Center(child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 13.5)));
+    }
+    return _buildBody(_guest!);
   }
 
   Widget _buildBody(Guest guest) {
     final isActive = guest.status == GuestStatus.active;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 640),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Row(
+              children: [
+                IconButton(
+                  onPressed: widget.onBack,
+                  icon: const Icon(Icons.arrow_back, size: 18, color: KonektoBrand.slate),
+                ),
+                Expanded(child: Text(guest.fullName, style: KonektoBrand.display(fontSize: 18))),
+              ],
+            ),
+            const SizedBox(height: 16),
             if (_errorMessage != null) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

@@ -31,6 +31,7 @@ class _RoomsPageState extends State<RoomsPage> {
   bool _isLoading = true;
   String? _errorMessage;
   List<Stay> _stays = const [];
+  String? _viewingStayId;
 
   @override
   void initState() {
@@ -84,17 +85,25 @@ class _RoomsPageState extends State<RoomsPage> {
     }
   }
 
-  Future<void> _openStay(Stay stay) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => StayDetailPage(session: widget.session, authRepository: widget.authRepository, stayId: stay.id),
-      ),
-    );
-    await _load();
+  void _openStay(Stay stay) {
+    setState(() => _viewingStayId = stay.id);
   }
 
   @override
   Widget build(BuildContext context) {
+    final viewingStayId = _viewingStayId;
+    if (viewingStayId != null) {
+      return StayDetailPage(
+        session: widget.session,
+        authRepository: widget.authRepository,
+        stayId: viewingStayId,
+        onBack: () {
+          setState(() => _viewingStayId = null);
+          _load();
+        },
+      );
+    }
+
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator(color: KonektoBrand.gold));
     }

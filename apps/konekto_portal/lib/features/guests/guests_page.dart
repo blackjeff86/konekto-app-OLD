@@ -95,6 +95,7 @@ class _GuestsPageState extends State<GuestsPage> {
   bool _isLoading = true;
   String? _errorMessage;
   List<Guest> _guests = const [];
+  String? _viewingGuestId;
 
   @override
   void initState() {
@@ -287,21 +288,25 @@ class _GuestsPageState extends State<GuestsPage> {
     );
   }
 
-  Future<void> _openGuestDetail(Guest guest) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => GuestDetailPage(
-          session: widget.session,
-          authRepository: widget.authRepository,
-          guestId: guest.id,
-        ),
-      ),
-    );
-    await _load();
+  void _openGuestDetail(Guest guest) {
+    setState(() => _viewingGuestId = guest.id);
   }
 
   @override
   Widget build(BuildContext context) {
+    final viewingGuestId = _viewingGuestId;
+    if (viewingGuestId != null) {
+      return GuestDetailPage(
+        session: widget.session,
+        authRepository: widget.authRepository,
+        guestId: viewingGuestId,
+        onBack: () {
+          setState(() => _viewingGuestId = null);
+          _load();
+        },
+      );
+    }
+
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: KonektoBrand.gold),

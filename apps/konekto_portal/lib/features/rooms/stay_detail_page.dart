@@ -17,16 +17,23 @@ String _formatDate(DateTime date) {
 /// Detalhe de uma estadia (quarto) — todos os hóspedes vinculados, aviso
 /// pra todos de uma vez, e o fechamento de conta (revoga todo mundo e
 /// mostra um resumo de consumo antes de confirmar).
+///
+/// Renderizado NO LUGAR do conteúdo (não via `Navigator.push`) — mesmo
+/// padrão de `ServiceItemsPage`/`onBack` — pra manter o menu lateral do
+/// portal sempre visível. O detalhe de um hóspede aberto a partir daqui
+/// (`_viewingGuestId`) segue o mesmo padrão, aninhado dentro desta página.
 class StayDetailPage extends StatefulWidget {
   final StaffSession session;
   final AuthRepository authRepository;
   final String stayId;
+  final VoidCallback onBack;
 
   const StayDetailPage({
     super.key,
     required this.session,
     required this.authRepository,
     required this.stayId,
+    required this.onBack,
   });
 
   @override
@@ -42,6 +49,7 @@ class _StayDetailPageState extends State<StayDetailPage> {
   bool _isSendingNotice = false;
   String? _errorMessage;
   Stay? _stay;
+  String? _viewingGuestId;
 
   @override
   void initState() {
@@ -188,46 +196,53 @@ class _StayDetailPageState extends State<StayDetailPage> {
     }
   }
 
-  Future<void> _openGuestDetail(StayGuestSummary guestSummary) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => GuestDetailPage(
-          session: widget.session,
-          authRepository: widget.authRepository,
-          guestId: guestSummary.id,
-        ),
-      ),
-    );
-    await _load();
+  void _openGuestDetail(StayGuestSummary guestSummary) {
+    setState(() => _viewingGuestId = guestSummary.id);
   }
 
   @override
   Widget build(BuildContext context) {
+    final viewingGuestId = _viewingGuestId;
+    if (viewingGuestId != null) {
+      return GuestDetailPage(
+        session: widget.session,
+        authRepository: widget.authRepository,
+        guestId: viewingGuestId,
+        onBack: () {
+          setState(() => _viewingGuestId = null);
+          _load();
+        },
+      );
+    }
+
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: KonektoBrand.gold));
+    }
     final stay = _stay;
-    return Scaffold(
-      backgroundColor: KonektoBrand.ink,
-      appBar: AppBar(
-        backgroundColor: KonektoBrand.ink,
-        elevation: 0,
-        title: Text(stay != null ? 'Quarto ${stay.roomNumber}' : 'Quarto', style: KonektoBrand.display(fontSize: 17)),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: KonektoBrand.gold))
-          : stay == null
-              ? Center(child: Text(_errorMessage ?? 'Não encontrado.', style: KonektoBrand.body(fontSize: 13.5)))
-              : _buildBody(stay),
-    );
+    if (stay == null) {
+      return Center(child: Text(_errorMessage ?? 'Não encontrado.', style: KonektoBrand.body(fontSize: 13.5)));
+    }
+    return _buildBody(stay);
   }
 
   Widget _buildBody(Stay stay) {
     final isActive = stay.status == StayStatus.active;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 640),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Row(
+              children: [
+                IconButton(
+                  onPressed: widget.onBack,
+                  icon: const Icon(Icons.arrow_back, size: 18, color: KonektoBrand.slate),
+                ),
+                Expanded(child: Text('Quarto ${stay.roomNumber}', style: KonektoBrand.display(fontSize: 18))),
+              ],
+            ),
+            const SizedBox(height: 16),
             if (_errorMessage != null) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
