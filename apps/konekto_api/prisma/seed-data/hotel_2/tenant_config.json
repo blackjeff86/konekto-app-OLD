@@ -3,7 +3,6 @@
   "hotelInfo": {
     "name": "Hotel 2",
     "logoUrl": "assets/app_assets/images/hotel_logo2.png",
-    "accessCode": "KONEKTO456",
     "promoImages": {
       "carouselEnabled": true,
       "images": [

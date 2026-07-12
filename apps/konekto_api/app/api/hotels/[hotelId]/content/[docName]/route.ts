@@ -6,11 +6,33 @@ import type { Prisma } from '@/app/generated/prisma/client'
 
 export const runtime = 'nodejs'
 
+// Docs que carregam dado sensível (hoje só a senha de wifi do hotel) —
+// diferente dos catálogos públicos (`servicesPage`, `mapa`, etc., que o
+// app do hóspede lê sem token nenhum), esses só podem ser lidos por staff
+// do próprio hotel. Sem essa lista, qualquer pessoa descobria o `hotelId`
+// via `GET /api/hotels` (público) e lia a senha de wifi de qualquer hotel
+// direto, sem código de acesso nem login.
+const PRIVATE_DOC_NAMES = new Set(['guestInfo'])
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ hotelId: string; docName: string }> },
 ) {
   const { hotelId, docName } = await params
+
+  if (PRIVATE_DOC_NAMES.has(docName)) {
+    let staff
+    try {
+      staff = await requireStaffRole(request, ['gerente', 'recepcao'])
+    } catch (error) {
+      if (error instanceof AuthGuardError) return error.response
+      throw error
+    }
+    if (staff.hotelId !== hotelId) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+    }
+  }
+
   const content = await prisma.hotelContent.findUnique({
     where: { hotelId_docName: { hotelId, docName } },
   })

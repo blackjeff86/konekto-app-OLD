@@ -430,4 +430,20 @@ Motivação: levantamento do que existe no app do hóspede sem contrapartida no 
 
 **Portal:** Configurações → Marca ganhou dois cards novos, entre o QR code de recepção e o card de marca existente: "Wi-Fi padrão" (nome da rede + senha, lidos/salvos em `HotelContent.guestInfo.wifi`) e "Carrossel de destaque" (lista dinâmica de URLs de imagem, adicionar/remover linha, salva a lista inteira em `hotelInfo.promoImages`). Cada card carrega e salva de forma independente do card de marca original (nome/logo/cores), sem alterar `updateBranding` nem o teste existente dele.
 
+## Fase Segurança 1.0 — auditoria de segregação multi-tenant
+
+**Status: concluído e em produção.**
+
+Motivação: usuário perguntou se a segregação entre hotéis clientes era garantida de ponta a ponta, antes de começar a onboardar clientes pagantes de verdade. Rodamos uma auditoria dedicada (agente `security-reviewer`) em todas as 26 rotas de `app/api/**/route.ts`, focada especificamente em IDOR e vazamento cross-tenant (não em OWASP genérico).
+
+**Achado CRÍTICO (corrigido):** `GET /api/hotels/:hotelId/content/:docName` não tinha autenticação nenhuma. O doc `guestInfo` guarda a senha de wifi do hotel em texto puro — qualquer pessoa descobria um `hotelId` via `GET /api/hotels` (rota pública, lista todo mundo) e lia a senha de wifi de qualquer hotel cliente sem login nem código de acesso. A própria feature de Wi-Fi padrão que shippamos na fase anterior usava essa mesma rota insegura. Corrigido com uma lista de docs sensíveis (`PRIVATE_DOC_NAMES`, hoje só `guestInfo`) que agora exige staff autenticado do mesmo hotel; os docs genuinamente públicos que o app do hóspede já lia sem token (`servicesPage`, `mapa`) continuam exatamente como estavam — confirmado via `grep` que nenhum outro doc sensível existe hoje e que nada mais chama essa rota sem token.
+
+**Achado leve (corrigido):** `hotelInfo.accessCode` — campo legado de antes do modelo de `Guest.accessCode` individual existir — sobrevivia no `Hotel.config` dos 2 hotéis de produção e era devolvido por `GET /api/hotels/:hotelId` (rota pública). Confirmado via grep que nenhum código lê esse campo hoje (morto, não é um controle de acesso funcional), mas removido mesmo assim por parecer um segredo válido — script pontual limpou os 2 hotéis existentes e o seed data.
+
+**Endurecimento defensivo (corrigido):** `GET /dashboard/stats` resolvia a categoria de cada serviço por `id`, sem filtro de `hotelId` — não explorável hoje (todo pedido só existe se o serviço já foi validado como do mesmo hotel na criação), mas adicionado o filtro mesmo assim pra não depender desse invariante silenciosamente pra sempre.
+
+**Tudo o mais auditado ficou confirmado correto:** toda rota de staff que mexe num recurso aninhado (hóspede, quarto, estadia, serviço, item, pedido) filtra tanto pela URL (`staff.hotelId !== hotelId` → 403) quanto na query em si; toda rota autenticada de hóspede deriva `hotelId`/`guestId` só do token verificado, nunca do body; o fluxo de convite de staff trava `role: recepcao` e o `hotelId` do convite, sem campo livre; JWT de staff/hóspede só é assinado a partir de um registro do banco recém-verificado, nunca de input do cliente.
+
+**Checkpoint:** `tsc --noEmit` limpo. Testado local contra banco de produção: `guestInfo` sem token → 401; com token de gerente do próprio hotel → 200 (conteúdo correto); `servicesPage` (doc público) sem token → 200 (comportamento inalterado); `GET /api/hotels/hotel_1` não retorna mais `accessCode`.
+
 **Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no portal e no app do hóspede, `tsc --noEmit` limpo na API. Testado via curl contra servidor local (banco de produção): PATCH de `promoImages` com URLs reais e reversão pro asset original; PATCH de Wi-Fi num doc já existente e upsert num doc novo (criado e removido de teste depois).

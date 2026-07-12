@@ -94,7 +94,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const serviceIds = Array.from(new Set(orders.map((order) => order.serviceId)))
   const services = serviceIds.length
-    ? await prisma.service.findMany({ where: { id: { in: serviceIds } }, select: { id: true, category: true } })
+    ? await prisma.service.findMany({ where: { id: { in: serviceIds }, hotelId }, select: { id: true, category: true } })
     : []
   const categoryByServiceId = new Map(services.map((service) => [service.id, service.category]))
 
