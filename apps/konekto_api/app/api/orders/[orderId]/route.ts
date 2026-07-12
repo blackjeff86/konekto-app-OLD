@@ -46,6 +46,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (existing.status !== 'pending') {
     return NextResponse.json({ error: 'order_already_in_progress' }, { status: 409 })
   }
+  // `price` já vem com o desconto do cupom embutido pra essa quantidade
+  // específica — mudar a quantidade sem recalcular o cupom inteiro
+  // (mínimo de pedido, limite de uso) deixaria o desconto errado. Mais
+  // simples pedir pra cancelar e refazer o pedido nesse caso raro.
+  if (existing.couponId && parsed.data.quantity !== undefined) {
+    return NextResponse.json({ error: 'cannot_change_quantity_with_coupon' }, { status: 409 })
+  }
 
   const data = parsed.data.cancel
     ? { status: 'cancelled' as const }

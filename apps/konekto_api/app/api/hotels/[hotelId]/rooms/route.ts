@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       stays: {
         where: { status: 'active' },
         take: 1,
-        include: { guests: { include: { orders: true } } },
+        include: { guests: { include: { orders: { include: { coupon: { select: { title: true } } } } } } },
       },
     },
   })

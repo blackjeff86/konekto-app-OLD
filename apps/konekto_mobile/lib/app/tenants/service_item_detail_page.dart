@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:konekto/app/tenants/booking_sheet.dart';
 import 'package:konekto/app/tenants/order_quantity_note_sheet.dart';
 import 'package:konekto/app/tenants/services_page.dart' show hexToColor;
+import 'package:konekto/data/coupons_repository.dart';
 import 'package:konekto/data/guest_claim_repository.dart';
 import 'package:konekto/data/orders_repository.dart';
+import 'package:konekto/models/coupon.dart';
 import 'package:konekto/models/service.dart';
 import 'package:konekto/widgets/tenant_image.dart';
 
@@ -56,6 +58,7 @@ class ServiceItemDetailPage extends StatefulWidget {
 class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
   final GuestClaimRepository _guestClaimRepository = GuestClaimRepository();
   final OrdersRepository _ordersRepository = OrdersRepository();
+  final CouponsRepository _couponsRepository = CouponsRepository();
   bool _isSubmitting = false;
 
   Map<String, dynamic> get tenantConfig => widget.tenantConfig;
@@ -79,6 +82,21 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
     final Color bodyTextColor = hexToColor(tenantConfig['typography']['bodyText']['color']);
     final bool isPurchasable = item.price != null;
 
+    // Cupom só faz sentido pra item com preço — busca na hora de abrir o
+    // modal (evita mostrar cupom já usado/expirado por causa de cache).
+    var availableCoupons = const <Coupon>[];
+    if (isPurchasable) {
+      final guestToken = await _guestClaimRepository.getStoredToken();
+      if (guestToken != null) {
+        try {
+          availableCoupons = await _couponsRepository.listAvailable(token: guestToken);
+        } on StateError {
+          availableCoupons = const [];
+        }
+      }
+    }
+    if (!context.mounted) return;
+
     final result = await showOrderQuantityNoteSheet(
       context,
       itemName: item.name,
@@ -87,6 +105,8 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
       backgroundColor: backgroundColor,
       bodyTextColor: bodyTextColor,
       confirmLabel: isPurchasable ? 'Adicionar ao pedido' : 'Solicitar',
+      itemPrice: item.price,
+      availableCoupons: availableCoupons,
     );
     if (result == null) return;
     if (!context.mounted) return;
@@ -95,6 +115,7 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
       context,
       quantity: result.quantity,
       note: result.note,
+      couponId: result.couponId,
       successMessage: isPurchasable ? 'Pedido enviado! A recepção foi notificada.' : 'Solicitação enviada! A recepção entrará em contato.',
     );
   }
@@ -129,6 +150,7 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
     required int quantity,
     String? note,
     DateTime? scheduledFor,
+    String? couponId,
     required String successMessage,
   }) async {
     final String fontFamily = tenantConfig['typography']['fontFamily'];
@@ -150,6 +172,7 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
         quantity: quantity,
         note: note,
         scheduledFor: scheduledFor,
+        couponId: couponId,
       );
       if (!context.mounted) return;
       _showSnackBar(context, message: successMessage, fontFamily: fontFamily, color: primaryColor);

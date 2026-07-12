@@ -348,6 +348,19 @@ class _OrderCard extends StatelessWidget {
               style: GoogleFonts.getFont(fontFamily, color: bodyTextColor, fontSize: 12.5, fontStyle: FontStyle.italic),
             ),
           ],
+          if (order.couponTitle != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(Icons.local_offer_outlined, size: 14, color: primaryColor),
+                const SizedBox(width: 6),
+                Text(
+                  '${order.couponTitle} aplicado (-R\$ ${order.discountAmount?.toStringAsFixed(2) ?? '0.00'})',
+                  style: GoogleFonts.getFont(fontFamily, color: primaryColor, fontSize: 12.5, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ],
           if (order.status.isEditableByGuest) ...[
             const SizedBox(height: 10),
             Row(

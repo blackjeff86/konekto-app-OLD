@@ -581,6 +581,20 @@ class _StayOrderRow extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(order.note!, style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slateSoft)),
                 ],
+                if (order.couponTitle != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.local_offer_outlined, size: 12, color: KonektoBrand.goldLight),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${order.couponTitle} (-R\$ ${order.discountAmount?.toStringAsFixed(2) ?? '0.00'})',
+                        style: KonektoBrand.body(fontSize: 11.5, fontWeight: FontWeight.w600, color: KonektoBrand.goldLight),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

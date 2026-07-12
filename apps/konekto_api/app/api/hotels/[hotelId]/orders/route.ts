@@ -23,6 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     orderBy: { createdAt: 'desc' },
     include: {
       guest: { select: { firstName: true, lastName: true, stay: { select: { room: { select: { number: true } } } } } },
+      coupon: { select: { title: true } },
     },
   })
 

@@ -42,6 +42,8 @@ class Order {
   final String guestName;
   final String guestRoomNumber;
   final DateTime createdAt;
+  final double? discountAmount;
+  final String? couponTitle;
 
   const Order({
     required this.id,
@@ -54,10 +56,13 @@ class Order {
     required this.guestName,
     required this.guestRoomNumber,
     required this.createdAt,
+    this.discountAmount,
+    this.couponTitle,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
     final guest = json['guest'] as Map<String, dynamic>;
+    final coupon = json['coupon'] as Map<String, dynamic>?;
     return Order(
       id: json['id'] as String,
       itemName: json['itemName'] as String,
@@ -69,6 +74,8 @@ class Order {
       guestName: '${guest['firstName']} ${guest['lastName']}',
       guestRoomNumber: guest['roomNumber'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      discountAmount: (json['discountAmount'] as num?)?.toDouble(),
+      couponTitle: coupon?['title'] as String?,
     );
   }
 }

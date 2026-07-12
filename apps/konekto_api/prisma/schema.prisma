@@ -28,6 +28,7 @@ model Hotel {
   orders       Order[]
   stays        Stay[]
   rooms        Room[]
+  coupons      Coupon[]
 
   @@map("hotels")
 }
@@ -234,14 +235,67 @@ model Order {
   /// pelo fluxo de agendamento (restaurantes, spa, eventos, passeios).
   /// `null` pra pedidos de Serviço de Quarto, que não têm horário marcado.
   scheduledFor  DateTime?
+  /// Cupom selecionado pelo hóspede (opcional) — quando presente, `price`
+  /// já vem com o desconto aplicado (preço final por unidade); `discountAmount`
+  /// é só o valor total abatido nesse pedido, guardado pra exibição/auditoria
+  /// (nenhum outro cálculo de receita no app precisa saber sobre cupom,
+  /// porque `price * quantity` já é o valor final cobrado).
+  couponId      String?
+  discountAmount Float?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   hotel         Hotel       @relation(fields: [hotelId], references: [id])
   guest         Guest       @relation(fields: [guestId], references: [id])
+  coupon        Coupon?     @relation(fields: [couponId], references: [id])
 
   @@index([hotelId])
   @@index([guestId])
+  @@index([couponId])
   @@map("orders")
+}
+
+enum CouponDiscountType {
+  percentage
+  fixed_amount
+}
+
+/// Cupom/promoção criado pelo hotel em Configurações — o hóspede escolhe
+/// da lista de cupons elegíveis ao fazer um pedido (não digita código,
+/// estilo iFood), e o desconto é calculado e travado no `Order` na hora.
+/// Aplica-se hoje ao hotel inteiro (qualquer item comprável), não a um
+/// serviço específico — mantém o modelo simples pro primeiro lançamento.
+model Coupon {
+  id             String             @id @default(cuid())
+  hotelId        String
+  title          String
+  description    String
+  /// Código interno, mostrado pro staff pra referência/auditoria — o
+  /// hóspede nunca digita isso, só seleciona o cupom na lista.
+  code           String
+  discountType   CouponDiscountType
+  /// Percentual (0-100) ou valor fixo em reais, dependendo de `discountType`.
+  discountValue  Float
+  /// Pedido precisa valer pelo menos isso (preço × quantidade, antes do
+  /// desconto) pra poder usar o cupom. `null` = sem mínimo.
+  minOrderValue  Float?
+  imageUrl       String?
+  validFrom      DateTime?
+  validUntil     DateTime?
+  /// Limite total de usos (somando todos os hóspedes). `null` = ilimitado.
+  usageLimit     Int?
+  /// Quantas vezes O MESMO hóspede pode usar esse cupom — 1 por padrão
+  /// (comportamento típico de cupom promocional).
+  perGuestLimit  Int                @default(1)
+  enabled        Boolean            @default(true)
+  position       Int                @default(0)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  hotel          Hotel              @relation(fields: [hotelId], references: [id])
+  orders         Order[]
+
+  @@unique([hotelId, code])
+  @@index([hotelId])
+  @@map("coupons")
 }
 
 /// Substitui konektoBrand/{docId} — tabela global (não específica de hotel),

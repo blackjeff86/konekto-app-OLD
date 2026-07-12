@@ -56,6 +56,8 @@ class GuestOrderSummary {
   final String? note;
   final DateTime? scheduledFor;
   final DateTime createdAt;
+  final double? discountAmount;
+  final String? couponTitle;
 
   const GuestOrderSummary({
     required this.id,
@@ -66,9 +68,12 @@ class GuestOrderSummary {
     this.note,
     this.scheduledFor,
     required this.createdAt,
+    this.discountAmount,
+    this.couponTitle,
   });
 
   factory GuestOrderSummary.fromJson(Map<String, dynamic> json) {
+    final coupon = json['coupon'] as Map<String, dynamic>?;
     return GuestOrderSummary(
       id: json['id'] as String,
       itemName: json['itemName'] as String,
@@ -78,6 +83,8 @@ class GuestOrderSummary {
       note: json['note'] as String?,
       scheduledFor: json['scheduledFor'] != null ? DateTime.parse(json['scheduledFor'] as String) : null,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      discountAmount: (json['discountAmount'] as num?)?.toDouble(),
+      couponTitle: coupon?['title'] as String?,
     );
   }
 }

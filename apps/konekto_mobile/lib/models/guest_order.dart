@@ -41,6 +41,8 @@ class GuestOrder {
   final String? note;
   final DateTime? scheduledFor;
   final DateTime createdAt;
+  final double? discountAmount;
+  final String? couponTitle;
 
   const GuestOrder({
     required this.id,
@@ -52,6 +54,8 @@ class GuestOrder {
     this.note,
     this.scheduledFor,
     required this.createdAt,
+    this.discountAmount,
+    this.couponTitle,
   });
 
   /// `true` pra itens que passaram pelo fluxo de agendamento (restaurantes,
@@ -60,6 +64,7 @@ class GuestOrder {
   bool get isBooking => scheduledFor != null;
 
   factory GuestOrder.fromJson(Map<String, dynamic> json) {
+    final coupon = json['coupon'] as Map<String, dynamic>?;
     return GuestOrder(
       id: json['id'] as String,
       serviceId: json['serviceId'] as String,
@@ -70,6 +75,8 @@ class GuestOrder {
       note: json['note'] as String?,
       scheduledFor: json['scheduledFor'] != null ? DateTime.parse(json['scheduledFor'] as String) : null,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      discountAmount: (json['discountAmount'] as num?)?.toDouble(),
+      couponTitle: coupon?['title'] as String?,
     );
   }
 }

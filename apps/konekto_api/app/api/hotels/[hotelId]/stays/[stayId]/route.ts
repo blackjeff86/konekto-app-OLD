@@ -31,7 +31,9 @@ export async function GET(
     where: { id: stayId, hotelId },
     include: {
       room: { select: { number: true } },
-      guests: { include: { orders: { orderBy: { createdAt: 'desc' } } } },
+      guests: {
+        include: { orders: { orderBy: { createdAt: 'desc' }, include: { coupon: { select: { title: true } } } } },
+      },
       notices: { orderBy: { createdAt: 'desc' } },
     },
   })

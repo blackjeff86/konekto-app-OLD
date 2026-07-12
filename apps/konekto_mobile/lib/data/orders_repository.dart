@@ -19,6 +19,7 @@ class OrdersRepository {
     int quantity = 1,
     String? note,
     DateTime? scheduledFor,
+    String? couponId,
   }) async {
     final response = await _client.post(
       Uri.parse('$apiBaseUrl/api/orders'),
@@ -29,8 +30,15 @@ class OrdersRepository {
         'quantity': quantity,
         if (note != null) 'note': note,
         if (scheduledFor != null) 'scheduledFor': scheduledFor.toIso8601String(),
+        if (couponId != null) 'couponId': couponId,
       }),
     );
+    if (response.statusCode == 409) {
+      throw StateError('Esse cupom não está mais disponível pra você — tente sem ele.');
+    }
+    if (response.statusCode == 400) {
+      throw StateError('Esse cupom não é válido pra esse pedido.');
+    }
     if (response.statusCode != 201) {
       throw StateError('Falha ao enviar o pedido (status ${response.statusCode}).');
     }
