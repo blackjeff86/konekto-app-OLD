@@ -5,6 +5,7 @@ import 'package:konekto_portal/data/guests_repository.dart';
 import 'package:konekto_portal/data/stays_repository.dart';
 import 'package:konekto_portal/features/guests/guest_detail_page.dart';
 import 'package:konekto_portal/models/guest.dart' show DocumentType, NewGuestInput;
+import 'package:konekto_portal/models/order.dart' show OrderStatus;
 import 'package:konekto_portal/models/stay.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
@@ -12,6 +13,17 @@ import 'package:intl_phone_field/phone_number.dart';
 
 String _formatDate(DateTime date) {
   return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+}
+
+String _formatDateTime(DateTime date) {
+  return '${_formatDate(date)} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+}
+
+class _StayOrderEntry {
+  final String guestName;
+  final GuestOrderSummary order;
+
+  const _StayOrderEntry({required this.guestName, required this.order});
 }
 
 /// Detalhe de uma estadia (quarto) — todos os hóspedes vinculados, aviso
@@ -150,6 +162,15 @@ class _StayDetailPageState extends State<StayDetailPage> {
       }
     }
     return total;
+  }
+
+  List<_StayOrderEntry> _allOrders(Stay stay) {
+    final entries = <_StayOrderEntry>[
+      for (final guest in stay.guests)
+        for (final order in guest.orders) _StayOrderEntry(guestName: guest.fullName, order: order),
+    ];
+    entries.sort((a, b) => b.order.createdAt.compareTo(a.order.createdAt));
+    return entries;
   }
 
   Future<void> _closeAccount(Stay stay) async {
@@ -426,9 +447,43 @@ class _StayDetailPageState extends State<StayDetailPage> {
               const SizedBox(height: 12),
               for (final notice in stay.notices) _NoticeLine(notice: notice),
             ],
+            const SizedBox(height: 24),
+            Text('Pedidos', style: KonektoBrand.display(fontSize: 15)),
+            const SizedBox(height: 4),
+            Text(
+              'Todos os pedidos e reservas feitos pelos hóspedes deste quarto — é o que forma o valor em aberto acima.',
+              style: KonektoBrand.body(fontSize: 12.5),
+            ),
+            const SizedBox(height: 8),
+            _buildOrdersList(stay),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildOrdersList(Stay stay) {
+    final entries = _allOrders(stay);
+    return Container(
+      decoration: BoxDecoration(
+        color: KonektoBrand.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: KonektoBrand.borderStrong),
+      ),
+      child: entries.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text('Nenhum pedido registrado ainda.', style: KonektoBrand.body(fontSize: 13.5)),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final entry in entries) ...[
+                  if (entry != entries.first) const Divider(height: 1, color: KonektoBrand.borderStrong),
+                  _StayOrderRow(entry: entry, showGuestName: stay.guests.length > 1),
+                ],
+              ],
+            ),
     );
   }
 }
@@ -480,6 +535,78 @@ class _StayGuestRow extends StatelessWidget {
             const Icon(Icons.chevron_right, size: 18, color: KonektoBrand.slate),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StayOrderRow extends StatelessWidget {
+  final _StayOrderEntry entry;
+  final bool showGuestName;
+
+  const _StayOrderRow({required this.entry, required this.showGuestName});
+
+  Color _statusColor(OrderStatus status) {
+    return switch (status) {
+      OrderStatus.pending => KonektoBrand.goldLight,
+      OrderStatus.inProgress => KonektoBrand.goldLight,
+      OrderStatus.completed => KonektoBrand.slateSoft,
+      OrderStatus.cancelled => const Color(0xFFF1A6A0),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final order = entry.order;
+    final statusColor = _statusColor(order.status);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${order.quantity}x ${order.itemName}',
+                  style: KonektoBrand.body(fontSize: 14, fontWeight: FontWeight.w700, color: KonektoBrand.cream),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  showGuestName ? '${entry.guestName} · ${_formatDateTime(order.createdAt)}' : _formatDateTime(order.createdAt),
+                  style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                ),
+                if (order.note != null && order.note!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(order.note!, style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slateSoft)),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                order.price != null ? 'R\$ ${(order.price! * order.quantity).toStringAsFixed(2)}' : '—',
+                style: KonektoBrand.display(fontSize: 14, color: KonektoBrand.goldLight),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  order.status.label,
+                  style: KonektoBrand.body(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
