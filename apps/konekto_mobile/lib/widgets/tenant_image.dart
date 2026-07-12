@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:konekto/api_config.dart';
 
 /// Carrega a imagem de um item de catálogo (room service, spa, restaurantes,
 /// eventos, passeios), que pode vir de duas fontes: um asset local
@@ -9,6 +10,14 @@ import 'package:flutter/material.dart';
 /// empacotar um asset local dentro do app). Decide com base no prefixo da
 /// URL. O placeholder `{{tenantId}}` (deixado por alguns dados semeados) é
 /// substituído pelo [hotelId] real antes de resolver o asset.
+///
+/// URLs de rede passam pelo proxy de imagem da API (`/api/image-proxy`) em
+/// vez de `Image.network` direto no host original — o Flutter Web usa
+/// CanvasKit, que precisa baixar os bytes via fetch() do navegador pra
+/// decodificar numa textura, e isso exige CORS do host de origem (que a
+/// maioria dos sites onde um hotel cola uma URL de imagem não configura).
+/// O proxy busca a imagem no servidor e devolve com CORS liberado,
+/// funcionando com qualquer origem.
 class TenantImage extends StatelessWidget {
   final String? imageUrl;
   final String hotelId;
@@ -40,7 +49,7 @@ class TenantImage extends StatelessWidget {
       image = _placeholder();
     } else if (_isNetworkUrl) {
       image = Image.network(
-        url,
+        '$apiBaseUrl/api/image-proxy?url=${Uri.encodeComponent(url)}',
         height: height,
         width: width,
         fit: fit,

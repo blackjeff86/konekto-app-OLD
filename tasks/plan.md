@@ -371,7 +371,7 @@ Motivação: logo depois de shippar os 3 `ServiceType` fixos como seções da li
 
 ## Itens abertos (pendências conhecidas, não bloqueiam)
 
-- **Imagem de item com URL externa não carrega no app do hóspede** (`TenantImage`, `apps/konekto_mobile/lib/widgets/tenant_image.dart`): criamos o widget que decide entre `Image.asset` (conteúdo semeado) e `Image.network` (itens novos do portal), mas testando com uma URL real (`fontagua.com.br`) a imagem não carregou — provavelmente CORS do host de origem, hotlink bloqueado, ou renderer CanvasKit do Flutter Web exigindo CORS pra decodificar a imagem em textura. Investigar depois: (1) testar com uma URL de imagem de um host que permite CORS/hotlink (ex: Unsplash, Cloudinary), (2) considerar um proxy de imagem no backend, ou (3) adicionar upload de imagem pro próprio `konekto_api`/storage em vez de depender de URL externa.
+- Nenhum item aberto no momento. Duas telas mortas no app do hóspede (`HistoryPage`, `MapaPage`) seguem existindo mas desconectadas de qualquer fluxo real — decisão de construir de verdade ou remover ainda pendente, não urgente.
 
 ## Fase Quartos 2.0 — cadastro de quarto físico, mapa visual, edição de hóspede
 
@@ -483,3 +483,17 @@ Motivação: usuário pediu uma aba em Configurações pra criar cupons de desco
 **Fora de escopo desta fase (deliberado):** cupom em reservas de restaurante/atividade (`booking_sheet.dart`) — só no fluxo de Serviço de Quarto por enquanto; cupom restrito a um serviço específico — hoje é sempre hotel inteiro.
 
 **Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos nos 3 apps, `tsc --noEmit` limpo na API. Ciclo ponta a ponta via curl contra servidor local (banco de produção), com quarto/estadia/hóspede de teste criados e removidos ao final: cupom de 20% criado → hóspede vê `eligible: true` → pedido de 2x um item de R$25 com o cupom → preço final gravado corretamente em R$20/unidade, `discountAmount: 10` → segunda tentativa do mesmo hóspede com o mesmo cupom rejeitada com 409 (limite por hóspede) → staff vê o pedido com o título do cupom anexado → tentativa de apagar o cupom já usado rejeitada com 409 → desativado com sucesso em vez disso.
+
+## Fase Imagens 1.0 — proxy de imagem corrige CORS de URL externa
+
+**Status: concluído e em produção.**
+
+Motivação: pendência aberta desde a Fase Serviços — imagens de item com URL externa (colada no portal) não carregavam no app do hóspede. Causa raiz confirmada: Flutter Web usa CanvasKit, que baixa os bytes da imagem via `fetch()` do navegador pra decodificar numa textura (diferente de uma tag `<img>` comum) — isso exige que o host de origem responda com cabeçalho CORS liberado, o que a grande maioria dos sites onde alguém cola uma URL de imagem não configura. Nenhuma URL de terceiro ia funcionar de forma confiável sem contornar isso.
+
+**Decisão:** proxy de imagem no backend (`GET /api/image-proxy?url=...`) em vez de pedir pra hotéis usarem hosts específicos ou construir upload de arquivo (maior escopo, adiado). O proxy busca a imagem no servidor — sem restrição de CORS ali — e devolve com `Access-Control-Allow-Origin: *`, funcionando com qualquer origem.
+
+**Backend:** rota pública (sem auth, mesma lógica de catálogo público) com proteção contra SSRF, já que é um endpoint que busca qualquer URL informada: só `http`/`https`, resolve o hostname via DNS antes de buscar e rejeita IPs privados/reservados (inclui bloqueio do endpoint de metadata de nuvem `169.254.169.254`, protege contra DNS rebinding), segue redirecionamentos manualmente (até 3, revalidando o host a cada um em vez de confiar no `redirect: 'follow'` do fetch), limita a 8MB (checado tanto pelo `Content-Length` quanto durante o download, caso o header minta), timeout de 8s, e só aceita `Content-Type` de imagem de verdade (rejeita qualquer outra coisa com 415). Resposta cacheada por 7 dias (`Cache-Control` com `s-maxage`) já que a mesma URL sempre devolve a mesma imagem.
+
+**App do hóspede:** `TenantImage` — o único lugar que renderiza imagem de rede no app (itens de serviço e o carrossel de destaque) — passou a montar a URL através do proxy em vez de `Image.network(url)` direto. Nenhuma outra mudança: portal continua só guardando a URL original digitada pelo hotel, sem saber nada do proxy.
+
+**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no app do hóspede, `tsc --noEmit` limpo na API. Testado local: imagem pública real proxeada com sucesso (PNG válido, cabeçalhos corretos) → bloqueio confirmado pra endpoint de metadata de nuvem, `localhost`, protocolo `file://` e `Content-Type` não-imagem.
