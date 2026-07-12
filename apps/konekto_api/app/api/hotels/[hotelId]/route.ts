@@ -16,7 +16,23 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 const patchHotelSchema = z.object({
-  hotelInfo: z.object({ name: z.string().min(1).optional(), logoUrl: z.string().min(1).optional() }).optional(),
+  hotelInfo: z
+    .object({
+      name: z.string().min(1).optional(),
+      logoUrl: z.string().min(1).optional(),
+      // Carrossel de imagens de destaque na home do hóspede — substitui o
+      // objeto inteiro quando enviado (não dá pra adicionar/remover uma
+      // imagem isolada via PATCH parcial, o portal sempre manda a lista
+      // completa já editada).
+      promoImages: z
+        .object({
+          images: z.array(z.string().min(1)).min(1),
+          carouselHeight: z.number().positive().optional(),
+          carouselEnabled: z.boolean().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
   colorPalette: z.object({ primary: z.string().min(1).optional(), secondary: z.string().min(1).optional() }).optional(),
 })
 

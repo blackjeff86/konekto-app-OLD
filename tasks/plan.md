@@ -415,3 +415,19 @@ Motivação: a aba "Hóspedes" era a primeira tela que o staff via ao entrar no 
 **Portal:** nova dependência `fl_chart`. Nova seção "Visão Geral" (`dashboard_overview_page.dart`) — vira a **primeira aba do sidebar** (antes era "Hóspedes"). Layout: cards de KPI no topo (ocupação, hóspedes ativos, receita hoje, receita 30 dias + ticket médio); gráfico de barras de receita dos últimos 14 dias; dois donuts lado a lado (pedidos por status, receita por categoria) que empilham em telas estreitas; ranking dos itens mais pedidos como barras horizontais; e duas listas lado a lado de chegadas/saídas previstas pros próximos 7 dias. Novo `lib/models/dashboard_stats.dart` + `lib/data/dashboard_repository.dart` seguindo o mesmo padrão de repositório do resto do portal.
 
 **Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no portal, `tsc --noEmit` limpo na API. Endpoint testado via curl contra servidor local (banco de produção) — confirmado ocupação 4/4 quartos, receita agregada batendo com os pedidos reais (R$120 massagem + R$155 restaurante em dois dias distintos), categorias e top itens corretos, check-outs previstos aparecendo certos pros 4 quartos ocupados.
+
+## Fase Marca 1.1 — Wi-Fi padrão do hotel e carrossel de destaque
+
+**Status: concluído e em produção.**
+
+Motivação: levantamento do que existe no app do hóspede sem contrapartida no portal. Achamos dois casos reais — a home do hóspede sempre mostra um card de "Wi-Fi" (rede + senha) e um carrossel de imagens de destaque, mas nenhum dos dois tinha editor nenhum no portal: o Wi-Fi só existia se alguém escrevesse direto no banco (`HotelContent` doc `guestInfo`), e o carrossel usava caminhos de asset local empacotados no app (`assets/tenant_assets/...`), então mesmo colando uma URL não haveria como o app renderizar.
+
+**Backend:**
+- `PATCH /api/hotels/:hotelId` — schema aceita agora `hotelInfo.promoImages` (`images[]`, `carouselHeight`, `carouselEnabled`), sempre substituindo o objeto inteiro.
+- `PATCH /api/hotels/:hotelId/content/:docName` — trocou de `update` (exigia o doc já existir, 404 senão) pra `upsert`, porque nem todo hotel tem o doc `guestInfo` semeado de antemão; sem isso o primeiro save do Wi-Fi de um hotel novo quebraria.
+
+**App do hóspede (`konekto_mobile`):** `ImageCarousel` (usado na home, depois do login) trocou `Image.asset` fixo por `TenantImage` — o mesmo widget que já decide entre asset local e `Image.network` pra imagens de item de serviço, olhando se a URL começa com `http(s)://`. Sem essa troca, uma URL configurada no portal simplesmente não apareceria (a Correção de imagem de item via URL externa segue como pendência separada, ver "Itens abertos" — esse era um bug de CORS/hotlink; aqui o problema era mais básico, o widget nem tentava carregar de rede).
+
+**Portal:** Configurações → Marca ganhou dois cards novos, entre o QR code de recepção e o card de marca existente: "Wi-Fi padrão" (nome da rede + senha, lidos/salvos em `HotelContent.guestInfo.wifi`) e "Carrossel de destaque" (lista dinâmica de URLs de imagem, adicionar/remover linha, salva a lista inteira em `hotelInfo.promoImages`). Cada card carrega e salva de forma independente do card de marca original (nome/logo/cores), sem alterar `updateBranding` nem o teste existente dele.
+
+**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no portal e no app do hóspede, `tsc --noEmit` limpo na API. Testado via curl contra servidor local (banco de produção): PATCH de `promoImages` com URLs reais e reversão pro asset original; PATCH de Wi-Fi num doc já existente e upsert num doc novo (criado e removido de teste depois).

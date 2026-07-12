@@ -5,6 +5,7 @@ import 'package:konekto/app/tenants/notices_page.dart';
 import 'package:konekto/app/tenants/services_page.dart';
 import 'package:konekto/data/tenant_repository.dart';
 import 'package:konekto/data/tenant_repository_provider.dart';
+import 'package:konekto/widgets/tenant_image.dart';
 
 // --- Modelos de dados atualizados para refletir a nova estrutura JSON ---
 class HotelInfo {
@@ -351,7 +352,7 @@ class TenantHomeBody extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              ImageCarousel(imageUrls: List<String>.from(promoImages), height: carouselHeight),
+              ImageCarousel(imageUrls: List<String>.from(promoImages), height: carouselHeight, hotelId: tenantId),
               const SizedBox(height: 20),
               Text(
                 welcomeSectionConfig['titleTemplate'].replaceAll('{userName}', userName),
@@ -655,8 +656,9 @@ class _ExpandableCardState extends State<ExpandableCard> {
 class ImageCarousel extends StatefulWidget {
   final List<String> imageUrls;
   final double height;
+  final String hotelId;
 
-  const ImageCarousel({Key? key, required this.imageUrls, required this.height}) : super(key: key);
+  const ImageCarousel({Key? key, required this.imageUrls, required this.height, required this.hotelId}) : super(key: key);
 
   @override
   State<ImageCarousel> createState() => _ImageCarouselState();
@@ -704,17 +706,12 @@ class _ImageCarouselState extends State<ImageCarousel> {
             controller: _pageController,
             itemCount: widget.imageUrls.length,
             itemBuilder: (context, index) {
-              return Image.asset(
-                widget.imageUrls[index],
+              return TenantImage(
+                imageUrl: widget.imageUrls[index],
+                hotelId: widget.hotelId,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Text('Erro ao carregar imagem', textAlign: TextAlign.center),
-                    ),
-                  );
-                },
+                width: double.infinity,
+                height: widget.height,
               );
             },
           ),

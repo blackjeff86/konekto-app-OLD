@@ -51,14 +51,13 @@ export async function PATCH(
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 })
   }
 
-  const existing = await prisma.hotelContent.findUnique({ where: { hotelId_docName: { hotelId, docName } } })
-  if (!existing) {
-    return NextResponse.json({ error: 'content_not_found' }, { status: 404 })
-  }
-
-  const updated = await prisma.hotelContent.update({
+  // Upsert em vez de exigir que o doc já exista — o portal agora escreve
+  // aqui direto (ex: `guestInfo` pra configurar o wifi padrão do hotel),
+  // e nem todo hotel tem cada doc semeado de antemão.
+  const updated = await prisma.hotelContent.upsert({
     where: { hotelId_docName: { hotelId, docName } },
-    data: { data: parsed.data.data as unknown as Prisma.InputJsonValue },
+    create: { hotelId, docName, data: parsed.data.data as unknown as Prisma.InputJsonValue },
+    update: { data: parsed.data.data as unknown as Prisma.InputJsonValue },
   })
   return NextResponse.json(updated.data)
 }

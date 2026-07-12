@@ -237,6 +237,10 @@ class _BrandingSectionState extends State<_BrandingSection> {
           children: [
             const _ReceptionQrCard(),
             const SizedBox(height: 24),
+            _WifiSettingsCard(session: widget.session, authRepository: widget.authRepository),
+            const SizedBox(height: 24),
+            _PromoImagesCard(session: widget.session, authRepository: widget.authRepository),
+            const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
@@ -335,6 +339,319 @@ class _BrandingSectionState extends State<_BrandingSection> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Wi-Fi padrão do hotel — nome da rede + senha usados por qualquer
+/// hóspede que não tenha uma senha individual sobrescrita no próprio
+/// cadastro (isso é feito no formulário de hóspede, não aqui).
+class _WifiSettingsCard extends StatefulWidget {
+  final StaffSession session;
+  final AuthRepository authRepository;
+
+  const _WifiSettingsCard({required this.session, required this.authRepository});
+
+  @override
+  State<_WifiSettingsCard> createState() => _WifiSettingsCardState();
+}
+
+class _WifiSettingsCardState extends State<_WifiSettingsCard> {
+  final _repository = HotelConfigRepository();
+  final _networkController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _networkController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    try {
+      final wifi = await _repository.getWifiSettings(hotelId: widget.session.hotelId);
+      _networkController.text = wifi.networkName;
+      _passwordController.text = wifi.password;
+    } on StateError catch (error) {
+      _errorMessage = error.message;
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _save() async {
+    final token = await widget.authRepository.getStoredToken();
+    if (token == null) {
+      setState(() => _errorMessage = 'Sessão expirada — saia e entre novamente.');
+      return;
+    }
+    setState(() {
+      _isSaving = true;
+      _errorMessage = null;
+    });
+    try {
+      await _repository.updateWifiSettings(
+        hotelId: widget.session.hotelId,
+        token: token,
+        networkName: _networkController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wi-Fi salvo.')));
+      }
+    } on StateError catch (error) {
+      setState(() => _errorMessage = error.message);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: KonektoBrand.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: KonektoBrand.borderStrong),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Wi-Fi padrão', style: KonektoBrand.display(fontSize: 18)),
+          const SizedBox(height: 4),
+          Text(
+            'Mostrado pro hóspede na tela inicial — a recepção pode dar uma senha diferente pra um hóspede específico no cadastro dele.',
+            style: KonektoBrand.body(fontSize: 12.5),
+          ),
+          const SizedBox(height: 24),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator(color: KonektoBrand.gold))
+          else ...[
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0x1ADC2626),
+                  border: Border.all(color: const Color(0x4DDC2626)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
+              ),
+              const SizedBox(height: 16),
+            ],
+            _SettingsField(label: 'Nome da rede', controller: _networkController),
+            const SizedBox(height: 14),
+            _SettingsField(label: 'Senha padrão', controller: _passwordController),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: KonektoBrand.gold,
+                  foregroundColor: KonektoBrand.ink,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2.4, color: KonektoBrand.ink),
+                      )
+                    : Text('Salvar', style: KonektoBrand.body(fontSize: 14, fontWeight: FontWeight.w700, color: KonektoBrand.ink)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Carrossel de imagens de destaque mostrado na tela inicial do hóspede
+/// (depois de entrar no app) — lista de URLs editável, sempre salva por
+/// inteiro (não dá pra editar uma imagem isolada via API).
+class _PromoImagesCard extends StatefulWidget {
+  final StaffSession session;
+  final AuthRepository authRepository;
+
+  const _PromoImagesCard({required this.session, required this.authRepository});
+
+  @override
+  State<_PromoImagesCard> createState() => _PromoImagesCardState();
+}
+
+class _PromoImagesCardState extends State<_PromoImagesCard> {
+  final _repository = HotelConfigRepository();
+  final List<TextEditingController> _imageControllers = [];
+  double _carouselHeight = 250;
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _imageControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    try {
+      final config = await _repository.getConfig(widget.session.hotelId);
+      final hotelInfo = config['hotelInfo'] as Map<String, dynamic>? ?? {};
+      final promoImages = hotelInfo['promoImages'] as Map<String, dynamic>? ?? {};
+      final images = (promoImages['images'] as List<dynamic>?)?.cast<String>() ?? const [];
+      _carouselHeight = (promoImages['carouselHeight'] as num?)?.toDouble() ?? 250;
+      setState(() {
+        _imageControllers.addAll(images.map((url) => TextEditingController(text: url)));
+        if (_imageControllers.isEmpty) _imageControllers.add(TextEditingController());
+      });
+    } on StateError catch (error) {
+      _errorMessage = error.message;
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _addRow() {
+    setState(() => _imageControllers.add(TextEditingController()));
+  }
+
+  void _removeRow(int index) {
+    setState(() => _imageControllers.removeAt(index).dispose());
+  }
+
+  Future<void> _save() async {
+    final token = await widget.authRepository.getStoredToken();
+    if (token == null) {
+      setState(() => _errorMessage = 'Sessão expirada — saia e entre novamente.');
+      return;
+    }
+    final images = _imageControllers.map((c) => c.text.trim()).where((url) => url.isNotEmpty).toList();
+    if (images.isEmpty) {
+      setState(() => _errorMessage = 'Adicione pelo menos uma imagem.');
+      return;
+    }
+    setState(() {
+      _isSaving = true;
+      _errorMessage = null;
+    });
+    try {
+      await _repository.updatePromoImages(
+        hotelId: widget.session.hotelId,
+        token: token,
+        images: images,
+        carouselHeight: _carouselHeight,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Carrossel salvo.')));
+      }
+    } on StateError catch (error) {
+      setState(() => _errorMessage = error.message);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: KonektoBrand.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: KonektoBrand.borderStrong),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Carrossel de destaque', style: KonektoBrand.display(fontSize: 18)),
+          const SizedBox(height: 4),
+          Text(
+            'Imagens mostradas na tela inicial do hóspede depois que ele entra — use URLs de imagens hospedadas (ex: um link direto de foto).',
+            style: KonektoBrand.body(fontSize: 12.5),
+          ),
+          const SizedBox(height: 24),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator(color: KonektoBrand.gold))
+          else ...[
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0x1ADC2626),
+                  border: Border.all(color: const Color(0x4DDC2626)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
+              ),
+              const SizedBox(height: 16),
+            ],
+            for (var i = 0; i < _imageControllers.length; i++) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _SettingsField(label: 'URL da imagem ${i + 1}', controller: _imageControllers[i])),
+                  IconButton(
+                    onPressed: _imageControllers.length > 1 ? () => _removeRow(i) : null,
+                    icon: const Icon(Icons.remove_circle_outline, size: 20, color: KonektoBrand.slate),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
+            TextButton.icon(
+              onPressed: _addRow,
+              icon: const Icon(Icons.add, size: 16, color: KonektoBrand.goldLight),
+              label: Text('Adicionar imagem', style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.goldLight)),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: KonektoBrand.gold,
+                  foregroundColor: KonektoBrand.ink,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2.4, color: KonektoBrand.ink),
+                      )
+                    : Text('Salvar', style: KonektoBrand.body(fontSize: 14, fontWeight: FontWeight.w700, color: KonektoBrand.ink)),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
