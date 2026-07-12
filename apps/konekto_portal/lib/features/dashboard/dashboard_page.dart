@@ -5,6 +5,7 @@ import 'package:konekto_portal/api_config.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
 import 'package:konekto_portal/auth/staff_role.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
+import 'package:konekto_portal/features/customers/customers_page.dart';
 import 'package:konekto_portal/features/dashboard/dashboard_overview_page.dart';
 import 'package:konekto_portal/features/dashboard/widgets/placeholder_section_card.dart';
 import 'package:konekto_portal/features/dashboard/widgets/portal_sidebar.dart';
@@ -16,8 +17,9 @@ import 'package:konekto_portal/theme/konekto_brand.dart';
 
 const int _kVisaoGeralIndex = 0;
 const int _kHospedesIndex = 1;
-const int _kQuartosIndex = 2;
-const int _kPedidosIndex = 3;
+const int _kClientesIndex = 2;
+const int _kQuartosIndex = 3;
+const int _kPedidosIndex = 4;
 
 const DashboardSection _kVisaoGeralSection = (
   icon: Icons.dashboard_outlined,
@@ -28,6 +30,11 @@ const DashboardSection _kHospedesSection = (
   icon: Icons.people_outline,
   title: 'Hóspedes',
   description: 'Conceda e revogue acesso, veja quem está hospedado.',
+);
+const DashboardSection _kClientesSection = (
+  icon: Icons.groups_outlined,
+  title: 'Clientes',
+  description: 'Histórico completo de quem já se hospedou e quanto gastou.',
 );
 const DashboardSection _kQuartosSection = (
   icon: Icons.meeting_room_outlined,
@@ -71,6 +78,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _sections = [
       _kVisaoGeralSection,
       _kHospedesSection,
+      _kClientesSection,
       _kQuartosSection,
       _kPedidosSection,
       if (widget.session.role == StaffRole.gerente) _kConfiguracoesSection,
@@ -115,6 +123,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       _kVisaoGeralIndex =>
                         DashboardOverviewPage(session: widget.session, authRepository: widget.authRepository),
                       _kHospedesIndex => GuestsPage(session: widget.session, authRepository: widget.authRepository),
+                      _kClientesIndex => CustomersPage(session: widget.session, authRepository: widget.authRepository),
                       _kQuartosIndex => RoomsPage(session: widget.session, authRepository: widget.authRepository),
                       _kPedidosIndex => OrdersPage(session: widget.session, authRepository: widget.authRepository),
                       _ when _selectedIndex == _configuracoesIndex =>

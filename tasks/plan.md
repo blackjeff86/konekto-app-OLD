@@ -430,6 +430,8 @@ Motivação: levantamento do que existe no app do hóspede sem contrapartida no 
 
 **Portal:** Configurações → Marca ganhou dois cards novos, entre o QR code de recepção e o card de marca existente: "Wi-Fi padrão" (nome da rede + senha, lidos/salvos em `HotelContent.guestInfo.wifi`) e "Carrossel de destaque" (lista dinâmica de URLs de imagem, adicionar/remover linha, salva a lista inteira em `hotelInfo.promoImages`). Cada card carrega e salva de forma independente do card de marca original (nome/logo/cores), sem alterar `updateBranding` nem o teste existente dele.
 
+**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no portal e no app do hóspede, `tsc --noEmit` limpo na API. Testado via curl contra servidor local (banco de produção): PATCH de `promoImages` com URLs reais e reversão pro asset original; PATCH de Wi-Fi num doc já existente e upsert num doc novo (criado e removido de teste depois).
+
 ## Fase Segurança 1.0 — auditoria de segregação multi-tenant
 
 **Status: concluído e em produção.**
@@ -446,4 +448,16 @@ Motivação: usuário perguntou se a segregação entre hotéis clientes era gar
 
 **Checkpoint:** `tsc --noEmit` limpo. Testado local contra banco de produção: `guestInfo` sem token → 401; com token de gerente do próprio hotel → 200 (conteúdo correto); `servicesPage` (doc público) sem token → 200 (comportamento inalterado); `GET /api/hotels/hotel_1` não retorna mais `accessCode`.
 
-**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no portal e no app do hóspede, `tsc --noEmit` limpo na API. Testado via curl contra servidor local (banco de produção): PATCH de `promoImages` com URLs reais e reversão pro asset original; PATCH de Wi-Fi num doc já existente e upsert num doc novo (criado e removido de teste depois).
+## Fase Clientes 1.0 — histórico consolidado de hóspedes
+
+**Status: concluído e em produção. Envio de e-mail/cupons fica pra uma fase futura, quando houver uma conta de provedor de e-mail configurada.**
+
+Motivação: usuário pediu uma página de "Clientes" — histórico de quem já se hospedou, quando, por quanto tempo, quanto gastou — pra eventualmente enviar promoções e cupons. Combinamos dividir em duas partes: histórico agora (sem depender de nada externo), envio de e-mail depois (precisa de conta num provedor tipo Resend + domínio verificado).
+
+**Decisão de modelagem:** não existe uma tabela "Cliente" própria — cada estadia gera um `Guest` novo (mesmo se for a mesma pessoa voltando). Em vez de migrar o schema, a API agrega por `documentNumber` (CPF/passaporte) na hora, em memória — suficiente pra escala de um hotel/pousada e evita manter uma tabela derivada sincronizada com `Guest`/`Stay`/`Order`.
+
+**Backend:** novo `GET /api/hotels/:hotelId/customers` (staff `gerente`/`recepcao`) — busca todos os `Guest` do hotel com a `Stay` (datas, quarto) e `Order`s (preço × quantidade) de cada um, agrupa por `documentNumber`, e devolve por cliente: nome/contato mais recente, `visitsCount`, `totalSpent`, `firstVisit`, `lastVisit`, e a lista completa de estadias (quarto, datas, noites, valor gasto naquela estadia).
+
+**Portal:** nova aba "Clientes" no sidebar (depois de Hóspedes). Lista com busca (nome/documento) e ordenação (última visita/total gasto/visitas/nome); cada linha mostra nome, contato, badge de visitas, total gasto e última visita. Detalhe do cliente (mesmo padrão `onBack` de conteúdo-no-lugar): contato completo, cards de estatística (visitas/total gasto/primeira e última visita), histórico completo de estadias, e um aviso "em breve" no lugar de um botão de enviar e-mail que ainda não existe (evita uma ação fake na tela).
+
+**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no portal, `tsc --noEmit` limpo na API. Testado via curl contra servidor local (banco de produção): 4 clientes agregados corretamente a partir dos hóspedes existentes, cada um com 1 visita (nenhum repetiu documento ainda), `totalSpent` batendo com os pedidos reais de cada hóspede.
