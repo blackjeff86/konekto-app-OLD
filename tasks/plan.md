@@ -393,3 +393,25 @@ Motivação: três pedidos do usuário na mesma leva — (1) editar o cadastro d
 - `RoomsPage` (aba principal "Quartos") virou um mapa visual — grade de cards por quarto, ícone+badge livre/ocupado, e pra quartos ocupados já mostra hóspedes+valor em aberto no próprio card. Tocar num quarto ocupado abre `StayDetailPage` (que ganhou um "Valor em aberto" permanente no corpo — não só na confirmação de fechar conta — e um botão "Estender estadia" que só troca o `checkOutDate`); tocar num quarto livre abre um atalho simples "Iniciar nova estadia" (dia de check-in/check-out, quarto já fixo).
 
 **Checkpoint:** `flutter analyze`/`flutter test` limpos no portal, `tsc --noEmit`/`next build` limpos na API. Ciclo ponta a ponta via curl contra servidor local (banco de produção): quarto novo criado → número duplicado rejeitado com 409 → Stay criada nele via `roomId` → quarto aparece OCUPADO no mapa → estender estadia (`checkOutDate` novo) → tentativa de apagar quarto com Stay vinculada rejeitada com 409 → edição de cadastro de hóspede (nome+e-mail) aplicada e revertida corretamente, `stay.roomNumber` continua achatado certo na resposta. Deployado em produção (API + konekto-portal — app do hóspede não precisou de rebuild, o achatamento de `roomNumber` mantém o contrato que ele já espera).
+
+## Fase Quartos 2.1 — lista de pedidos no detalhe do quarto
+
+**Status: concluído e em produção.**
+
+Motivação: o "Valor em aberto" mostrado no topo de `StayDetailPage` não tinha nenhuma lista de pedidos abaixo pra justificar o número — o usuário pediu pra ver o detalhamento (o que foi pedido, por quem, quando, quanto) logo abaixo do campo de enviar aviso.
+
+**Portal:** `StayDetailPage` ganhou uma seção "Pedidos" no fim da página — achata `stay.guests[].orders[]` numa lista única ordenada por `createdAt` desc, mostrando quantidade + nome do item, hóspede (só quando há mais de um no quarto) + horário, observação (se houver), valor (`price * quantity`) e badge de status. Nenhuma mudança de API — os dados já vinham nested na resposta de `GET /stays/:stayId`.
+
+## Fase Dashboard 1.0 — Visão Geral com gráficos operacionais
+
+**Status: concluído e em produção.**
+
+Motivação: a aba "Hóspedes" era a primeira tela que o staff via ao entrar no portal — não existia nenhuma visão consolidada do que hotéis/pousadas realmente acompanham no dia a dia (ocupação, receita, o que está vendendo, quem está chegando/saindo).
+
+**Decisão de escopo:** todas as métricas vêm de dados que já existem no schema (Room, Stay, Guest, Order, Service.category) — nada de tracking novo. Agregação inteira feita no servidor numa única chamada, pra não trafegar o histórico de pedidos inteiro pro portal.
+
+**Backend:** novo `GET /api/hotels/:hotelId/dashboard/stats` (staff `gerente`/`recepcao`) — calcula em uma única resposta: ocupação (quartos cadastrados vs. com estadia ativa), hóspedes ativos, receita (hoje / 7 dias / 30 dias, soma de `price * quantity` de pedidos não cancelados), série diária de receita (14 dias), contagem de pedidos por status (30 dias), receita por `Service.category` (30 dias), top 5 itens mais pedidos por receita (30 dias), ticket médio por hóspede (receita 30d / hóspedes distintos com pedido cobrável), e as estadias com check-in ou check-out previstos pros próximos 7 dias. `Order` não tem relação Prisma direta com `Service` (só guarda `serviceId` solto) — resolvido buscando os `Service` distintos dos pedidos do período numa segunda query e montando um mapa `serviceId → category` em memória.
+
+**Portal:** nova dependência `fl_chart`. Nova seção "Visão Geral" (`dashboard_overview_page.dart`) — vira a **primeira aba do sidebar** (antes era "Hóspedes"). Layout: cards de KPI no topo (ocupação, hóspedes ativos, receita hoje, receita 30 dias + ticket médio); gráfico de barras de receita dos últimos 14 dias; dois donuts lado a lado (pedidos por status, receita por categoria) que empilham em telas estreitas; ranking dos itens mais pedidos como barras horizontais; e duas listas lado a lado de chegadas/saídas previstas pros próximos 7 dias. Novo `lib/models/dashboard_stats.dart` + `lib/data/dashboard_repository.dart` seguindo o mesmo padrão de repositório do resto do portal.
+
+**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no portal, `tsc --noEmit` limpo na API. Endpoint testado via curl contra servidor local (banco de produção) — confirmado ocupação 4/4 quartos, receita agregada batendo com os pedidos reais (R$120 massagem + R$155 restaurante em dois dias distintos), categorias e top itens corretos, check-outs previstos aparecendo certos pros 4 quartos ocupados.

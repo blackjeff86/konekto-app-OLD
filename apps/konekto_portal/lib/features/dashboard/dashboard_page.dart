@@ -5,6 +5,7 @@ import 'package:konekto_portal/api_config.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
 import 'package:konekto_portal/auth/staff_role.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
+import 'package:konekto_portal/features/dashboard/dashboard_overview_page.dart';
 import 'package:konekto_portal/features/dashboard/widgets/placeholder_section_card.dart';
 import 'package:konekto_portal/features/dashboard/widgets/portal_sidebar.dart';
 import 'package:konekto_portal/features/guests/guests_page.dart';
@@ -13,10 +14,16 @@ import 'package:konekto_portal/features/rooms/rooms_page.dart';
 import 'package:konekto_portal/features/settings/settings_page.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
 
-const int _kHospedesIndex = 0;
-const int _kQuartosIndex = 1;
-const int _kPedidosIndex = 2;
+const int _kVisaoGeralIndex = 0;
+const int _kHospedesIndex = 1;
+const int _kQuartosIndex = 2;
+const int _kPedidosIndex = 3;
 
+const DashboardSection _kVisaoGeralSection = (
+  icon: Icons.dashboard_outlined,
+  title: 'Visão Geral',
+  description: 'Ocupação, receita e o que está movimentando o hotel.',
+);
 const DashboardSection _kHospedesSection = (
   icon: Icons.people_outline,
   title: 'Hóspedes',
@@ -62,6 +69,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _sections = [
+      _kVisaoGeralSection,
       _kHospedesSection,
       _kQuartosSection,
       _kPedidosSection,
@@ -104,6 +112,8 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: switch (_selectedIndex) {
+                      _kVisaoGeralIndex =>
+                        DashboardOverviewPage(session: widget.session, authRepository: widget.authRepository),
                       _kHospedesIndex => GuestsPage(session: widget.session, authRepository: widget.authRepository),
                       _kQuartosIndex => RoomsPage(session: widget.session, authRepository: widget.authRepository),
                       _kPedidosIndex => OrdersPage(session: widget.session, authRepository: widget.authRepository),
