@@ -7,7 +7,6 @@
 abstract class TenantRepository {
   Future<Map<String, dynamic>> getTenantConfig(String hotelId);
   Future<Map<String, dynamic>> getServicesPageConfig(String hotelId);
-  Future<Map<String, dynamic>> getMapaData(String hotelId);
 
   /// Serviços dinâmicos do hotel (Room Service, Spa, cada restaurante, ou
   /// qualquer serviço que o hotel tenha criado) — substitui os métodos

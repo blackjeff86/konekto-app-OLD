@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:konekto/app/home_konekto/history_page.dart';
-import 'package:konekto/app/home_konekto/profile_page.dart';
 import 'package:konekto/app/navigation/qr_scanner_page.dart';
 import 'package:konekto/app/tenants/tenant_home_page.dart' show TenantHomePage;
 import 'package:konekto/theme/konekto_brand.dart';
@@ -26,60 +24,20 @@ class Promotion {
   }
 }
 
-class HomeKonektoPage extends StatefulWidget {
+/// Tela de entrada do app — só o formulário de código de acesso (+ QR) e o
+/// carrossel de promoções. Chegou a ter abas de "Histórico"/"Perfil" no
+/// rodapé, mas eram protótipo (estadias fictícias fixas no código, e um
+/// "Perfil" com nome hardcoded) mostrado pra qualquer visitante antes dele
+/// sequer se identificar — removidas. O histórico/perfil de verdade só
+/// existe depois do claim, dentro de `TenantHomePage`.
+class HomeKonektoPage extends StatelessWidget {
   const HomeKonektoPage({super.key});
 
   @override
-  State<HomeKonektoPage> createState() => _HomeKonektoPageState();
-}
-
-class _HomeKonektoPageState extends State<HomeKonektoPage> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _widgetOptions = <Widget>[
-    _HomePageBody(),
-    HistoryPage(),
-    ProfilePage(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: KonektoBrand.cream,
-      body: _widgetOptions.elementAt(_selectedIndex),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, -4)),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: BottomNavigationBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            selectedItemColor: KonektoBrand.gold,
-            unselectedItemColor: KonektoBrand.slate.withValues(alpha: 0.6),
-            showUnselectedLabels: true,
-            selectedLabelStyle: KonektoBrand.body(fontSize: 12, fontWeight: FontWeight.w600, color: KonektoBrand.gold),
-            unselectedLabelStyle: KonektoBrand.body(fontSize: 12),
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home_rounded), label: 'Início'),
-              BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: 'Histórico'),
-              BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded), activeIcon: Icon(Icons.person_rounded), label: 'Perfil'),
-            ],
-          ),
-        ),
-      ),
+      body: _HomePageBody(),
     );
   }
 }

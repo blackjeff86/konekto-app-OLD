@@ -37,9 +37,6 @@ class HttpTenantRepository implements TenantRepository {
   Future<Map<String, dynamic>> getServicesPageConfig(String hotelId) => _getContent(hotelId, 'servicesPage');
 
   @override
-  Future<Map<String, dynamic>> getMapaData(String hotelId) => _getContent(hotelId, 'mapa');
-
-  @override
   Future<List<dynamic>> getServices(String hotelId) => _getList('/api/hotels/$hotelId/services');
 
   @override

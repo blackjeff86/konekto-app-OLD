@@ -30,9 +30,6 @@ class AssetTenantRepository implements TenantRepository {
   Future<Map<String, dynamic>> getServicesPageConfig(String hotelId) =>
       _loadJson(_hotelPath(hotelId, 'services_page.json'));
 
-  @override
-  Future<Map<String, dynamic>> getMapaData(String hotelId) => _loadJson(_hotelPath(hotelId, 'mapa_data.json'));
-
   // --- Serviços dinâmicos sintetizados a partir dos JSONs dos 5 catálogos
   // antigos (mesma conversão usada em apps/konekto_api/prisma/seed.ts, mas
   // do lado do app pra manter o modo "sem API" funcionando). Não há

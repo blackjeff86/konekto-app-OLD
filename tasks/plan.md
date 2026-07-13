@@ -497,3 +497,15 @@ Motivação: pendência aberta desde a Fase Serviços — imagens de item com UR
 **App do hóspede:** `TenantImage` — o único lugar que renderiza imagem de rede no app (itens de serviço e o carrossel de destaque) — passou a montar a URL através do proxy em vez de `Image.network(url)` direto. Nenhuma outra mudança: portal continua só guardando a URL original digitada pelo hotel, sem saber nada do proxy.
 
 **Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no app do hóspede, `tsc --noEmit` limpo na API. Testado local: imagem pública real proxeada com sucesso (PNG válido, cabeçalhos corretos) → bloqueio confirmado pra endpoint de metadata de nuvem, `localhost`, protocolo `file://` e `Content-Type` não-imagem.
+
+## Limpeza — remoção de código morto (Histórico/Perfil pré-login, Mapa do hotel)
+
+**Status: concluído e em produção.**
+
+Motivação: revisão do que ficava pendente das últimas fases apontou duas telas do app do hóspede nunca conectadas a nenhum fluxo real. Investigando de perto, achamos algo pior que "inacabado": as abas "Histórico" e "Perfil" apareciam no rodapé da tela de entrada **antes** do hóspede digitar qualquer código de acesso — ou seja, visíveis pra qualquer visitante do app. "Histórico" mostrava estadias fictícias fixas no código; "Perfil" mostrava um nome hardcoded (não genérico, o nome de uma pessoa real) como se fosse a conta logada. Não era feature inacabada, era sobra de protótipo mostrando dado fake/pessoal pra estranhos. Decisão: remover as duas, mais o "Mapa do hotel" (`MapaPage`, sem dado fake mas também nunca instanciado em lugar nenhum).
+
+**Removido:** `lib/app/home_konekto/history_page.dart`, `lib/app/home_konekto/profile_page.dart`, `lib/app/tenants/mapa_page.dart` — arquivos inteiros apagados. `HomeKonektoPage` (tela de entrada) simplificada de `StatefulWidget` com `BottomNavigationBar` de 3 abas pra `StatelessWidget` mostrando só `_HomePageBody` (formulário de código de acesso + QR + carrossel de promoções) — a experiência real que já era o único caminho funcional. `getMapaData` removido de `TenantRepository` (interface) e das duas implementações (`AssetTenantRepository`, `HttpTenantRepository`), já que `MapaPage` era o único consumidor.
+
+**Fora do escopo:** os arquivos de seed `mapa_data.json` (`assets/tenant_assets/hotels/*/mapa_data.json`) ficaram no repositório — dado estático órfão, inofensivo, não vale o risco de mexer no manifesto de assets pra isso agora.
+
+**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos — nenhuma referência restante a `MapaPage`/`HistoryPage`/`getMapaData`/`mapa_data` em nenhum arquivo `.dart` (confirmado via grep).
