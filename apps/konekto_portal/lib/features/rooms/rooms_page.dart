@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/phone_number.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
+import 'package:konekto_portal/data/guests_repository.dart';
 import 'package:konekto_portal/data/rooms_repository.dart';
 import 'package:konekto_portal/data/stays_repository.dart';
 import 'package:konekto_portal/features/rooms/stay_detail_page.dart';
+import 'package:konekto_portal/models/guest.dart';
 import 'package:konekto_portal/models/room.dart';
 import 'package:konekto_portal/models/stay.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
@@ -13,10 +17,12 @@ String _formatDate(DateTime date) {
 }
 
 /// Tela "Quartos" — mapa visual de todos os quartos cadastrados (ver
-/// Configurações → Quartos), cada um mostrando livre/ocupado. Tocar num
-/// quarto ocupado abre o detalhe da estadia (`StayDetailPage`, com
-/// hóspedes, avisos, valor em aberto, estender/fechar conta); tocar num
-/// quarto livre abre um atalho pra iniciar uma nova estadia nele.
+/// Configurações → Quartos), separado em duas seções (vagos/ocupados) pra
+/// ficar claro de relance quem precisa de atenção. Tocar num quarto
+/// ocupado abre o detalhe da estadia (`StayDetailPage`, com hóspedes,
+/// avisos, valor em aberto, estender/fechar conta); tocar num quarto vago
+/// abre o formulário de ocupação (datas + cadastro do hóspede, com busca
+/// por documento pra reaproveitar quem já se hospedou antes).
 class RoomsPage extends StatefulWidget {
   final StaffSession session;
   final AuthRepository authRepository;
@@ -103,6 +109,9 @@ class _RoomsPageState extends State<RoomsPage> {
       return const Center(child: CircularProgressIndicator(color: KonektoBrand.gold));
     }
 
+    final freeRooms = _rooms.where((room) => !room.isOccupied).toList();
+    final occupiedRooms = _rooms.where((room) => room.isOccupied).toList();
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -110,7 +119,7 @@ class _RoomsPageState extends State<RoomsPage> {
           Text('Quartos', style: KonektoBrand.display(fontSize: 18)),
           const SizedBox(height: 4),
           Text(
-            'Toque num quarto pra ver hóspedes, avisos e o valor em aberto — ou iniciar uma estadia se estiver livre.',
+            'Toque num quarto vago pra registrar um hóspede e iniciar a estadia — ou num quarto ocupado pra ver hóspedes, avisos e o valor em aberto.',
             style: KonektoBrand.body(fontSize: 12.5),
           ),
           const SizedBox(height: 20),
@@ -139,16 +148,69 @@ class _RoomsPageState extends State<RoomsPage> {
                 style: KonektoBrand.body(fontSize: 13.5),
               ),
             )
-          else
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                for (final room in _rooms) _RoomCard(room: room, onTap: () => setState(() => _viewingRoomId = room.id)),
-              ],
+          else ...[
+            _RoomSection(
+              title: 'Quartos vagos',
+              count: freeRooms.length,
+              rooms: freeRooms,
+              onTapRoom: (room) => setState(() => _viewingRoomId = room.id),
             ),
+            const SizedBox(height: 28),
+            _RoomSection(
+              title: 'Quartos ocupados',
+              count: occupiedRooms.length,
+              rooms: occupiedRooms,
+              onTapRoom: (room) => setState(() => _viewingRoomId = room.id),
+            ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _RoomSection extends StatelessWidget {
+  final String title;
+  final int count;
+  final List<Room> rooms;
+  final ValueChanged<Room> onTapRoom;
+
+  const _RoomSection({required this.title, required this.count, required this.rooms, required this.onTapRoom});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Text(title, style: KonektoBrand.display(fontSize: 15)),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(999)),
+              child: Text('$count', style: KonektoBrand.body(fontSize: 11.5, fontWeight: FontWeight.w600, color: KonektoBrand.slate)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (rooms.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: KonektoBrand.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: KonektoBrand.borderStrong),
+            ),
+            child: Text('Nenhum quarto nessa situação agora.', style: KonektoBrand.body(fontSize: 13)),
+          )
+        else
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [for (final room in rooms) _RoomCard(room: room, onTap: () => onTapRoom(room))],
+          ),
+      ],
     );
   }
 }
@@ -230,8 +292,11 @@ class _RoomCard extends StatelessWidget {
   }
 }
 
-/// Detalhe de um quarto LIVRE — sem estadia pra mostrar, só a opção de
-/// iniciar uma nova.
+/// Detalhe de um quarto VAGO — informações do quarto + o formulário
+/// completo de ocupação bem abaixo, na mesma página (nada de modal): datas
+/// da estadia e o cadastro do hóspede, que pode ser buscado pelo documento
+/// (reaproveita os dados de quem já se hospedou antes) ou preenchido do
+/// zero se for realmente um hóspede novo.
 class _FreeRoomDetail extends StatefulWidget {
   final StaffSession session;
   final AuthRepository authRepository;
@@ -253,32 +318,199 @@ class _FreeRoomDetail extends StatefulWidget {
 
 class _FreeRoomDetailState extends State<_FreeRoomDetail> {
   final _staysRepository = StaysRepository();
-  String? _errorMessage;
+  final _guestsRepository = GuestsRepository();
+
+  final _documentNumberController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _countryController = TextEditingController();
+  final _wifiPasswordController = TextEditingController();
+
+  DocumentType _documentType = DocumentType.cpf;
+  PhoneNumber? _phone;
+  PhoneNumber? _whatsapp;
+  bool _whatsappSameAsPhone = true;
+  String? _prefillPhone;
+  String? _prefillWhatsapp;
+  int _prefillGeneration = 0;
+
+  DateTime? _checkInDate;
+  DateTime? _checkOutDate;
+
+  bool _isSearching = false;
   bool _isSubmitting = false;
+  String? _errorMessage;
+  String? _lookupBanner;
+  bool _lookupBannerFound = false;
 
-  Future<void> _startStay() async {
-    final dates = await showDialog<_StayDates>(context: context, builder: (context) => const _StayDatesDialog());
-    if (dates == null) return;
+  @override
+  void dispose() {
+    _documentNumberController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _addressController.dispose();
+    _countryController.dispose();
+    _wifiPasswordController.dispose();
+    super.dispose();
+  }
 
+  Future<String?> _requireToken() async {
     final token = await widget.authRepository.getStoredToken();
     if (token == null) {
       setState(() => _errorMessage = 'Sessão expirada — saia e entre novamente.');
+    }
+    return token;
+  }
+
+  Future<void> _pickDate({required bool isCheckIn}) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: isCheckIn ? (_checkInDate ?? now) : (_checkOutDate ?? _checkInDate ?? now),
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 2),
+    );
+    if (picked == null) return;
+    setState(() {
+      if (isCheckIn) {
+        _checkInDate = picked;
+      } else {
+        _checkOutDate = picked;
+      }
+    });
+  }
+
+  Future<void> _searchGuest() async {
+    final documentNumber = _documentNumberController.text.trim();
+    if (documentNumber.isEmpty) {
+      setState(() => _errorMessage = 'Digite o número do documento pra buscar.');
+      return;
+    }
+    final token = await _requireToken();
+    if (token == null) return;
+
+    setState(() {
+      _isSearching = true;
+      _errorMessage = null;
+      _lookupBanner = null;
+    });
+    try {
+      final result = await _guestsRepository.lookupByDocument(
+        hotelId: widget.session.hotelId,
+        token: token,
+        documentNumber: documentNumber,
+      );
+      if (result == null) {
+        setState(() {
+          _lookupBanner = 'Nenhum cadastro encontrado com esse documento — preencha os dados de um novo hóspede.';
+          _lookupBannerFound = false;
+        });
+        return;
+      }
+      setState(() {
+        _documentType = result.documentType;
+        _firstNameController.text = result.firstName;
+        _lastNameController.text = result.lastName;
+        _emailController.text = result.email ?? '';
+        _addressController.text = result.address ?? '';
+        _countryController.text = result.country;
+        _prefillPhone = result.phoneNumber;
+        _prefillWhatsapp = result.whatsappNumber;
+        _whatsappSameAsPhone = result.whatsappNumber == null || result.whatsappNumber == result.phoneNumber;
+        _prefillGeneration++;
+        _lookupBanner = 'Hóspede encontrado: ${result.firstName} ${result.lastName} — dados preenchidos, revise se necessário.';
+        _lookupBannerFound = true;
+      });
+    } on StateError catch (error) {
+      setState(() => _errorMessage = error.message);
+    } finally {
+      if (mounted) setState(() => _isSearching = false);
+    }
+  }
+
+  Future<void> _submit() async {
+    final checkInDate = _checkInDate;
+    final checkOutDate = _checkOutDate;
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final documentNumber = _documentNumberController.text.trim();
+    final country = _countryController.text.trim();
+    final phone = _phone;
+
+    if (checkInDate == null || checkOutDate == null) {
+      setState(() => _errorMessage = 'Preencha as datas de check-in e check-out.');
+      return;
+    }
+    if (checkOutDate.isBefore(checkInDate)) {
+      setState(() => _errorMessage = 'A data de saída não pode ser antes da data de entrada.');
+      return;
+    }
+    if (firstName.isEmpty || lastName.isEmpty || documentNumber.isEmpty || country.isEmpty || phone == null) {
+      setState(() => _errorMessage = 'Preencha nome, sobrenome, documento, telefone e país do hóspede.');
       return;
     }
 
-    setState(() => _isSubmitting = true);
+    final token = await _requireToken();
+    if (token == null) return;
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
     try {
-      await _staysRepository.createStay(
+      final stay = await _staysRepository.createStay(
         hotelId: widget.session.hotelId,
         token: token,
-        input: NewStayInput(roomId: widget.room.id, checkInDate: dates.checkIn, checkOutDate: dates.checkOut),
+        input: NewStayInput(roomId: widget.room.id, checkInDate: checkInDate, checkOutDate: checkOutDate),
+      );
+      final whatsapp = _whatsappSameAsPhone ? phone : _whatsapp;
+      final email = _emailController.text.trim();
+      final address = _addressController.text.trim();
+      final wifiPassword = _wifiPasswordController.text.trim();
+
+      final guest = await _guestsRepository.createGuest(
+        hotelId: widget.session.hotelId,
+        token: token,
+        input: NewGuestInput(
+          stayId: stay.id,
+          firstName: firstName,
+          lastName: lastName,
+          documentType: _documentType,
+          documentNumber: documentNumber,
+          phoneCountryCode: phone.countryCode,
+          phoneNumber: phone.number,
+          whatsappCountryCode: whatsapp?.countryCode,
+          whatsappNumber: whatsapp?.number,
+          email: email.isEmpty ? null : email,
+          address: address.isEmpty ? null : address,
+          country: country,
+          wifiPassword: wifiPassword.isEmpty ? null : wifiPassword,
+        ),
       );
       widget.onStayCreated();
+      if (mounted) await _showAccessCodeDialog(guest.accessCode);
     } on StateError catch (error) {
       setState(() => _errorMessage = error.message);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  Future<void> _showAccessCodeDialog(String accessCode) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: KonektoBrand.surface,
+        title: Text('Hóspede registrado', style: KonektoBrand.display(fontSize: 16)),
+        content: Text('Código de acesso: $accessCode', style: KonektoBrand.body(fontSize: 14, color: KonektoBrand.goldLight)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Fechar')),
+        ],
+      ),
+    );
   }
 
   @override
@@ -315,146 +547,184 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: KonektoBrand.borderStrong),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(child: Text('Este quarto está livre.', style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream))),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(999)),
-                        child: Text(
-                          'Livre',
-                          style: KonektoBrand.body(fontSize: 11, fontWeight: FontWeight.w600, color: KonektoBrand.slateSoft),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (widget.room.description != null && widget.room.description!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(widget.room.description!, style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slate)),
-                  ],
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isSubmitting ? null : _startStay,
-                      icon: _isSubmitting
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: KonektoBrand.ink))
-                          : const Icon(Icons.login, size: 18),
-                      label: Text('Iniciar nova estadia', style: KonektoBrand.body(fontSize: 13.5, fontWeight: FontWeight.w700)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: KonektoBrand.gold,
-                        foregroundColor: KonektoBrand.ink,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-                      ),
-                    ),
+                  Expanded(child: Text('Este quarto está livre.', style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream))),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(999)),
+                    child: Text('Livre', style: KonektoBrand.body(fontSize: 11, fontWeight: FontWeight.w600, color: KonektoBrand.slateSoft)),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StayDates {
-  final DateTime checkIn;
-  final DateTime checkOut;
-
-  const _StayDates({required this.checkIn, required this.checkOut});
-}
-
-class _StayDatesDialog extends StatefulWidget {
-  const _StayDatesDialog();
-
-  @override
-  State<_StayDatesDialog> createState() => _StayDatesDialogState();
-}
-
-class _StayDatesDialogState extends State<_StayDatesDialog> {
-  DateTime? _checkInDate;
-  DateTime? _checkOutDate;
-  String? _errorMessage;
-
-  Future<void> _pickDate({required bool isCheckIn}) async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: isCheckIn ? (_checkInDate ?? now) : (_checkOutDate ?? _checkInDate ?? now),
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 2),
-    );
-    if (picked == null) return;
-    setState(() {
-      if (isCheckIn) {
-        _checkInDate = picked;
-      } else {
-        _checkOutDate = picked;
-      }
-    });
-  }
-
-  void _submit() {
-    final checkInDate = _checkInDate;
-    final checkOutDate = _checkOutDate;
-    if (checkInDate == null || checkOutDate == null) {
-      setState(() => _errorMessage = 'Preencha as datas de estadia.');
-      return;
-    }
-    if (checkOutDate.isBefore(checkInDate)) {
-      setState(() => _errorMessage = 'A data de saída não pode ser antes da data de entrada.');
-      return;
-    }
-    Navigator.of(context).pop(_StayDates(checkIn: checkInDate, checkOut: checkOutDate));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: KonektoBrand.surface,
-      title: Text('Iniciar estadia', style: KonektoBrand.display(fontSize: 16)),
-      content: SizedBox(
-        width: 340,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0x1ADC2626),
-                  border: Border.all(color: const Color(0x4DDC2626)),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
-              ),
-              const SizedBox(height: 14),
+            if (widget.room.description != null && widget.room.description!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(widget.room.description!, style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slate)),
             ],
+            const SizedBox(height: 24),
+            Text('Nova estadia', style: KonektoBrand.display(fontSize: 15)),
+            const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(
-                  child: _DatePickerField(label: 'Check-in', date: _checkInDate, onTap: () => _pickDate(isCheckIn: true)),
+                Expanded(child: _DatePickerField(label: 'Check-in', date: _checkInDate, onTap: () => _pickDate(isCheckIn: true))),
+                const SizedBox(width: 10),
+                Expanded(child: _DatePickerField(label: 'Check-out', date: _checkOutDate, onTap: () => _pickDate(isCheckIn: false))),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text('Hóspede', style: KonektoBrand.display(fontSize: 15)),
+            const SizedBox(height: 4),
+            Text(
+              'Busque pelo documento pra reaproveitar o cadastro de quem já se hospedou antes, ou preencha um hóspede novo.',
+              style: KonektoBrand.body(fontSize: 12.5),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 140,
+                  child: DropdownButtonFormField<DocumentType>(
+                    initialValue: _documentType,
+                    dropdownColor: KonektoBrand.surface,
+                    style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                    decoration: InputDecoration(
+                      labelText: 'Documento',
+                      labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                      isDense: true,
+                      enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
+                      focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+                    ),
+                    items: [for (final type in DocumentType.values) DropdownMenuItem(value: type, child: Text(type.label))],
+                    onChanged: (value) => setState(() => _documentType = value ?? _documentType),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: _DatePickerField(label: 'Check-out', date: _checkOutDate, onTap: () => _pickDate(isCheckIn: false)),
+                  child: _FormField(
+                    label: _documentType == DocumentType.cpf ? 'CPF' : 'Número do documento',
+                    controller: _documentNumberController,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: _isSearching ? null : _searchGuest,
+                    icon: _isSearching
+                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.search, size: 16, color: KonektoBrand.goldLight),
+                    label: Text('Buscar', style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.goldLight)),
+                    style: OutlinedButton.styleFrom(side: const BorderSide(color: KonektoBrand.borderStrong)),
+                  ),
                 ),
               ],
+            ),
+            if (_lookupBanner != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: (_lookupBannerFound ? KonektoBrand.gold : KonektoBrand.slate).withValues(alpha: 0.1),
+                  border: Border.all(color: (_lookupBannerFound ? KonektoBrand.gold : KonektoBrand.slate).withValues(alpha: 0.35)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _lookupBannerFound ? Icons.check_circle_outline : Icons.info_outline,
+                      size: 16,
+                      color: _lookupBannerFound ? KonektoBrand.goldLight : KonektoBrand.slate,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(_lookupBanner!, style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.cream))),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(child: _FormField(label: 'Nome', controller: _firstNameController)),
+                const SizedBox(width: 10),
+                Expanded(child: _FormField(label: 'Sobrenome', controller: _lastNameController)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            IntlPhoneField(
+              key: ValueKey('phone-$_prefillGeneration'),
+              initialCountryCode: 'BR',
+              initialValue: _prefillPhone,
+              style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+              dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+              decoration: InputDecoration(
+                labelText: 'Telefone',
+                labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                isDense: true,
+                enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
+                focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+              ),
+              onChanged: (phone) => _phone = phone,
+            ),
+            const SizedBox(height: 4),
+            CheckboxListTile(
+              value: _whatsappSameAsPhone,
+              onChanged: (value) => setState(() => _whatsappSameAsPhone = value ?? true),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: KonektoBrand.gold,
+              dense: true,
+              title: Text('WhatsApp é o mesmo número do telefone', style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slate)),
+            ),
+            if (!_whatsappSameAsPhone) ...[
+              const SizedBox(height: 4),
+              IntlPhoneField(
+                key: ValueKey('whatsapp-$_prefillGeneration'),
+                initialCountryCode: 'BR',
+                initialValue: _prefillWhatsapp,
+                style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                decoration: InputDecoration(
+                  labelText: 'WhatsApp',
+                  labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+                  isDense: true,
+                  enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
+                  focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+                ),
+                onChanged: (phone) => _whatsapp = phone,
+              ),
+              const SizedBox(height: 10),
+            ],
+            const SizedBox(height: 6),
+            _FormField(label: 'E-mail (opcional)', controller: _emailController, keyboardType: TextInputType.emailAddress),
+            const SizedBox(height: 10),
+            _FormField(label: 'Endereço (opcional)', controller: _addressController),
+            const SizedBox(height: 10),
+            _FormField(label: 'País', controller: _countryController),
+            const SizedBox(height: 10),
+            _FormField(label: 'Senha de wifi (opcional — vazio usa a padrão do hotel)', controller: _wifiPasswordController),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isSubmitting ? null : _submit,
+                icon: _isSubmitting
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: KonektoBrand.ink))
+                    : const Icon(Icons.login, size: 18),
+                label: Text('Registrar hóspede e iniciar estadia', style: KonektoBrand.body(fontSize: 13.5, fontWeight: FontWeight.w700)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: KonektoBrand.gold,
+                  foregroundColor: KonektoBrand.ink,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                ),
+              ),
             ),
           ],
         ),
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-        TextButton(onPressed: _submit, child: const Text('Iniciar')),
-      ],
     );
   }
 }
@@ -488,6 +758,30 @@ class _DatePickerField extends StatelessWidget {
             const Icon(Icons.calendar_today_outlined, size: 15, color: KonektoBrand.slate),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _FormField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+
+  const _FormField({required this.label, required this.controller, this.keyboardType});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate),
+        isDense: true,
+        enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
+        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
       ),
     );
   }

@@ -23,6 +23,26 @@ class GuestsRepository {
     return raw.map((item) => Guest.fromJson(item as Map<String, dynamic>)).toList();
   }
 
+  /// Busca o cadastro mais recente pelo documento — `null` quando é
+  /// realmente um hóspede novo (404 da API).
+  Future<GuestLookupResult?> lookupByDocument({
+    required String hotelId,
+    required String token,
+    required String documentNumber,
+  }) async {
+    final response = await _client.get(
+      Uri.parse('$apiBaseUrl/api/hotels/$hotelId/guests/lookup?documentNumber=${Uri.encodeQueryComponent(documentNumber)}'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 404) {
+      return null;
+    }
+    if (response.statusCode != 200) {
+      throw StateError('Falha ao buscar hóspede (status ${response.statusCode}).');
+    }
+    return GuestLookupResult.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  }
+
   Future<Guest> getGuest({required String hotelId, required String guestId, required String token}) async {
     final response = await _client.get(
       Uri.parse('$apiBaseUrl/api/hotels/$hotelId/guests/$guestId'),

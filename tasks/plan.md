@@ -509,3 +509,17 @@ Motivação: revisão do que ficava pendente das últimas fases apontou duas tel
 **Fora do escopo:** os arquivos de seed `mapa_data.json` (`assets/tenant_assets/hotels/*/mapa_data.json`) ficaram no repositório — dado estático órfão, inofensivo, não vale o risco de mexer no manifesto de assets pra isso agora.
 
 **Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos — nenhuma referência restante a `MapaPage`/`HistoryPage`/`getMapaData`/`mapa_data` em nenhum arquivo `.dart` (confirmado via grep).
+
+## Fase Quartos 2.1 — mapa seccionado + ocupação com busca de hóspede por documento
+
+**Status: concluído e em produção.**
+
+Motivação: usuário apontou que o fluxo de ocupar um quarto estava confuso — o mapa misturava livres/ocupados sem separação visual, e ocupar um quarto exigia dois passos desconectados (um modal só de datas pra criar a Stay, depois abrir o quarto de novo e usar OUTRO modal pra adicionar o hóspede, sempre do zero, sem nenhuma forma de reaproveitar o cadastro de alguém que já se hospedou antes).
+
+**Backend:** novo `GET /api/hotels/:hotelId/guests/lookup?documentNumber=X` (staff `gerente`/`recepcao`) — acha o cadastro mais recente de um `Guest` pelo documento (CPF ou passaporte/outro se estrangeiro) dentro do hotel, devolve os dados pessoais pra reaproveitar, ou 404 se for realmente um hóspede novo. Convive sem conflito com a rota dinâmica existente `guests/[guestId]` (Next.js resolve o segmento estático "lookup" antes do dinâmico).
+
+**Portal — mapa de quartos:** `RoomsPage` agora renderiza duas seções sempre visíveis, "Quartos vagos" e "Quartos ocupados" (cada uma com contador), em vez de um `Wrap` único misturado.
+
+**Portal — ocupação de quarto:** os dois modais (`_StayDatesDialog` de datas + `_AddGuestDialog` de hóspede, aberto depois, separado) foram substituídos por um único formulário **na própria página** do quarto vago (nada de modal) — abaixo da informação do quarto: datas de check-in/check-out, depois a seção "Hóspede" com tipo+número de documento e um botão "Buscar". Encontrado → nome, telefone, e-mail, endereço e país são preenchidos automaticamente (ainda editáveis, com um aviso "Hóspede encontrado: Nome — revise se necessário"); não encontrado → aviso "Nenhum cadastro encontrado" e os campos ficam prontos pra um cadastro novo. Um botão só ("Registrar hóspede e iniciar estadia") cria a Stay e o Guest em sequência e mostra o código de acesso ao final — mesmo resultado de antes, só que num fluxo contínuo.
+
+**Checkpoint:** `flutter analyze`/`flutter test`/`flutter build web --release` limpos no portal, `tsc --noEmit` limpo na API. Ciclo ponta a ponta via curl contra servidor local (banco de produção), com 2 quartos/estadias/hóspedes de teste criados e removidos ao final: quarto 1 ocupado com hóspede novo (documento inédito) → lookup pelo mesmo documento encontra os dados corretos → quarto 2 ocupado reaproveitando esses dados (mesma pessoa, segunda estadia) → mapa mostra os 2 quartos corretamente como ocupados.

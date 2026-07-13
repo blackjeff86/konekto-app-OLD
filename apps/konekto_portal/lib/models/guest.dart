@@ -169,6 +169,54 @@ class NewGuestInput {
   }
 }
 
+/// Cadastro mais recente de uma pessoa encontrado pelo documento —
+/// devolvido por `GET /api/hotels/:hotelId/guests/lookup`, usado pra
+/// reaproveitar os dados de alguém que já se hospedou antes ao ocupar um
+/// quarto, sem digitar tudo de novo.
+class GuestLookupResult {
+  final String firstName;
+  final String lastName;
+  final DocumentType documentType;
+  final String documentNumber;
+  final String phoneCountryCode;
+  final String phoneNumber;
+  final String? whatsappCountryCode;
+  final String? whatsappNumber;
+  final String? email;
+  final String? address;
+  final String country;
+
+  const GuestLookupResult({
+    required this.firstName,
+    required this.lastName,
+    required this.documentType,
+    required this.documentNumber,
+    required this.phoneCountryCode,
+    required this.phoneNumber,
+    this.whatsappCountryCode,
+    this.whatsappNumber,
+    this.email,
+    this.address,
+    required this.country,
+  });
+
+  factory GuestLookupResult.fromJson(Map<String, dynamic> json) {
+    return GuestLookupResult(
+      firstName: json['firstName'] as String,
+      lastName: json['lastName'] as String,
+      documentType: DocumentType.fromString(json['documentType'] as String),
+      documentNumber: json['documentNumber'] as String,
+      phoneCountryCode: json['phoneCountryCode'] as String,
+      phoneNumber: json['phoneNumber'] as String,
+      whatsappCountryCode: json['whatsappCountryCode'] as String?,
+      whatsappNumber: json['whatsappNumber'] as String?,
+      email: json['email'] as String?,
+      address: json['address'] as String?,
+      country: json['country'] as String,
+    );
+  }
+}
+
 /// Dados do formulário de EDIÇÃO de um hóspede já existente — mesmos
 /// campos pessoais de `NewGuestInput`, sem `stayId` (mudar de quarto é uma
 /// operação diferente, fora de escopo). Diferente de `NewGuestInput`,
