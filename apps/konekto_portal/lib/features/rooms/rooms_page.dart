@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
@@ -11,6 +12,8 @@ import 'package:konekto_portal/models/guest.dart';
 import 'package:konekto_portal/models/room.dart';
 import 'package:konekto_portal/models/stay.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
+import 'package:konekto_portal/utils/input_formatters.dart';
+import 'package:konekto_portal/widgets/copyable_code_box.dart';
 
 String _formatDate(DateTime date) {
   return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
@@ -417,8 +420,8 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
         _emailController.text = result.email ?? '';
         _addressController.text = result.address ?? '';
         _countryController.text = result.country;
-        _prefillPhone = result.phoneNumber;
-        _prefillWhatsapp = result.whatsappNumber;
+        _prefillPhone = BrazilPhoneInputFormatter.format(result.phoneNumber);
+        _prefillWhatsapp = result.whatsappNumber != null ? BrazilPhoneInputFormatter.format(result.whatsappNumber!) : null;
         _whatsappSameAsPhone = result.whatsappNumber == null || result.whatsappNumber == result.phoneNumber;
         _prefillGeneration++;
         _lookupBanner = 'Hóspede encontrado: ${result.firstName} ${result.lastName} — dados preenchidos, revise se necessário.';
@@ -481,9 +484,9 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
           documentType: _documentType,
           documentNumber: documentNumber,
           phoneCountryCode: phone.countryCode,
-          phoneNumber: phone.number,
+          phoneNumber: stripNonDigits(phone.number),
           whatsappCountryCode: whatsapp?.countryCode,
-          whatsappNumber: whatsapp?.number,
+          whatsappNumber: whatsapp != null ? stripNonDigits(whatsapp.number) : null,
           email: email.isEmpty ? null : email,
           address: address.isEmpty ? null : address,
           country: country,
@@ -505,7 +508,18 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
       builder: (context) => AlertDialog(
         backgroundColor: KonektoBrand.surface,
         title: Text('Hóspede registrado', style: KonektoBrand.display(fontSize: 16)),
-        content: Text('Código de acesso: $accessCode', style: KonektoBrand.body(fontSize: 14, color: KonektoBrand.goldLight)),
+        content: SizedBox(
+          width: 340,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Código de acesso:', style: KonektoBrand.body(fontSize: 13)),
+              const SizedBox(height: 8),
+              CopyableCodeBox(value: accessCode),
+            ],
+          ),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Fechar')),
         ],
@@ -605,6 +619,7 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
                   child: _FormField(
                     label: _documentType == DocumentType.cpf ? 'CPF' : 'Número do documento',
                     controller: _documentNumberController,
+                    inputFormatters: _documentType == DocumentType.cpf ? [CpfInputFormatter()] : null,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -656,6 +671,8 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
               key: ValueKey('phone-$_prefillGeneration'),
               initialCountryCode: 'BR',
               initialValue: _prefillPhone,
+              disableLengthCheck: true,
+              inputFormatters: [BrazilPhoneInputFormatter()],
               style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
               dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
               decoration: InputDecoration(
@@ -683,6 +700,8 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
                 key: ValueKey('whatsapp-$_prefillGeneration'),
                 initialCountryCode: 'BR',
                 initialValue: _prefillWhatsapp,
+                disableLengthCheck: true,
+                inputFormatters: [BrazilPhoneInputFormatter()],
                 style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                 dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                 decoration: InputDecoration(
@@ -767,14 +786,16 @@ class _FormField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
-  const _FormField({required this.label, required this.controller, this.keyboardType});
+  const _FormField({required this.label, required this.controller, this.keyboardType, this.inputFormatters});
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
       decoration: InputDecoration(
         labelText: label,

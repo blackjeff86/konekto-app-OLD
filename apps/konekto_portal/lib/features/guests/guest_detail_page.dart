@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
@@ -8,6 +9,8 @@ import 'package:konekto_portal/models/guest.dart';
 import 'package:konekto_portal/models/order.dart' show OrderStatus;
 import 'package:konekto_portal/models/stay.dart' show GuestOrderSummary;
 import 'package:konekto_portal/theme/konekto_brand.dart';
+import 'package:konekto_portal/utils/input_formatters.dart';
+import 'package:konekto_portal/widgets/copyable_code_box.dart';
 
 String _formatDate(DateTime date) {
   return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
@@ -212,7 +215,19 @@ class _GuestDetailPageState extends State<GuestDetailPage> {
                 if (guest.address != null) _DetailLine(label: 'Endereço', value: guest.address!),
                 _DetailLine(label: 'País', value: guest.country),
                 _DetailLine(label: 'Senha de wifi', value: guest.wifiPassword ?? 'Padrão do hotel'),
-                _DetailLine(label: 'Código de acesso', value: guest.accessCode),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 140,
+                        child: Text('Código de acesso', style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
+                      ),
+                      Expanded(child: CopyableCodeBox(value: guest.accessCode, fontSize: 13)),
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -427,7 +442,7 @@ class _GuestEditDialogState extends State<_GuestEditDialog> {
     final country = _countryController.text.trim();
     final phone = _phone;
     final phoneCountryCode = phone?.countryCode ?? widget.guest.phoneCountryCode;
-    final phoneNumber = phone?.number ?? widget.guest.phoneNumber;
+    final phoneNumber = phone != null ? stripNonDigits(phone.number) : widget.guest.phoneNumber;
 
     if (firstName.isEmpty || lastName.isEmpty || documentNumber.isEmpty || country.isEmpty) {
       setState(() => _errorMessage = 'Preencha nome, sobrenome, documento e país.');
@@ -436,7 +451,9 @@ class _GuestEditDialogState extends State<_GuestEditDialog> {
 
     final whatsapp = _whatsappSameAsPhone ? null : _whatsapp;
     final whatsappCountryCode = _whatsappSameAsPhone ? phoneCountryCode : (whatsapp?.countryCode ?? widget.guest.whatsappCountryCode);
-    final whatsappNumber = _whatsappSameAsPhone ? phoneNumber : (whatsapp?.number ?? widget.guest.whatsappNumber);
+    final whatsappNumber = _whatsappSameAsPhone
+        ? phoneNumber
+        : (whatsapp != null ? stripNonDigits(whatsapp.number) : widget.guest.whatsappNumber);
     final email = _emailController.text.trim();
     final address = _addressController.text.trim();
     final wifiPassword = _wifiPasswordController.text.trim();
@@ -512,13 +529,21 @@ class _GuestEditDialogState extends State<_GuestEditDialog> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(child: _EditFormField(label: 'Número do documento', controller: _documentNumberController)),
+                  Expanded(
+                    child: _EditFormField(
+                      label: 'Número do documento',
+                      controller: _documentNumberController,
+                      inputFormatters: _documentType == DocumentType.cpf ? [CpfInputFormatter()] : null,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
               IntlPhoneField(
                 initialCountryCode: 'BR',
-                initialValue: widget.guest.phoneNumber,
+                initialValue: BrazilPhoneInputFormatter.format(widget.guest.phoneNumber),
+                disableLengthCheck: true,
+                inputFormatters: [BrazilPhoneInputFormatter()],
                 style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                 dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                 decoration: InputDecoration(
@@ -547,7 +572,11 @@ class _GuestEditDialogState extends State<_GuestEditDialog> {
                 const SizedBox(height: 4),
                 IntlPhoneField(
                   initialCountryCode: 'BR',
-                  initialValue: widget.guest.whatsappNumber,
+                  initialValue: widget.guest.whatsappNumber != null
+                      ? BrazilPhoneInputFormatter.format(widget.guest.whatsappNumber!)
+                      : null,
+                  disableLengthCheck: true,
+                  inputFormatters: [BrazilPhoneInputFormatter()],
                   style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                   dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                   decoration: InputDecoration(
@@ -588,14 +617,16 @@ class _EditFormField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
-  const _EditFormField({required this.label, required this.controller, this.keyboardType});
+  const _EditFormField({required this.label, required this.controller, this.keyboardType, this.inputFormatters});
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
       decoration: InputDecoration(
         labelText: label,

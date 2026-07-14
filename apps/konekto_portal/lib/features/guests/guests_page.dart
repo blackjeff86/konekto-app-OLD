@@ -11,6 +11,7 @@ import 'package:konekto_portal/guest_app_config.dart';
 import 'package:konekto_portal/models/guest.dart';
 import 'package:konekto_portal/models/stay.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
+import 'package:konekto_portal/widgets/copyable_code_box.dart';
 
 void _copyToClipboard(BuildContext context, String value) {
   Clipboard.setData(ClipboardData(text: value));
@@ -206,40 +207,7 @@ class _GuestsPageState extends State<GuestsPage> {
             children: [
               Text('Código de acesso:', style: KonektoBrand.body(fontSize: 13)),
               const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: KonektoBrand.borderStrong),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        guest.accessCode,
-                        style: KonektoBrand.display(
-                          fontSize: 18,
-                          color: KonektoBrand.goldLight,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Copiar código',
-                      icon: const Icon(
-                        Icons.copy_outlined,
-                        size: 18,
-                        color: KonektoBrand.slate,
-                      ),
-                      onPressed: () =>
-                          _copyToClipboard(context, guest.accessCode),
-                    ),
-                  ],
-                ),
-              ),
+              CopyableCodeBox(value: guest.accessCode),
               const SizedBox(height: 16),
               Text(
                 'Ou copie a mensagem pronta pra mandar por WhatsApp/e-mail:',

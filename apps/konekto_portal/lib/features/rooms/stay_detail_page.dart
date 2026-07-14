@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
 import 'package:konekto_portal/data/guests_repository.dart';
@@ -8,6 +9,8 @@ import 'package:konekto_portal/models/guest.dart' show DocumentType, NewGuestInp
 import 'package:konekto_portal/models/order.dart' show OrderStatus;
 import 'package:konekto_portal/models/stay.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
+import 'package:konekto_portal/utils/input_formatters.dart';
+import 'package:konekto_portal/widgets/copyable_code_box.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 
@@ -127,7 +130,18 @@ class _StayDetailPageState extends State<StayDetailPage> {
       builder: (context) => AlertDialog(
         backgroundColor: KonektoBrand.surface,
         title: Text('Hóspede criado', style: KonektoBrand.display(fontSize: 16)),
-        content: Text('Código de acesso: $accessCode', style: KonektoBrand.body(fontSize: 14, color: KonektoBrand.goldLight)),
+        content: SizedBox(
+          width: 340,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Código de acesso:', style: KonektoBrand.body(fontSize: 13)),
+              const SizedBox(height: 8),
+              CopyableCodeBox(value: accessCode),
+            ],
+          ),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Fechar')),
         ],
@@ -711,9 +725,9 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
         documentType: _documentType,
         documentNumber: documentNumber,
         phoneCountryCode: phone.countryCode,
-        phoneNumber: phone.number,
+        phoneNumber: stripNonDigits(phone.number),
         whatsappCountryCode: whatsapp?.countryCode,
-        whatsappNumber: whatsapp?.number,
+        whatsappNumber: whatsapp != null ? stripNonDigits(whatsapp.number) : null,
         email: email.isEmpty ? null : email,
         address: address.isEmpty ? null : address,
         country: country,
@@ -775,12 +789,20 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(child: _FormField(label: 'Número do documento', controller: _documentNumberController)),
+                  Expanded(
+                    child: _FormField(
+                      label: 'Número do documento',
+                      controller: _documentNumberController,
+                      inputFormatters: _documentType == DocumentType.cpf ? [CpfInputFormatter()] : null,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
               IntlPhoneField(
                 initialCountryCode: 'BR',
+                disableLengthCheck: true,
+                inputFormatters: [BrazilPhoneInputFormatter()],
                 style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                 dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                 decoration: InputDecoration(
@@ -809,6 +831,8 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
                 const SizedBox(height: 4),
                 IntlPhoneField(
                   initialCountryCode: 'BR',
+                  disableLengthCheck: true,
+                  inputFormatters: [BrazilPhoneInputFormatter()],
                   style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                   dropdownTextStyle: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
                   decoration: InputDecoration(
@@ -849,14 +873,16 @@ class _FormField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
-  const _FormField({required this.label, required this.controller, this.keyboardType});
+  const _FormField({required this.label, required this.controller, this.keyboardType, this.inputFormatters});
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
       decoration: InputDecoration(
         labelText: label,
