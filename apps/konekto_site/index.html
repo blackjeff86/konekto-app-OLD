@@ -3,32 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Konekto — A experiência digital do seu hotel</title>
-<meta name="description" content="Konekto é o app de hóspedes com a marca do seu hotel. Check-in por QR Code, serviços, pedidos e mensagens — sem instalar nada.">
-<link rel="icon" href="assets/logo/app-icon-dark-bg.svg" type="image/svg+xml">
+<title>Konektto — Hospitalidade invisível</title>
+<meta name="description" content="Konektto é a infraestrutura white-label por trás do app do seu hotel — o hóspede só vê a marca do seu hotel, nunca a nossa. Check-in por QR Code, pedidos, chat e mais.">
+<link rel="icon" href="assets/logo/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0B0D12;
-    --surface: #12151C;
-    --surface-2: #171B23;
-    --border: rgba(255,255,255,0.09);
-    --border-strong: rgba(255,255,255,0.16);
-    --gold: #B8935F;
-    --gold-light: #E4CFA6;
-    --cream: #F5F3EE;
-    --slate: #9099A6;
-    --slate-soft: #6B7280;
+    --bg: #FAFAF9;
+    --surface: #FFFFFF;
+    --surface-alt: #F7F5F3;
+    --surface-sunken: #EFEAE6;
+    --border: rgba(22,24,29,0.1);
+    --border-strong: rgba(22,24,29,0.18);
+    --ink: #16181D;
+    --muted: #5B5F68;
+    --muted-soft: #85899A;
+    --primary: #FF2E88;
+    --primary-soft: rgba(255,46,136,0.07);
+    --primary-dim: rgba(255,46,136,0.32);
+    --on-primary: #FFFFFF;
 
-    --font-body: 'Inter', -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SFMono-Regular', monospace;
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
-    --space-xl: clamp(5rem, 3.5rem + 6vw, 9rem);
-    --radius-lg: 28px;
+    --radius-sm: 0.25rem;
+    --radius: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
 
-    color-scheme: dark;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --space-edge: clamp(1.25rem, 5vw, 4rem);
+    --space-section: clamp(4rem, 3rem + 6vw, 8rem);
+    --container-max: 1320px;
+
+    color-scheme: light;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -42,473 +54,431 @@
     margin: 0;
     font-family: var(--font-body);
     background: var(--bg);
-    color: var(--cream);
-    line-height: 1.55;
+    color: var(--ink);
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
 
   img, svg { max-width: 100%; display: block; }
-  h1, h2, h3 { text-wrap: balance; margin: 0; color: var(--cream); font-weight: 700; letter-spacing: -0.01em; }
+  h1, h2, h3, h4 { text-wrap: balance; margin: 0; color: var(--ink); }
   a { color: inherit; }
+  button { font-family: inherit; cursor: pointer; }
 
-  .container { max-width: 1180px; margin: 0 auto; padding-inline: clamp(1.25rem, 4vw, 2.5rem); }
+  .container { max-width: var(--container-max); margin: 0 auto; padding-inline: var(--space-edge); }
 
   .eyebrow {
-    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500;
-    letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-light);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--primary); display: inline-flex; align-items: center; gap: 0.5rem;
   }
+  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+
+  .brand-mark { width: 26px; height: 26px; flex: none; }
+  .brand { display: inline-flex; align-items: center; gap: 0.55rem; font-family: var(--font-body); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
 
   /* ---------- Nav ---------- */
   .nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    padding: 1.1rem 0; background: rgba(11,13,18,0);
-    border-bottom: 1px solid transparent;
-    transition: background 0.35s ease, border-color 0.35s ease, padding 0.35s ease;
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(250,250,249,0.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
   }
-  .nav.scrolled {
-    background: rgba(11,13,18,0.86); backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border); padding: 0.75rem 0;
-  }
-  .nav .container { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
-  .brand { display: flex; align-items: center; gap: 0.75rem; font-size: 1.5rem; font-weight: 800; color: var(--cream); text-decoration: none; }
-  .brand-mark { width: 42px; height: 42px; flex: none; }
-  .brand-mark rect:first-child { stroke: var(--gold-light); }
-  .brand-mark rect:last-child { fill: var(--gold); }
-  .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; margin: 0; padding: 0; }
-  .nav-links a { color: var(--slate); text-decoration: none; font-size: 0.92rem; font-weight: 500; transition: color 0.2s ease; }
-  .nav-links a:hover, .nav-links a:focus-visible { color: var(--gold-light); }
+  .nav .container { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding-block: 1.15rem; }
+  .nav-links { display: flex; align-items: center; gap: 2.1rem; list-style: none; margin: 0; padding: 0; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.25s var(--ease); }
+  .nav-links a:hover, .nav-links a:focus-visible { color: var(--primary); }
+  .nav-right { display: flex; align-items: center; gap: 1.3rem; }
+  .nav-signin { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.25s var(--ease); }
+  .nav-signin:hover, .nav-signin:focus-visible { color: var(--primary); }
   .nav-cta {
-    font-weight: 600; font-size: 0.88rem; color: var(--bg); background: var(--gold-light);
-    padding: 0.6rem 1.3rem; border-radius: 999px; text-decoration: none;
-    transition: transform 0.2s ease, background 0.2s ease;
+    font-weight: 700; font-size: 0.85rem; color: var(--on-primary); background: var(--ink);
+    padding: 0.7rem 1.5rem; border: none; border-radius: var(--radius-lg); text-decoration: none;
+    transition: transform 0.25s var(--ease), background 0.25s var(--ease);
   }
-  .nav-cta:hover, .nav-cta:focus-visible { background: var(--gold); transform: translateY(-1px); }
+  .nav-cta:hover, .nav-cta:focus-visible { transform: scale(0.97); background: var(--primary); }
+  @media (max-width: 820px) { .nav-links { display: none; } }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    font-weight: 700; font-size: 0.92rem; padding: 1rem 2rem; border-radius: var(--radius-lg);
+    text-decoration: none; border: 1.5px solid transparent; transition: transform 0.25s var(--ease), background 0.25s var(--ease), border-color 0.25s var(--ease);
+  }
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-primary:hover, .btn-primary:focus-visible { background: var(--primary); transform: translateY(-2px); }
+  .btn-ghost { color: var(--ink); background: transparent; border-color: var(--border-strong); }
+  .btn-ghost:hover, .btn-ghost:focus-visible { border-color: var(--ink); background: var(--surface); }
 
   /* ---------- Hero ---------- */
-  .hero { padding: clamp(7rem, 5rem + 8vw, 10rem) 0 clamp(4rem, 3rem + 4vw, 7rem); position: relative; overflow: clip; }
-  .hero::after {
-    content: ""; position: absolute; inset: auto 0 0 0; height: 55%;
-    background: radial-gradient(60% 100% at 80% 100%, rgba(184,147,95,0.12), transparent 70%);
-    pointer-events: none;
+  .hero { padding: clamp(3rem, 2rem + 5vw, 6rem) 0 var(--space-section); overflow: clip; }
+  .hero .container { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(2rem, 4vw, 4.5rem); align-items: center; }
+  .hero h1 {
+    font-family: var(--font-display); font-weight: 800; letter-spacing: -0.03em;
+    font-size: clamp(2.4rem, 1.7rem + 3vw, 3.6rem); line-height: 1.08;
   }
-  .hero .container { display: grid; grid-template-columns: 1.05fr 0.85fr; gap: clamp(2rem, 4vw, 4rem); align-items: center; position: relative; z-index: 1; }
-  .hero h1 { font-size: clamp(2.4rem, 1.7rem + 3vw, 3.6rem); line-height: 1.08; margin-top: 0.9rem; }
-  .hero h1 .accent { color: var(--gold-light); }
-  .hero p.lede { color: var(--slate); font-size: clamp(1rem, 0.94rem + 0.3vw, 1.15rem); max-width: 46ch; margin-top: 1.3rem; }
+  .hero h1 em { font-style: normal; color: var(--primary); }
+  .hero p.lede { color: var(--muted); font-size: clamp(1rem, 0.94rem + 0.3vw, 1.15rem); max-width: 42ch; margin-top: 1.4rem; }
   .hero-actions { display: flex; gap: 0.9rem; margin-top: 2.2rem; flex-wrap: wrap; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.95rem;
-    padding: 0.9rem 1.6rem; border-radius: 999px; text-decoration: none;
-    border: 1px solid transparent; cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+  /* ---------- Phone demo ---------- */
+  .phone-stage { position: relative; display: flex; justify-content: center; align-items: center; min-height: 560px; }
+  .phone-glow {
+    position: absolute; width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, var(--primary-soft), transparent 70%);
+    filter: blur(10px); animation: pulse 5s ease-in-out infinite;
   }
-  .btn-primary { background: var(--gold); color: var(--bg); }
-  .btn-primary:hover, .btn-primary:focus-visible { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(184,147,95,0.4); }
-  .btn-ghost { color: var(--cream); border-color: var(--border-strong); }
-  .btn-ghost:hover, .btn-ghost:focus-visible { border-color: var(--gold); color: var(--gold-light); }
-
-  .hero-stats { display: flex; gap: clamp(1.5rem, 4vw, 3rem); margin-top: clamp(2.5rem, 3vw, 3.5rem); }
-  .hero-stat .num { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 600; color: var(--gold-light); font-variant-numeric: tabular-nums; }
-  .hero-stat .label { font-size: 0.8rem; color: var(--slate-soft); margin-top: 0.2rem; }
-
-  /* Phone mockup — titânio + Dynamic Island */
-  .phone-wrap { display: flex; justify-content: center; perspective: 1600px; }
-  .phone-frame {
-    position: relative; width: min(272px, 100%); aspect-ratio: 272 / 560;
-    border-radius: 58px; padding: 12px;
-    background: linear-gradient(155deg, #9a9b9e 0%, #dcdde0 16%, #7d7f82 34%, #cfd0d3 58%, #67696c 80%, #97999c 100%);
-    box-shadow: 0 50px 90px -24px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.4), inset 0 0 0 1.5px rgba(255,255,255,0.35);
-    transform: rotate3d(0.3, -1, 0, 8deg) rotateZ(-1.2deg);
-    animation: float 7s ease-in-out infinite;
+  @keyframes pulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+  .phone {
+    position: relative; width: 272px; padding: 1rem;
+    background: #fff; border-radius: 2.6rem; border: 1px solid var(--border);
+    box-shadow: 0 40px 70px -24px rgba(22,24,29,0.16), 0 0 0 1px rgba(22,24,29,0.03);
+    transform: rotate(3deg); transition: transform 0.8s var(--ease);
   }
-  @keyframes float { 0%, 100% { transform: rotate3d(0.3, -1, 0, 8deg) rotateZ(-1.2deg) translateY(0); } 50% { transform: rotate3d(0.3, -1, 0, 8deg) rotateZ(-1.2deg) translateY(-14px); } }
-  @media (prefers-reduced-motion: reduce) { .phone-frame { animation: none; } }
-
-  .phone-side { position: absolute; background: linear-gradient(90deg, #5c5e61, #a3a5a8); border-radius: 3px; box-shadow: -1px 0 2px rgba(0,0,0,0.4); }
-  .phone-side-action { left: -3px; top: 15%; width: 3px; height: 3.5%; }
-  .phone-side-vol-up { left: -3px; top: 21%; width: 3px; height: 6%; }
-  .phone-side-vol-down { left: -3px; top: 29%; width: 3px; height: 6%; }
-  .phone-side-power { right: -3px; top: 22%; width: 3px; height: 9%; border-radius: 3px; box-shadow: 1px 0 2px rgba(0,0,0,0.4); }
-
-  .phone-screen { position: relative; width: 100%; height: 100%; background: var(--cream); border-radius: 46px; overflow: hidden; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.55); }
-  .dynamic-island { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 34%; height: 22px; background: #000; border-radius: 999px; z-index: 5; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06); }
-
-  .phone-panel { background: linear-gradient(160deg, var(--bg), var(--surface-2)); padding: 3rem 1.2rem 2.2rem; text-align: center; }
-  .phone-eyebrow { font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.16em; color: var(--gold-light); text-transform: uppercase; }
-  .phone-logo { width: 60px; height: 60px; margin: 0.9rem auto 0; }
-  .phone-logo rect:first-child { stroke: var(--gold-light); }
-  .phone-logo rect:last-child { fill: var(--gold); }
-  .phone-body { margin-top: -1.6rem; background: var(--cream); border-radius: 22px 22px 0 0; padding: 2rem 1.2rem 1.4rem; }
-  .phone-body h3 { font-size: 1.05rem; color: #14181F; }
-  .phone-tag { font-size: 0.78rem; color: var(--gold); font-weight: 600; margin-top: 0.15rem; }
-  .phone-desc { font-size: 0.7rem; color: #5B6472; margin-top: 0.6rem; line-height: 1.5; }
-  .phone-input { margin-top: 1.1rem; text-align: left; background: #fff; border: 1px solid #E2D5C0; border-radius: 12px; padding: 0.55rem 0.7rem; font-size: 0.66rem; color: #8A94A3; display: flex; align-items: center; gap: 0.4rem; }
-  .phone-btn { margin-top: 0.7rem; background: #14181F; color: var(--cream); text-align: center; padding: 0.6rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; }
-  .phone-scan { margin-top: 0.5rem; text-align: center; padding: 0.55rem; border-radius: 999px; font-size: 0.66rem; font-weight: 600; color: #14181F; border: 1px solid #E2D5C0; }
-  .phone-home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 34%; height: 4px; border-radius: 999px; background: #14181F; opacity: 0.55; }
+  .phone:hover { transform: rotate(0deg); }
+  .phone-screen { border-radius: 2.1rem; padding: 1.5rem 1.3rem; display: flex; flex-direction: column; gap: 1rem; transition: background-color 0.6s var(--ease), opacity 0.4s ease; min-height: 480px; }
+  .phone-brand { font-family: var(--font-body); font-weight: 800; font-size: 1.1rem; text-align: center; transition: color 0.6s var(--ease); }
+  .phone-room {
+    height: 130px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--surface-sunken), var(--border-strong));
+    position: relative; overflow: hidden;
+  }
+  .phone-room span { position: absolute; bottom: 0.7rem; left: 0.7rem; background: #fff; font-size: 0.68rem; font-weight: 700; padding: 0.25rem 0.55rem; border-radius: var(--radius-sm); }
+  .phone-row { height: 46px; border-radius: var(--radius); background: var(--surface-alt); display: flex; align-items: center; padding-inline: 1rem; font-size: 0.76rem; font-weight: 600; color: var(--muted); }
+  .phone-rows { display: flex; flex-direction: column; gap: 0.6rem; }
+  .float-card {
+    position: absolute; left: -2.5rem; bottom: 4rem; width: 190px; padding: 1.3rem;
+    background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--border);
+    box-shadow: 0 24px 50px -20px rgba(22,24,29,0.14);
+  }
+  .float-card p.tag { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); margin: 0 0 0.5rem; }
+  .float-card p.claim { font-family: var(--font-body); font-size: 1.05rem; font-weight: 700; margin: 0 0 0.8rem; }
+  .dot-row { display: flex; gap: 0.4rem; }
+  .dot-row i { width: 16px; height: 16px; border-radius: 50%; display: block; }
+  @media (max-width: 980px) { .float-card { display: none; } }
+  @media (max-width: 720px) { .hero .container { grid-template-columns: 1fr; } .phone-stage { min-height: 420px; } }
 
   /* ---------- Sections generic ---------- */
-  section { padding: var(--space-xl) 0; }
-  .section-alt { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .section-head { max-width: 640px; margin-bottom: clamp(2.5rem, 3vw, 3.5rem); }
-  .section-head h2 { font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.6rem); margin-top: 0.7rem; }
-  .section-head p { color: var(--slate); margin-top: 0.9rem; font-size: 1.05rem; max-width: 58ch; }
-  .section-head.center { margin-inline: auto; text-align: center; }
-  .section-head.center p { margin-inline: auto; }
+  section { padding: var(--space-section) 0; }
+  .section-alt { background: var(--surface-alt); }
+  .section-head { max-width: 640px; }
+  .section-head h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.75rem); letter-spacing: -0.02em; }
+  .rule { height: 3px; width: 64px; background: var(--primary); margin-top: 1.3rem; border-radius: 2px; }
 
-  /* ---------- Value strip ---------- */
-  .value-strip { padding: clamp(2.2rem, 2vw, 2.8rem) 0; }
-  .value-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
-  .value-item { display: flex; gap: 0.9rem; align-items: flex-start; }
-  .value-item .icon { flex: none; width: 42px; height: 42px; border-radius: 12px; background: rgba(184,147,95,0.12); color: var(--gold-light); display: flex; align-items: center; justify-content: center; }
-  .value-item h3 { font-size: 1rem; font-weight: 700; }
-  .value-item p { margin: 0.25rem 0 0; font-size: 0.9rem; color: var(--slate); }
-
-  /* ---------- Features (bento) ---------- */
-  .bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1.1rem; }
-  .bento-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-    padding: clamp(1.5rem, 2vw, 2.1rem);
-    transition: transform 0.25s ease, border-color 0.25s ease;
+  /* ---------- Invisibility split ---------- */
+  .invis { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: clamp(2rem, 4vw, 4.5rem); align-items: center; }
+  .invis-visual {
+    aspect-ratio: 4/3; border-radius: var(--radius-xl); position: relative; overflow: hidden;
+    border: 1px solid var(--border);
   }
-  .bento-card:hover { transform: translateY(-4px); border-color: var(--border-strong); }
-  .bento-card .icon-badge {
-    width: 46px; height: 46px; border-radius: 13px; background: rgba(184,147,95,0.12);
-    display: flex; align-items: center; justify-content: center; color: var(--gold-light);
-    margin-bottom: 1.1rem;
-  }
-  .bento-card h3 { font-size: 1.05rem; font-weight: 700; }
-  .bento-card p { font-size: 0.92rem; color: var(--slate); margin-top: 0.5rem; }
-  .b-span-3 { grid-column: span 3; }
-  .b-span-2 { grid-column: span 2; }
-  .b-span-4 { grid-column: span 4; }
-  .b-feature { background: linear-gradient(155deg, var(--surface-2), var(--surface)); border-color: var(--gold); }
-  .b-feature .icon-badge { background: rgba(228,207,166,0.16); }
+  .invis-visual img { width: 100%; height: 100%; object-fit: cover; }
+  .invis-copy .eyebrow { margin-bottom: 1rem; }
+  .invis-copy h2 { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; font-size: clamp(1.8rem, 1.5rem + 1.4vw, 2.5rem); margin-bottom: 1.3rem; }
+  .invis-copy p.lede { color: var(--muted); font-size: 1.05rem; margin-bottom: 1.6rem; max-width: 48ch; }
+  .check-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+  .check-list li { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 0.96rem; }
+  .check-list .tick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; margin-top: 0.1rem; }
+  @media (max-width: 860px) { .invis { grid-template-columns: 1fr; } .invis-visual { order: -1; } }
 
+  /* ---------- Non-linear feature grid ---------- */
+  .feature-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1.25rem; margin-top: clamp(2.5rem, 3vw, 3.5rem); }
+  .f-card {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: clamp(1.75rem, 2vw, 2.4rem); border-radius: var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-sm);
+    transition: transform 0.35s var(--ease), border-color 0.35s var(--ease);
+  }
+  .f-card:hover { transform: translateY(-4px); border-color: var(--border-strong); }
+  .f-card h3 { font-family: var(--font-body); font-weight: 800; letter-spacing: -0.01em; font-size: 1.25rem; margin-bottom: 0.7rem; }
+  .f-card p { color: var(--muted); font-size: 0.95rem; max-width: 40ch; }
+  .f-card .icon { width: 46px; height: 46px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 1.2rem; font-size: 1.2rem; }
+
+  .f-room-service { grid-column: span 7; display: flex; flex-direction: column; justify-content: space-between; gap: 2rem; }
+  .f-room-service .photo-swap {
+    height: 200px; border-radius: var(--radius-lg); overflow: hidden;
+    object-fit: cover; width: 100%; display: block;
+  }
+  .f-checkin { grid-column: span 5; background: var(--surface-sunken); border-color: transparent; display: flex; flex-direction: column; justify-content: space-between; }
+  .f-checkin .qr-mini { width: 88px; height: 88px; border: 2px dashed var(--border-strong); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: var(--muted-soft); margin: 1.5rem auto 0; background: #fff; }
+  .f-chat { grid-column: span 4; background: var(--ink); color: #fff; border-color: transparent; }
+  .f-chat h3, .f-chat p { color: #fff; }
+  .f-chat p { opacity: 0.72; }
+  .f-chat .bubble { margin-top: 1.4rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius); padding: 0.8rem 1rem; font-size: 0.8rem; }
+  .f-chat .bubble b { color: var(--primary); }
+  .f-small { grid-column: span 4; }
+  .f-small-row { grid-column: span 8; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  @media (max-width: 900px) {
+    .f-room-service, .f-checkin, .f-chat, .f-small, .f-small-row { grid-column: span 12; }
+    .f-small-row { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Experience cycle ---------- */
+  .cycle-head { text-align: center; max-width: 640px; margin: 0 auto clamp(3rem, 4vw, 4.5rem); }
+  .cycle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem; position: relative; }
+  .cycle::before { content: ""; position: absolute; top: 26px; left: 4%; right: 4%; height: 1px; background: var(--border-strong); }
+  .cycle-step { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.9rem 1.6rem; transition: border-color 0.3s var(--ease), transform 0.3s var(--ease); }
+  .cycle-step:hover { border-color: var(--primary); transform: translateY(-3px); }
+  .cycle-step .num { font-family: var(--font-body); font-size: 2.1rem; font-weight: 800; color: var(--primary-soft); margin-bottom: 1rem; font-variant-numeric: tabular-nums; }
+  .cycle-step:hover .num { color: var(--primary-dim); }
+  .cycle-step h4 { font-size: 0.82rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.6rem; }
+  .cycle-step p { font-size: 0.88rem; color: var(--muted); }
+  .cycle-step:nth-child(2) { transform: translateY(1.2rem); }
+  .cycle-step:nth-child(3) { transform: translateY(2.4rem); }
+  .cycle-step:nth-child(4) { transform: translateY(3.6rem); }
+  .cycle-step:nth-child(2):hover { transform: translateY(1.2rem) translateY(-3px); }
+  .cycle-step:nth-child(3):hover { transform: translateY(2.4rem) translateY(-3px); }
+  .cycle-step:nth-child(4):hover { transform: translateY(3.6rem) translateY(-3px); }
   @media (max-width: 860px) {
-    .bento { grid-template-columns: 1fr 1fr; }
-    .b-span-3, .b-span-2, .b-span-4 { grid-column: span 2; }
-  }
-  @media (max-width: 560px) {
-    .bento { grid-template-columns: 1fr; }
-    .b-span-3, .b-span-2, .b-span-4 { grid-column: span 1; }
-  }
-
-  /* ---------- How it works ---------- */
-  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; counter-reset: step; position: relative; }
-  .steps::before { content: ""; position: absolute; top: 27px; left: 12%; right: 12%; height: 1px; background: var(--border-strong); }
-  .step { position: relative; z-index: 1; }
-  .step .step-num {
-    counter-increment: step; width: 54px; height: 54px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--gold);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-mono); font-weight: 600; color: var(--gold-light); font-size: 1.1rem;
-  }
-  .step .step-num::before { content: counter(step, decimal-leading-zero); }
-  .step h3 { font-size: 1rem; font-weight: 700; margin-top: 1.1rem; }
-  .step p { font-size: 0.88rem; color: var(--slate); margin-top: 0.4rem; }
-  @media (max-width: 760px) {
-    .steps { grid-template-columns: 1fr 1fr; row-gap: 2.2rem; }
-    .steps::before { display: none; }
+    .cycle { grid-template-columns: 1fr 1fr; row-gap: 1.4rem; }
+    .cycle::before { display: none; }
+    .cycle-step, .cycle-step:nth-child(2), .cycle-step:nth-child(3), .cycle-step:nth-child(4) { transform: none; }
+    .cycle-step:hover, .cycle-step:nth-child(2):hover, .cycle-step:nth-child(3):hover, .cycle-step:nth-child(4):hover { transform: translateY(-3px); }
   }
 
   /* ---------- Pricing ---------- */
-  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; align-items: stretch; }
-  .plan {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-    padding: clamp(1.8rem, 2vw, 2.4rem); display: flex; flex-direction: column;
-    transition: transform 0.3s ease, border-color 0.3s ease;
-  }
-  .plan:hover { transform: translateY(-4px); border-color: var(--border-strong); }
-  .plan-featured {
-    background: var(--surface-2); border: 1.5px solid var(--gold);
-    transform: scale(1.045); box-shadow: 0 30px 70px -28px rgba(184,147,95,0.35); z-index: 2;
-  }
-  .plan-featured:hover { transform: scale(1.045) translateY(-4px); }
-  .plan-badge {
-    align-self: flex-start; font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--bg); background: var(--gold-light);
-    padding: 0.3rem 0.7rem; border-radius: 999px; margin-bottom: 1rem; font-weight: 600;
-  }
-  .plan-name { font-size: 1.4rem; font-weight: 700; }
-  .plan-desc { font-size: 0.87rem; color: var(--slate); margin-top: 0.35rem; min-height: 2.6em; }
-  .plan-price { display: flex; align-items: baseline; gap: 0.35rem; margin-top: 1.4rem; }
-  .plan-price .amount { font-family: var(--font-mono); font-size: 2rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .plan-price .period { font-size: 0.85rem; color: var(--slate); }
-  .plan-guests { margin-top: 0.6rem; font-size: 0.82rem; font-weight: 600; color: var(--gold-light); display: flex; align-items: center; gap: 0.4rem; }
-  .plan-cta {
-    margin-top: 1.6rem; text-align: center; padding: 0.8rem; border-radius: 999px;
-    font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1px solid var(--border-strong); color: var(--cream);
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  }
-  .plan-cta:hover { background: var(--cream); color: var(--bg); border-color: var(--cream); }
-  .plan-featured .plan-cta { background: var(--gold); color: var(--bg); border-color: var(--gold); }
-  .plan-featured .plan-cta:hover { background: var(--gold-light); }
-  .plan-features { list-style: none; margin: 1.6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.65rem; flex: 1; }
-  .plan-features li { display: flex; gap: 0.6rem; font-size: 0.87rem; align-items: flex-start; }
-  .plan-features li svg { flex: none; margin-top: 0.15rem; color: var(--gold-light); }
-  .plan-ai {
-    margin-top: 1.2rem; padding: 0.9rem 1rem; border-radius: 14px; background: rgba(228,207,166,0.08);
-    border: 1px dashed var(--gold-light); font-size: 0.82rem; color: var(--gold-light);
-  }
-  @media (max-width: 900px) {
-    .pricing-grid { grid-template-columns: 1fr; }
-    .plan-featured { transform: none; }
-    .plan-featured:hover { transform: translateY(-4px); }
-  }
+  .pricing-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; flex-wrap: wrap; margin-bottom: clamp(2.5rem, 3vw, 3.5rem); }
+  .pricing-head p { color: var(--muted); font-size: 1.02rem; max-width: 46ch; margin-top: 1rem; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .plan { padding: clamp(1.9rem, 2vw, 2.6rem); background: var(--surface); border-left: 1px solid var(--border); transition: background 0.3s var(--ease); }
+  .plan:first-child { border-left: none; }
+  .plan:hover { background: var(--surface-alt); }
+  .plan-featured { background: var(--surface); position: relative; }
+  .plan-featured:hover { background: var(--surface); }
+  .plan-badge { position: absolute; top: 0; right: 0; background: var(--primary); color: #fff; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; padding: 0.35rem 0.9rem; border-radius: 0 0 0 var(--radius); }
+  .plan-name { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .plan-featured .plan-name { color: var(--primary); }
+  .plan-price { font-family: var(--font-body); font-size: 2.2rem; font-weight: 800; letter-spacing: -0.01em; margin-top: 1.1rem; font-variant-numeric: tabular-nums; }
+  .plan-price span { font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; color: var(--muted); }
+  .plan-note { font-size: 0.85rem; color: var(--muted); font-style: italic; margin-top: 0.6rem; min-height: 1.4em; }
+  .plan-features { list-style: none; margin: 1.6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+  .plan-features li { font-size: 0.88rem; display: flex; gap: 0.6rem; }
+  .plan-features li::before { content: "•"; color: var(--primary); font-weight: 700; }
+  .plan-cta { display: block; text-align: center; margin-top: 1.8rem; padding: 0.85rem; border-radius: var(--radius-lg); border: 1.5px solid var(--ink); font-weight: 700; font-size: 0.88rem; text-decoration: none; transition: background 0.25s var(--ease), color 0.25s var(--ease); }
+  .plan-cta:hover { background: var(--ink); color: #fff; }
+  .plan-featured .plan-cta { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .plan-featured .plan-cta:hover { background: var(--ink); border-color: var(--ink); }
+  @media (max-width: 860px) { .pricing-grid { grid-template-columns: 1fr; } .plan { border-left: none; border-top: 1px solid var(--border); } .plan:first-child { border-top: none; } }
 
   /* ---------- Final CTA ---------- */
-  .cta-band {
-    background: linear-gradient(135deg, var(--surface-2), var(--surface));
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-lg);
-    padding: clamp(2.5rem, 3vw, 4rem);
-    margin: 0 auto; max-width: 1180px; text-align: center;
-  }
-  .cta-band h2 { font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.4rem); }
-  .cta-band p { color: var(--slate); margin-top: 0.8rem; }
-  .cta-band .hero-actions { justify-content: center; margin-top: 1.8rem; }
+  .cta-band { background: var(--ink); color: #fff; border-radius: var(--radius-xl); padding: clamp(2.8rem, 4vw, 4.5rem); text-align: center; position: relative; overflow: hidden; }
+  .cta-band::after { content: ""; position: absolute; top: -40%; right: -10%; width: 55%; aspect-ratio: 1; background: var(--primary-dim); border-radius: 50%; filter: blur(70px); opacity: 0.5; }
+  .cta-band > * { position: relative; z-index: 1; }
+  .cta-band h2 { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.5rem); color: #fff; }
+  .cta-band p { opacity: 0.78; margin-top: 0.9rem; max-width: 46ch; margin-inline: auto; }
+  .cta-band .hero-actions { justify-content: center; margin-top: 1.9rem; }
+  .cta-band .btn-primary { background: var(--primary); }
+  .cta-band .btn-primary:hover { background: #fff; color: var(--ink); }
+  .cta-band .btn-ghost { border-color: rgba(255,255,255,0.3); color: #fff; }
+  .cta-band .btn-ghost:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
 
   /* ---------- Footer ---------- */
-  footer { background: var(--surface); border-top: 1px solid var(--border); color: var(--slate); padding: clamp(2.5rem, 3vw, 3.5rem) 0 2rem; margin-top: var(--space-xl); }
+  footer { border-top: 1px solid var(--border); color: var(--muted); padding: clamp(2.5rem, 3vw, 3.5rem) 0 2rem; }
   .footer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
-  .footer-brand p { font-size: 0.85rem; max-width: 32ch; margin-top: 0.8rem; }
-  .footer-links { display: flex; gap: clamp(2rem, 5vw, 5rem); flex-wrap: wrap; }
-  .footer-col h4 { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); margin: 0 0 0.8rem; }
-  .footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
-  .footer-col a { color: var(--slate); text-decoration: none; font-size: 0.87rem; }
-  .footer-col a:hover { color: var(--gold-light); }
+  .footer-brand p { font-size: 0.85rem; max-width: 32ch; margin-top: 0.9rem; }
+  .footer-col span { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); display: block; margin-bottom: 0.9rem; }
+  .footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  .footer-col a { color: var(--muted); text-decoration: none; font-size: 0.87rem; }
+  .footer-col a:hover { color: var(--primary); }
   .footer-bottom { display: flex; justify-content: space-between; padding-top: 1.5rem; font-size: 0.78rem; flex-wrap: wrap; gap: 0.5rem; }
 
   /* ---------- Reveal on scroll ---------- */
-  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s ease, transform 0.7s ease; }
-  .reveal.in { opacity: 1; transform: translateY(0); }
-  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
-
-  @media (max-width: 780px) { .nav-links { display: none; } }
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
 </style>
 </head>
 <body>
 
-<nav class="nav" id="nav">
+<nav class="nav">
   <div class="container">
     <a href="#" class="brand">
-      <svg class="brand-mark" viewBox="0 0 100 100"><rect x="12" y="12" width="56" height="56" rx="16" fill="none" stroke-width="6"/><rect x="52" y="52" width="34" height="34" rx="10"/></svg>
-      Konekto
+      <svg class="brand-mark" viewBox="0 0 100 100" fill="#FF2E88" aria-hidden="true"><rect x="46" y="6" width="8" height="30" rx="4"/><rect x="46" y="64" width="8" height="30" rx="4"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(45 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(90 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(135 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(180 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(225 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(270 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(315 50 50)"/></svg>
+      Konektto
     </a>
     <ul class="nav-links">
       <li><a href="#produto">Produto</a></li>
       <li><a href="#como-funciona">Como funciona</a></li>
       <li><a href="#planos">Planos</a></li>
     </ul>
-    <a href="login.html" class="nav-cta">Entrar</a>
+    <div class="nav-right">
+      <a href="login.html" class="nav-signin">Entrar</a>
+      <a href="#planos" class="nav-cta">Criar conta</a>
+    </div>
   </div>
 </nav>
 
 <header class="hero">
   <div class="container">
     <div>
-      <p class="eyebrow">Para hotéis que encantam hóspedes</p>
-      <h1>A experiência do seu hotel,<br><span class="accent">sem instalar nada.</span></h1>
-      <p class="lede">O Konekto é o app de hóspedes com a cara do seu hotel: o hóspede escaneia um QR Code ou digita um código recebido por e-mail/WhatsApp e já entra direto na experiência da sua marca — check-in, serviços, pedidos e recepção, tudo num só lugar.</p>
+      <p class="eyebrow">Hospitalidade invisível</p>
+      <h1>Seu hotel, <em>sua marca.</em><br>A tecnologia a gente esconde.</h1>
+      <p class="lede">White-label por definição, boutique por escolha. O hóspede vê a identidade do seu hotel do início ao fim — a Konektto nunca aparece.</p>
       <div class="hero-actions">
-        <a href="#planos" class="btn btn-primary">Ver planos</a>
-        <a href="#contato" class="btn btn-ghost">Agendar demonstração</a>
-      </div>
-      <div class="hero-stats">
-        <div class="hero-stat"><div class="num">0</div><div class="label">apps pra baixar</div></div>
-        <div class="hero-stat"><div class="num">100%</div><div class="label">com a marca do hotel</div></div>
-        <div class="hero-stat"><div class="num">&lt;30s</div><div class="label">do QR ao check-in</div></div>
+        <a href="#planos" class="btn btn-primary">Começar agora</a>
+        <a href="mailto:contato@konekto.app" class="btn btn-ghost">Agendar demonstração</a>
       </div>
     </div>
-    <div class="phone-wrap">
-      <div class="phone-frame">
-        <div class="phone-side phone-side-action"></div>
-        <div class="phone-side phone-side-vol-up"></div>
-        <div class="phone-side phone-side-vol-down"></div>
-        <div class="phone-side phone-side-power"></div>
-        <div class="phone-screen">
-          <div class="dynamic-island"></div>
-          <div class="phone-panel">
-            <div class="phone-eyebrow">Sua estadia começa aqui</div>
-            <svg class="phone-logo" viewBox="0 0 100 100"><rect x="12" y="12" width="56" height="56" rx="16" fill="none" stroke-width="6"/><rect x="52" y="52" width="34" height="34" rx="10"/></svg>
+    <div class="phone-stage">
+      <div class="phone-glow" aria-hidden="true"></div>
+      <div class="float-card reveal">
+        <p class="tag">CUSTOMIZAÇÃO</p>
+        <p class="claim">Mude tudo com um clique.</p>
+        <div class="dot-row" aria-hidden="true">
+          <i style="background:#16181D"></i><i style="background:#FF2E88"></i><i style="background:#2D5A27"></i>
+        </div>
+      </div>
+      <div class="phone">
+        <div class="phone-screen" id="phone-screen">
+          <p class="phone-brand" id="phone-brand">Amara Bay</p>
+          <div class="phone-room"><span>Quarto 204</span></div>
+          <div class="phone-rows">
+            <div class="phone-row">Room service</div>
+            <div class="phone-row">Reserva de spa</div>
+            <div class="phone-row">Chave digital</div>
           </div>
-          <div class="phone-body">
-            <h3>Grand Konekto Palace</h3>
-            <div class="phone-tag">Bem-vindo(a) de volta</div>
-            <p class="phone-desc">Conecte-se ao seu hotel e descubra uma experiência personalizada.</p>
-            <div class="phone-input">🔑 Código de acesso do hotel</div>
-            <div class="phone-btn">CONFIRMAR ACESSO</div>
-            <div class="phone-scan">Escanear QR Code</div>
-          </div>
-          <div class="phone-home-indicator"></div>
         </div>
       </div>
     </div>
   </div>
 </header>
 
-<section class="value-strip section-alt">
-  <div class="container value-grid">
-    <div class="value-item">
-      <div class="icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h3v4h-7z"/></svg>
-      </div>
-      <div><h3>Zero fricção de instalação</h3><p>PWA instalável direto do navegador — o hóspede abre e já usa.</p></div>
-    </div>
-    <div class="value-item">
-      <div class="icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      </div>
-      <div><h3>Sua marca, não a nossa</h3><p>Cores, logo e fonte configuráveis por hotel — o hóspede nem percebe a Konekto.</p></div>
-    </div>
-    <div class="value-item">
-      <div class="icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v12H7l-3 3z"/></svg>
-      </div>
-      <div><h3>Mais consumo interno</h3><p>Spa, restaurante e passeios a um toque — sem precisar ligar pra recepção.</p></div>
-    </div>
-  </div>
-</section>
-
 <section id="produto">
   <div class="container">
-    <div class="section-head reveal">
-      <p class="eyebrow">Produto</p>
-      <h2>Tudo que o hóspede precisa. Tudo que o hotel controla.</h2>
-      <p>Uma plataforma, duas pontas: o app do hóspede com a identidade do seu hotel, e o painel onde sua equipe gerencia acesso, pedidos e conteúdo.</p>
-    </div>
-    <div class="bento">
-      <div class="bento-card b-span-3 b-feature reveal">
-        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 18h6"/></svg></div>
-        <h3>Check-in por QR Code ou código</h3>
-        <p>O hóspede recebe o acesso por e-mail ou WhatsApp antes mesmo de chegar — sem senha, sem cadastro, sem fricção.</p>
+    <div class="invis reveal">
+      <div class="invis-visual">
+        <img src="assets/marketing/hero-checkin.jpg" alt="Hóspede escaneando um QR Code de check-in direto no balcão da recepção" width="512" height="279" loading="lazy">
       </div>
-      <div class="bento-card b-span-3 reveal">
-        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/></svg></div>
-        <h3>Wi-Fi e detalhes do quarto</h3>
-        <p>Número do quarto, senha de rede e informações da estadia, sempre à mão, sem passar na recepção.</p>
-      </div>
-      <div class="bento-card b-span-2 reveal">
-        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5l16 7-16 7z"/></svg></div>
-        <h3>Spa, restaurantes e passeios</h3>
-        <p>Catálogo de serviços com reserva direto pelo app.</p>
-      </div>
-      <div class="bento-card b-span-2 reveal">
-        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5A8.5 8.5 0 1 1 21 11.5z"/></svg></div>
-        <h3>Room service digital</h3>
-        <p>Cardápio completo, pedido enviado direto pro operacional.</p>
-      </div>
-      <div class="bento-card b-span-2 reveal">
-        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-        <h3>Mapa interativo do hotel</h3>
-        <p>Piscinas, quadras e áreas comuns, fáceis de encontrar.</p>
-      </div>
-      <div class="bento-card b-span-4 reveal">
-        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-        <h3>Mensagens em tempo real com a recepção</h3>
-        <p>Um canal direto entre hóspede e equipe do hotel, sem precisar ligar ou descer até a recepção.</p>
-      </div>
-      <div class="bento-card b-span-2 reveal">
-        <div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg></div>
-        <h3>Promoções e ofertas</h3>
-        <p>Carrossel de promoções direto na home do hóspede.</p>
+      <div class="invis-copy">
+        <p class="eyebrow">Identidade preservada</p>
+        <h2>A invisibilidade é a nossa maior virtude</h2>
+        <p class="lede">Diferente das grandes OTAs e apps de delivery, a Konektto não compete pela atenção do seu hóspede. Somos a infraestrutura silenciosa que coloca a marca do seu hotel no centro da experiência digital.</p>
+        <ul class="check-list">
+          <li><span class="tick">✓</span> Logo e paleta de cores 100% customizáveis</li>
+          <li><span class="tick">✓</span> Domínio e links dedicados ao seu hotel</li>
+          <li><span class="tick">✓</span> Sem "powered by Konektto" visível pro hóspede</li>
+        </ul>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section-alt" id="como-funciona">
+<section class="section-alt">
   <div class="container">
     <div class="section-head reveal">
-      <p class="eyebrow">Como funciona</p>
-      <h2>Da configuração ao check-in, em 4 passos.</h2>
+      <h2>Hospitalidade digital em cada detalhe</h2>
+      <div class="rule"></div>
     </div>
-    <div class="steps">
-      <div class="step reveal">
-        <div class="step-num"></div>
-        <h3>Configure sua marca</h3>
-        <p>Cores, logo, serviços e cardápio — tudo pelo painel do hotel.</p>
+    <div class="feature-grid">
+      <div class="f-card f-room-service reveal">
+        <div>
+          <h3>Room service &amp; pedidos</h3>
+          <p>Cardápio digital com fotos profissionais — aumenta o ticket médio sem sobrecarregar a recepção.</p>
+        </div>
+        <img class="photo-swap" src="assets/marketing/room-service-dish.jpg" alt="Prato de room service elegante, servido no quarto com café da manhã" width="512" height="279" loading="lazy">
       </div>
-      <div class="step reveal">
-        <div class="step-num"></div>
-        <h3>Hóspede recebe o acesso</h3>
-        <p>Um código ou QR Code, enviado por e-mail ou WhatsApp antes da chegada.</p>
+      <div class="f-card f-checkin reveal">
+        <div>
+          <div class="icon">▦</div>
+          <h3>Check-in instantâneo</h3>
+          <p>Reduz fila no balcão — o hóspede acessa tudo via QR Code, sem baixar nenhum app.</p>
+        </div>
+        <div class="qr-mini">QR</div>
       </div>
-      <div class="step reveal">
-        <div class="step-num"></div>
-        <h3>Escaneia ou digita</h3>
-        <p>Sem senha, sem cadastro — o acesso já vem liberado pelo hotel.</p>
+      <div class="f-card f-chat reveal">
+        <h3>Chat em tempo real</h3>
+        <p>Comunicação direta com a recepção, sem precisar descer até o balcão.</p>
+        <div class="bubble"><b>Hóspede:</b> Posso pedir mais toalhas?</div>
       </div>
-      <div class="step reveal">
-        <div class="step-num"></div>
-        <h3>Aproveita a estadia</h3>
-        <p>Serviços, pedidos e recepção, tudo dentro da experiência da sua marca.</p>
+      <div class="f-small-row">
+        <div class="f-card f-small reveal">
+          <div class="icon">⌖</div>
+          <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:0.4rem;letter-spacing:-0.01em;">Mapa interativo</h4>
+          <p style="font-size:0.88rem">Guia local com piscinas, quadras e áreas comuns.</p>
+        </div>
+        <div class="f-card f-small reveal">
+          <div class="icon">✧</div>
+          <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:0.4rem;letter-spacing:-0.01em;">Promoções ativas</h4>
+          <p style="font-size:0.88rem">Notificações contextuais e ofertas em destaque.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section id="planos">
+<section id="como-funciona">
   <div class="container">
-    <div class="section-head center reveal">
-      <p class="eyebrow">Planos</p>
-      <h2>Um plano pra cada tamanho de operação.</h2>
-      <p>O diferencial entre os planos é o volume de hóspedes ativos por mês — e, no topo, inteligência para o hóspede consumir mais durante a estadia.</p>
+    <div class="cycle-head reveal">
+      <p class="eyebrow">A jornada do hóspede</p>
+      <h2 style="font-family:var(--font-display);font-weight:800;letter-spacing:-0.02em;font-size:clamp(1.9rem, 1.5rem + 1.6vw, 2.75rem);margin-top:0.8rem;">O ciclo da experiência</h2>
     </div>
-    <div class="pricing-grid">
-      <div class="plan reveal">
-        <div class="plan-name">Essencial</div>
-        <p class="plan-desc">Pra pousadas e hotéis independentes começarem com o pé direito.</p>
-        <div class="plan-price"><span class="amount">R$ 349</span><span class="period">/mês</span></div>
-        <div class="plan-guests">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          até 80 hóspedes ativos/mês
-        </div>
-        <a href="#contato" class="plan-cta">Começar agora</a>
-        <ul class="plan-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>App com a marca do seu hotel</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Check-in por código ou QR Code</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Wi-Fi e detalhes do quarto</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Catálogo de serviços (consulta)</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Suporte por e-mail</li>
-        </ul>
+    <div class="cycle">
+      <div class="cycle-step reveal">
+        <div class="num">01</div>
+        <h4>Configuração</h4>
+        <p>Personalize o sistema com a marca do seu hotel em minutos — sem código, só design.</p>
       </div>
-
-      <div class="plan plan-featured reveal">
-        <div class="plan-badge">Mais escolhido</div>
-        <div class="plan-name">Profissional</div>
-        <p class="plan-desc">Pra hotéis de médio porte que querem vender mais serviços durante a estadia.</p>
-        <div class="plan-price"><span class="amount">R$ 799</span><span class="period">/mês</span></div>
-        <div class="plan-guests">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          até 300 hóspedes ativos/mês
-        </div>
-        <a href="#contato" class="plan-cta">Começar agora</a>
-        <ul class="plan-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Tudo do Essencial</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Pedidos e reservas (room service, spa, restaurante)</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Mensagens em tempo real com a recepção</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Painel de gestão de hóspedes e pedidos</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Suporte prioritário</li>
-        </ul>
+      <div class="cycle-step reveal">
+        <div class="num">02</div>
+        <h4>Acesso</h4>
+        <p>O hóspede recebe o link por e-mail/WhatsApp ou escaneia o QR Code no quarto.</p>
       </div>
+      <div class="cycle-step reveal">
+        <div class="num">03</div>
+        <h4>Experiência</h4>
+        <p>Pedidos, chat, reservas e guias — tudo na palma da mão, com a cara do seu hotel.</p>
+      </div>
+      <div class="cycle-step reveal">
+        <div class="num">04</div>
+        <h4>Fidelização</h4>
+        <p>Coleta de feedback em tempo real, pra garantir que o hóspede volte.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-      <div class="plan reveal">
-        <div class="plan-name">Elite</div>
-        <p class="plan-desc">Pra redes e hotéis de luxo que querem uma experiência sob medida.</p>
-        <div class="plan-price"><span class="amount">Sob consulta</span></div>
-        <div class="plan-guests">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          hóspedes ilimitados
-        </div>
-        <a href="#contato" class="plan-cta">Falar com vendas</a>
+<section class="section-alt" id="planos">
+  <div class="container">
+    <div class="pricing-head reveal">
+      <div>
+        <p class="eyebrow">Planos</p>
+        <h2 style="font-family:var(--font-display);font-weight:800;letter-spacing:-0.02em;font-size:clamp(1.9rem, 1.5rem + 1.6vw, 2.75rem);margin-top:0.8rem;">Investimento em hospitalidade</h2>
+        <p>Escolha o plano que melhor se adapta ao volume do seu hotel ou pousada — sem taxa de instalação oculta.</p>
+      </div>
+    </div>
+    <div class="pricing-grid reveal">
+      <div class="plan">
+        <p class="plan-name">Essencial</p>
+        <p class="plan-price">R$349<span>/mês</span></p>
+        <p class="plan-note">Pra pousadas e hotéis independentes começarem com o pé direito.</p>
         <ul class="plan-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Tudo do Profissional</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Personalização total de marca e tipografia</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Gerente de conta dedicado</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Relatórios avançados de consumo</li>
+          <li>Até 80 hóspedes ativos/mês</li>
+          <li>App com a marca do seu hotel</li>
+          <li>Check-in por código ou QR Code</li>
+          <li>Wi-Fi e detalhes do quarto</li>
+          <li>Catálogo de serviços (consulta)</li>
         </ul>
-        <div class="plan-ai">✦ Recomendações por IA — sugestões personalizadas de spa, restaurante e passeios pro hóspede consumir mais durante a estadia.</div>
+        <a href="mailto:contato@konekto.app" class="plan-cta">Começar agora</a>
+      </div>
+      <div class="plan plan-featured">
+        <span class="plan-badge">Mais escolhido</span>
+        <p class="plan-name">Profissional</p>
+        <p class="plan-price">R$799<span>/mês</span></p>
+        <p class="plan-note">Pra hotéis de médio porte que querem vender mais durante a estadia.</p>
+        <ul class="plan-features">
+          <li>Até 300 hóspedes ativos/mês</li>
+          <li>Tudo do Essencial</li>
+          <li>Pedidos e reservas (room service, spa, restaurante)</li>
+          <li>Chat em tempo real com a recepção</li>
+          <li>Painel de gestão de hóspedes e pedidos</li>
+        </ul>
+        <a href="mailto:contato@konekto.app" class="plan-cta">Começar agora</a>
+      </div>
+      <div class="plan">
+        <p class="plan-name">Elite</p>
+        <p class="plan-price" style="font-size:1.65rem;">Sob consulta</p>
+        <p class="plan-note">Pra redes e hotéis de luxo que querem uma experiência sob medida.</p>
+        <ul class="plan-features">
+          <li>Hóspedes ilimitados</li>
+          <li>Tudo do Profissional</li>
+          <li>Personalização total de marca e tipografia</li>
+          <li>Recomendações por IA pra aumentar consumo</li>
+          <li>Gerente de conta dedicado</li>
+        </ul>
+        <a href="mailto:contato@konekto.app" class="plan-cta">Falar com vendas</a>
       </div>
     </div>
   </div>
@@ -518,7 +488,7 @@
   <div class="container">
     <div class="cta-band reveal">
       <h2>Vamos colocar seu hotel no bolso do hóspede?</h2>
-      <p>Fale com a gente e veja o Konekto com a identidade do seu hotel em poucos dias.</p>
+      <p>Fale com a gente e veja a Konektto com a identidade do seu hotel em poucos dias.</p>
       <div class="hero-actions">
         <a href="mailto:contato@konekto.app" class="btn btn-primary">contato@konekto.app</a>
         <a href="login.html" class="btn btn-ghost">Já sou cliente</a>
@@ -532,41 +502,48 @@
     <div class="footer-top">
       <div class="footer-brand">
         <a href="#" class="brand">
-          <svg class="brand-mark" viewBox="0 0 100 100"><rect x="12" y="12" width="56" height="56" rx="16" fill="none" stroke-width="6"/><rect x="52" y="52" width="34" height="34" rx="10"/></svg>
-          Konekto
+          <svg class="brand-mark" viewBox="0 0 100 100" fill="#FF2E88" aria-hidden="true"><rect x="46" y="6" width="8" height="30" rx="4"/><rect x="46" y="64" width="8" height="30" rx="4"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(45 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(90 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(135 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(180 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(225 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(270 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(315 50 50)"/></svg>
+          Konektto
         </a>
-        <p>A experiência digital do seu hotel — com a marca do seu hotel, na palma da mão do hóspede.</p>
+        <p>Redefinindo a hospitalidade digital através de soluções white-label que colocam a marca do seu hotel acima de tudo.</p>
       </div>
-      <div class="footer-links">
-        <div class="footer-col">
-          <h4>Produto</h4>
-          <ul>
-            <li><a href="#produto">Recursos</a></li>
-            <li><a href="#como-funciona">Como funciona</a></li>
-            <li><a href="#planos">Planos</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Empresa</h4>
-          <ul>
-            <li><a href="#contato">Contato</a></li>
-            <li><a href="login.html">Área do hotel</a></li>
-          </ul>
-        </div>
+      <div class="footer-col">
+        <span>Empresa</span>
+        <ul>
+          <li><a href="#contato">Contato</a></li>
+          <li><a href="login.html">Área do hotel</a></li>
+          <li><a href="https://konektoadmin.vercel.app">Acesso admin</a></li>
+        </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Konekto. Todos os direitos reservados.</span>
+      <span>© 2026 Konektto. Todos os direitos reservados.</span>
       <span>Feito para hospitalidade de verdade.</span>
     </div>
   </div>
 </footer>
 
 <script>
-  const nav = document.getElementById('nav');
-  window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 40);
-  }, { passive: true });
+  // Troca cíclica de marca no mockup do telefone — demonstra o white-label ao vivo.
+  const phoneScreen = document.getElementById('phone-screen');
+  const phoneBrand = document.getElementById('phone-brand');
+  const brands = [
+    { name: 'Amara Bay', bg: '#FFFFFF', accent: '#16181D' },
+    { name: 'Verde Trilha', bg: '#F2F8F2', accent: '#2D5A27' },
+    { name: 'Ouro Preto Inn', bg: '#FFFCF5', accent: '#8A6A1F' },
+  ];
+  let brandIndex = 0;
+  setInterval(() => {
+    brandIndex = (brandIndex + 1) % brands.length;
+    const next = brands[brandIndex];
+    phoneScreen.style.opacity = '0.4';
+    setTimeout(() => {
+      phoneScreen.style.backgroundColor = next.bg;
+      phoneBrand.textContent = next.name;
+      phoneBrand.style.color = next.accent;
+      phoneScreen.style.opacity = '1';
+    }, 250);
+  }, 3200);
 
   const revealEls = document.querySelectorAll('.reveal');
   if ('IntersectionObserver' in window) {
