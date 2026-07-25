@@ -88,7 +88,7 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
   { id: 'parking', name: 'Estacionamento', description: 'Informações e reserva de vaga de estacionamento.', category: 'hospitalidade', groupId: 'mobilidade', icon: 'local_parking', placement: ['servicesMenu'], screenId: 'service_parking', defaultOrder: 11, dependencies: ['services'], implemented: false, configSchemaId: 'generic_service' },
 
   // ── financeiro ──
-  { id: 'digital_wallet', name: 'Carteira Digital', description: 'Saldo e extrato de consumo do hóspede.', category: 'financeiro', icon: 'account_balance_wallet', placement: ['home', 'bottomNav'], screenId: 'wallet', defaultOrder: 0, dependencies: [], implemented: true, configSchemaId: 'wallet' },
+  { id: 'digital_wallet', name: 'Carteira Digital', description: 'Saldo e extrato de consumo do hóspede.', category: 'financeiro', icon: 'account_balance_wallet', placement: ['home', 'bottomNav'], screenId: 'wallet', defaultOrder: 0, dependencies: [], implemented: true, configSchemaId: 'digital_wallet' },
   { id: 'payments', name: 'Pagamentos', description: 'Pagamento de consumo direto pelo app.', category: 'financeiro', icon: 'payment', placement: ['home'], screenId: 'payments', defaultOrder: 1, dependencies: ['digital_wallet'], implemented: false },
   { id: 'statements', name: 'Extratos', description: 'Extrato detalhado de consumo por período.', category: 'financeiro', icon: 'receipt_long', placement: ['home'], screenId: 'statements', defaultOrder: 2, dependencies: ['digital_wallet'], implemented: false },
 
