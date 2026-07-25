@@ -1,5 +1,40 @@
 import type { HotelPlan } from '@/app/generated/prisma/client'
 
+/// Catálogo central do White Label — plano comercial, templates do app do
+/// hóspede e feature flags. Fonte de verdade pros 3, mas NENHUM dos dois
+/// catálogos abaixo é uma tabela no banco — são listas fixas em código,
+/// cada uma com uma segunda cópia em outro app que precisa ficar em sync
+/// manualmente (documentado abaixo de cada uma).
+///
+/// ## Adicionar um 6º template
+/// 1. Aqui: acrescentar o id em `PREMIUM_TEMPLATES` (e em `ESSENTIAL_TEMPLATES`
+///    também, se o novo template também for Essential).
+/// 2. `apps/konekto_portal_next/app/(portal)/settings/appearance/page.tsx`:
+///    acrescentar uma entrada em `TEMPLATE_OPTIONS` (nome, tagline,
+///    descrição, cor, print em `public/appearance/<id>-home.png`).
+/// 3. `apps/konekto_mobile/lib/templates/<id>/`: criar `theme.dart`
+///    (`GuestTemplateTheme`) + `home_screen.dart` no mínimo (ver os 5
+///    existentes como referência — Room Service/Chat/Onboarding/Diretório/
+///    Loyalty/Wallet são opcionais, com dado de demonstração até serem
+///    ligados a dado real).
+/// 4. `apps/konekto_mobile/lib/templates/guest_template_registry.dart`:
+///    acrescentar o `GuestTemplateId`, `guestTemplateThemes` e
+///    `_homeContentBuilders`.
+///
+/// ## Adicionar uma 10ª feature flag
+/// Só precisa de 2 lugares:
+/// 1. Aqui: acrescentar o id em `FEATURE_FLAGS` — `defaultFeaturesByPlan`/
+///    `resolveEnabledFeatures`/`isFeatureFlag` já pegam a flag nova
+///    automaticamente, nada mais muda neste arquivo.
+/// 2. `apps/konekto_admin/lib/features/clients/client_detail_page.dart`:
+///    acrescentar `(id, 'Rótulo em PT-BR')` em `_kFeatureFlags` (senão a
+///    flag existe no backend mas não aparece pra equipe Konekto liberar
+///    como cortesia).
+/// Se a feature precisar de UI de verdade no app do hóspede, o padrão é
+/// `GuestFeatureGate` (`lib/templates/shared/widgets/guest_feature_gate.dart`)
+/// — ver `lib/templates/{elite,pulse,horizon}/{loyalty,wallet}_screen.dart`
+/// pra um exemplo de tela inteira atrás de uma flag.
+///
 /// As 9 flags exclusivas de Premium/Enterprise (ver "FUNCIONALIDADES
 /// EXCLUSIVAS DOS PLANOS PREMIUM E ENTERPRISE" na spec do White Label).
 /// Tudo que NÃO está nesta lista (auth, integrações PMS/CRS/ERP/Channel

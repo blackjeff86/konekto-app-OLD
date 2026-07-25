@@ -147,17 +147,70 @@ Plano completo: `tasks/plan-guest-app-whitelabel.md`.
         no visual antigo mesmo quando `template` está presente (não
         migrados — ver limitação documentada no código). `flutter analyze`
         limpo.
-  - [ ] Migração de dado (mapear hotéis reais, incl. `hotel_1`/`hotel_2`,
-        pro template novo — manual, por hotel, decisão pendente do usuário
-        pra cada hotel)
-  - [ ] Arquivamento dos 5 templates atuais em `legacy-templates/` (só
-        depois da migração de dado, pra não quebrar hotel que ainda
-        depende do sistema antigo)
+  - [x] Migração de dado — **concluída em produção**, direto no banco:
+    - `hotel_1` (que era na verdade o cliente real "Konekto Hotel", marcado
+      incorretamente como `kind: template` em algum momento) corrigido pra
+      `kind: client` e renomeado pra um ID de verdade
+      (`b370eef7-0317-4f03-9bdb-c5bfe1b17682`) — nunca foi template, era
+      confusão de dado.
+    - `hotel_2` ("Amara Bay", instalação-demonstração do sistema antigo,
+      sem cliente/staff/hóspede algum) apagado por completo (serviços,
+      conteúdo, o hotel).
+    - Todo hotel novo já nasce com `template: aura` por padrão
+      (`POST /api/platform-admin/hotels`) — decisão do usuário.
+    - Konekto Hotel e Hotel Damm (os 2 únicos clientes reais) ganharam
+      `template` — Hotel Damm recebeu o default `aura`; Konekto Hotel já
+      tinha escolhido `bosque` manualmente (preservado, não sobrescrito).
+    - `seed.ts` limpo: removido todo código de seed de hotel_1/hotel_2
+      (não existe mais o conceito de "hotel-modelo" pra template — os 5
+      templates não dependem de nenhum hotel no banco, a prévia no portal
+      usa print estático). `prisma/seed-data/hotel_1/`, `hotel_2/`
+      removidos. README atualizado.
+    - **Resultado**: com o build novo do `konekto_mobile` já deployado
+      (mecanismo da Task 14), os 2 hotéis reais agora renderizam os
+      templates novos de verdade pros hóspedes — não é mais só mecanismo
+      inerte, está ativo em produção.
+  - [x] Arquivamento do código dos 5 templates antigos — **concluído**.
+    - `legacy-templates/` (fora de `lib/`, excluído do `flutter analyze`,
+      não compila): `guest_infra.dart`, `template_registry.dart` antigo,
+      `amara_bay/`, `verde_pousada/`, `casa_marechal/` (home_screen.dart de
+      cada), `shared/guest_home_content_params.dart`,
+      `shared/widgets/{expandable_card,header_icon_button,image_carousel,
+      notification_count_badge,tenant_logo}.dart` — com `git mv` (preserva
+      histórico) + README explicando como reativar se um dia fizer sentido.
+    - **Descoberta importante durante a execução**: 12 telas (Serviços,
+      Reservas, Perfil, Avisos, Meus Pedidos, Info do Hotel, Conta da
+      estadia, Minibar, etc.) dependiam do sistema antigo pra se
+      estilizar — não eram exclusivas de nenhum template. Por decisão do
+      usuário ("essas funcionalidades não deveriam estar presas aos
+      templates"), `GuestAppTheme` virou um tema único e fixo
+      (`GuestSharedTokens`, os valores do antigo default Verde Pousada),
+      independente de qual dos 5 templates novos o hotel escolheu pra
+      Home — só a Home troca de visual por template, o resto do app é
+      consistente sempre.
+    - `tenant_home_page.dart`: Home sempre renderiza um dos 5 templates
+      novos (fallback `aura` se `tenantConfig['template']` estiver
+      ausente — nunca quebra por falta de dado).
+    - `flutter analyze` limpo, build de produção limpo, deployado e
+      confirmado no ar (`konekto-guest.vercel.app`).
 - [ ] **Checkpoint D (gate obrigatório)**
 
 ## Fase 5 — Limpeza
-- [ ] Task 15: Remover campo `infra` legado
-- [ ] Task 16: Documentar convenção pra novo template/feature flag
+- [x] Task 15: Remover campo `infra` legado — removido dos 4 apps
+      (`konekto_api`: `patchHotelSchema`/`createHotelSchema`;
+      `konekto_portal_next`: `updateInfra`/tipo `HotelConfig`;
+      `konekto_admin`: seletor de "estilo visual" no diálogo de criar
+      cliente; `konekto_mobile`: comentário desatualizado). Testes
+      atualizados (374/374 no `konekto_api`, 176/176 no portal,
+      `flutter analyze` limpo no mobile/admin). Deployado e verificado nos
+      3 apps com pipeline Vercel.
+- [x] Task 16: Documentar convenção pra novo template/feature flag —
+      `apps/konekto_api/lib/feature-flags.ts` (cabeçalho do arquivo, fonte
+      de verdade dos 2 catálogos) + `apps/konekto_mobile/lib/templates/README.md`
+      (espelha a mesma convenção do lado Flutter). Passo a passo pra 6º
+      template (4 lugares) e 10ª feature flag (2 lugares).
+
+## Fase 5 concluída — White Label completo, ponta a ponta, em produção.
 
 ## Pendências (adiadas, não bloqueiam a Fase 3)
 - [ ] Rodar `flutter test` de verdade em `konekto_mobile` (inclui o teste novo de
