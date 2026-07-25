@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100">
+  <g transform="translate(6,6)">
+    <rect x="12" y="12" width="56" height="56" rx="16" fill="none" stroke="#E4CFA6" stroke-width="6"/>
+    <rect x="52" y="52" width="34" height="34" rx="10" fill="#B8935F"/>
+  </g>
+  <text x="106" y="61" font-family="Inter, -apple-system, sans-serif" font-weight="700" font-size="42" letter-spacing="-0.5" fill="#F5F3EE">Konekto</text>
+</svg>
