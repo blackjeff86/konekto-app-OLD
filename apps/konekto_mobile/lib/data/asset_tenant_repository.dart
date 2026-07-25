@@ -212,6 +212,29 @@ class AssetTenantRepository implements TenantRepository {
     );
     return service;
   }
+
+  // Modo asset (sem backend real) nunca tem agendamento configurado — cai
+  // sempre no seletor de dia/hora livre de sempre.
+  @override
+  Future<Map<String, dynamic>> getItemAvailability({
+    required String hotelId,
+    required String serviceId,
+    required String itemId,
+    required DateTime date,
+  }) async {
+    return {'schedulingEnabled': false};
+  }
+
+  // Modo asset nunca tem tipos de mesa cadastrados — reserva de mesa
+  // continua livre, sem checagem de capacidade.
+  @override
+  Future<Map<String, dynamic>> getTableAvailability({
+    required String hotelId,
+    required String serviceId,
+    required DateTime scheduledFor,
+  }) async {
+    return {'ok': true, 'tableTypes': <Map<String, dynamic>>[]};
+  }
 }
 
 class AssetPromotionsRepository implements PromotionsRepository {

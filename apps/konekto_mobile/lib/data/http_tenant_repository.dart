@@ -42,6 +42,28 @@ class HttpTenantRepository implements TenantRepository {
   @override
   Future<Map<String, dynamic>> getService(String hotelId, String serviceId) =>
       _get('/api/hotels/$hotelId/services/$serviceId');
+
+  @override
+  Future<Map<String, dynamic>> getItemAvailability({
+    required String hotelId,
+    required String serviceId,
+    required String itemId,
+    required DateTime date,
+  }) {
+    final isoDate =
+        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    return _get('/api/hotels/$hotelId/services/$serviceId/items/$itemId/availability?date=$isoDate');
+  }
+
+  @override
+  Future<Map<String, dynamic>> getTableAvailability({
+    required String hotelId,
+    required String serviceId,
+    required DateTime scheduledFor,
+  }) {
+    final encoded = Uri.encodeComponent(scheduledFor.toIso8601String());
+    return _get('/api/hotels/$hotelId/services/$serviceId/table-availability?scheduledFor=$encoded');
+  }
 }
 
 class HttpPromotionsRepository implements PromotionsRepository {

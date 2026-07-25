@@ -1,0 +1,9 @@
+# O app do hóspede agora usa dart:js_interop/package:web (tokenização de
+# cartão via pagarme_tokenizer.dart) — código que só compila pra um alvo
+# web (dart2js/dart2wasm), nunca pra VM. Sem isso, `flutter test` (padrão:
+# plataforma VM) falha na compilação de qualquer arquivo que importe
+# package:web, mesmo que o teste em si não exercite pagamento. Rodar
+# sempre com `flutter test --platform chrome` (exige Chrome instalado e
+# `CHROME_EXECUTABLE` setado se não estiver no PATH padrão).
+platforms:
+  - chrome

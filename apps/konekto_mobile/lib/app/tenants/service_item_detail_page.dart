@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:konekto/app/tenants/booking_sheet.dart';
 import 'package:konekto/app/tenants/order_quantity_note_sheet.dart';
-import 'package:konekto/app/tenants/services_page.dart' show hexToColor;
 import 'package:konekto/data/coupons_repository.dart';
 import 'package:konekto/data/guest_claim_repository.dart';
 import 'package:konekto/data/orders_repository.dart';
+import 'package:konekto/data/tenant_repository.dart';
+import 'package:konekto/data/tenant_repository_provider.dart';
+import 'package:konekto/l10n/app_localizations.dart';
 import 'package:konekto/models/coupon.dart';
 import 'package:konekto/models/service.dart';
+import 'package:konekto/theme/guest_app_theme.dart';
 import 'package:konekto/widgets/tenant_image.dart';
 
 /// Detalhe de um item de serviço — substitui as 5 telas antigas de detalhe
@@ -38,8 +40,18 @@ class ServiceItemDetailPage extends StatefulWidget {
   final String serviceId;
   final String serviceName;
   final ServiceType serviceType;
+  final Service service;
   final ServiceItem item;
   final String hotelId;
+  final GuestAppTheme theme;
+  /// `true` quando aberto a partir da tela de Frigobar — o hóspede está
+  /// informando um consumo que já aconteceu, não pedindo algo pra
+  /// preparar. O mesmo item (`item.isMinibarItem`) pode ser aberto também
+  /// via Serviço de Quarto normalmente (`false`) — ex: pedir mais uma
+  /// água pra ser entregue, em vez de informar que já bebeu uma do
+  /// frigobar. É o CAMINHO de navegação que decide o comportamento, não
+  /// só a flag do item.
+  final bool isMinibarReportFlow;
 
   const ServiceItemDetailPage({
     super.key,
@@ -47,8 +59,11 @@ class ServiceItemDetailPage extends StatefulWidget {
     required this.serviceId,
     required this.serviceName,
     required this.serviceType,
+    required this.service,
     required this.item,
     required this.hotelId,
+    required this.theme,
+    this.isMinibarReportFlow = false,
   });
 
   @override
@@ -59,10 +74,40 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
   final GuestClaimRepository _guestClaimRepository = GuestClaimRepository();
   final OrdersRepository _ordersRepository = OrdersRepository();
   final CouponsRepository _couponsRepository = CouponsRepository();
+  final TenantRepository _tenantRepository = createTenantRepository();
   bool _isSubmitting = false;
 
-  Map<String, dynamic> get tenantConfig => widget.tenantConfig;
+  GuestAppTheme get theme => widget.theme;
   ServiceItem get item => widget.item;
+
+  /// Só bloqueia Serviço de Quarto — `activity` já tem seu próprio controle
+  /// fino por item, e `restaurant` nem mostra este botão (reserva é de
+  /// mesa, no rodapé de `ServiceItemsListPage`). O fluxo de informar
+  /// consumo do frigobar nunca bloqueia por horário — o frigobar físico do
+  /// quarto está sempre acessível, mesmo que o serviço em que o item vive
+  /// tenha horário de funcionamento restrito (ex: cozinha fechada de
+  /// madrugada). Pedir o mesmo item pelo Serviço de Quarto normal continua
+  /// respeitando o horário, porque aí é um pedido de verdade pra entregar.
+  bool get _isClosedRoomService =>
+      widget.serviceType == ServiceType.roomService && !widget.isMinibarReportFlow && !widget.service.isOpenNow;
+
+  Future<List<TimeSlot>> _loadAvailability(DateTime date) async {
+    final json = await _tenantRepository.getItemAvailability(
+      hotelId: widget.hotelId,
+      serviceId: widget.serviceId,
+      itemId: item.id,
+      date: date,
+    );
+    final rawSlots = json['slots'] as List<dynamic>? ?? const [];
+    return rawSlots
+        .map(
+          (raw) => TimeSlot(
+            time: (raw as Map<String, dynamic>)['time'] as String,
+            available: raw['available'] as bool,
+          ),
+        )
+        .toList();
+  }
 
   Future<void> _confirm(BuildContext context) async {
     switch (widget.serviceType) {
@@ -76,20 +121,21 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
   }
 
   Future<void> _confirmOrder(BuildContext context) async {
-    final String fontFamily = tenantConfig['typography']['fontFamily'];
-    final Color primaryColor = hexToColor(tenantConfig['colorPalette']['primary']);
-    final Color backgroundColor = hexToColor(tenantConfig['colorPalette']['background']);
-    final Color bodyTextColor = hexToColor(tenantConfig['typography']['bodyText']['color']);
+    if (_isClosedRoomService) return;
+    final l10n = AppLocalizations.of(context)!;
     final bool isPurchasable = item.price != null;
 
-    // Cupom só faz sentido pra item com preço — busca na hora de abrir o
-    // modal (evita mostrar cupom já usado/expirado por causa de cache).
+    // Informar consumo do frigobar: o hóspede está relatando algo que já
+    // aconteceu, não pedindo algo pra preparar — não faz sentido oferecer
+    // cupom aqui.
     var availableCoupons = const <Coupon>[];
-    if (isPurchasable) {
+    if (isPurchasable && !widget.isMinibarReportFlow) {
       final guestToken = await _guestClaimRepository.getStoredToken();
       if (guestToken != null) {
         try {
-          availableCoupons = await _couponsRepository.listAvailable(token: guestToken);
+          availableCoupons = await _couponsRepository.listAvailable(
+            token: guestToken,
+          );
         } on StateError {
           availableCoupons = const [];
         }
@@ -100,11 +146,12 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
     final result = await showOrderQuantityNoteSheet(
       context,
       itemName: item.name,
-      fontFamily: fontFamily,
-      primaryColor: primaryColor,
-      backgroundColor: backgroundColor,
-      bodyTextColor: bodyTextColor,
-      confirmLabel: isPurchasable ? 'Adicionar ao pedido' : 'Solicitar',
+      fontFamily: theme.tokens.bodyFontFamily,
+      headlineFontFamily: theme.tokens.headlineFontFamily,
+      primaryColor: theme.accent,
+      backgroundColor: theme.bg,
+      bodyTextColor: theme.mutedColor,
+      confirmLabel: widget.isMinibarReportFlow ? l10n.reportConsumptionButton : (isPurchasable ? l10n.addToOrder : l10n.requestButton),
       itemPrice: item.price,
       availableCoupons: availableCoupons,
     );
@@ -116,23 +163,23 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
       quantity: result.quantity,
       note: result.note,
       couponId: result.couponId,
-      successMessage: isPurchasable ? 'Pedido enviado! A recepção foi notificada.' : 'Solicitação enviada! A recepção entrará em contato.',
+      successMessage: widget.isMinibarReportFlow ? l10n.consumptionRecorded : (isPurchasable ? l10n.orderSent : l10n.requestSent),
     );
   }
 
   Future<void> _confirmBooking(BuildContext context) async {
-    final String fontFamily = tenantConfig['typography']['fontFamily'];
-    final Color primaryColor = hexToColor(tenantConfig['colorPalette']['primary']);
-    final Color backgroundColor = hexToColor(tenantConfig['colorPalette']['background']);
-    final Color bodyTextColor = hexToColor(tenantConfig['typography']['bodyText']['color']);
-
+    final l10n = AppLocalizations.of(context)!;
+    final schedulingEnabled = item.durationMinutes != null;
     final result = await showBookingSheet(
       context,
       itemName: item.name,
-      fontFamily: fontFamily,
-      primaryColor: primaryColor,
-      backgroundColor: backgroundColor,
-      bodyTextColor: bodyTextColor,
+      fontFamily: theme.tokens.bodyFontFamily,
+      headlineFontFamily: theme.tokens.headlineFontFamily,
+      primaryColor: theme.accent,
+      backgroundColor: theme.bg,
+      bodyTextColor: theme.mutedColor,
+      schedulingEnabled: schedulingEnabled,
+      loadAvailability: schedulingEnabled ? _loadAvailability : null,
     );
     if (result == null) return;
     if (!context.mounted) return;
@@ -141,7 +188,7 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
       context,
       quantity: 1,
       scheduledFor: result.dateTime,
-      successMessage: 'Reserva confirmada! A recepção foi notificada.',
+      successMessage: l10n.reservationConfirmed,
     );
   }
 
@@ -153,13 +200,10 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
     String? couponId,
     required String successMessage,
   }) async {
-    final String fontFamily = tenantConfig['typography']['fontFamily'];
-    final Color primaryColor = hexToColor(tenantConfig['colorPalette']['primary']);
-
     final guestToken = await _guestClaimRepository.getStoredToken();
     if (guestToken == null) {
       if (!context.mounted) return;
-      _showSnackBar(context, message: successMessage, fontFamily: fontFamily, color: primaryColor);
+      _showSnackBar(context, message: successMessage, color: theme.accent);
       return;
     }
 
@@ -173,21 +217,30 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
         note: note,
         scheduledFor: scheduledFor,
         couponId: couponId,
+        isConsumptionReport: widget.isMinibarReportFlow,
       );
       if (!context.mounted) return;
-      _showSnackBar(context, message: successMessage, fontFamily: fontFamily, color: primaryColor);
+      _showSnackBar(context, message: successMessage, color: theme.accent);
     } on StateError catch (error) {
       if (!context.mounted) return;
-      _showSnackBar(context, message: error.message, fontFamily: fontFamily, color: Colors.red.shade700);
+      _showSnackBar(
+        context,
+        message: error.message,
+        color: Colors.red.shade700,
+      );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
-  void _showSnackBar(BuildContext context, {required String message, required String fontFamily, required Color color}) {
+  void _showSnackBar(
+    BuildContext context, {
+    required String message,
+    required Color color,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: GoogleFonts.getFont(fontFamily, color: Colors.white)),
+        content: Text(message, style: theme.body(color: Colors.white)),
         backgroundColor: color,
         duration: const Duration(seconds: 3),
       ),
@@ -196,14 +249,12 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final String fontFamily = tenantConfig['typography']['fontFamily'];
-    final Color primaryColor = hexToColor(tenantConfig['colorPalette']['primary']);
-    final Color backgroundColor = hexToColor(tenantConfig['colorPalette']['background']);
-    final Color bodyTextColor = hexToColor(tenantConfig['typography']['bodyText']['color']);
+    final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
     final bool isPurchasable = item.price != null;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: theme.bg,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,9 +262,18 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
             Stack(
               children: [
                 Container(
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
-                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 18, offset: Offset(0, 8))],
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(theme.tokens.heroRadius),
+                      bottomRight: Radius.circular(theme.tokens.heroRadius),
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 18,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
                   ),
                   child: TenantImage(
                     imageUrl: item.imageUrl,
@@ -221,7 +281,10 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
                     height: 240,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(theme.tokens.heroRadius),
+                      bottomRight: Radius.circular(theme.tokens.heroRadius),
+                    ),
                   ),
                 ),
                 Positioned(
@@ -231,10 +294,16 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.9),
                       shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 8, offset: const Offset(0, 2))],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: primaryColor),
+                      icon: Icon(Icons.arrow_back, color: theme.textColor),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),
@@ -248,61 +317,145 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
                 children: [
                   Text(
                     widget.serviceName,
-                    style: GoogleFonts.getFont(fontFamily, color: bodyTextColor, fontSize: 13, fontWeight: FontWeight.w500),
+                    style: theme.body(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: theme.mutedColor,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    item.name,
-                    style: GoogleFonts.getFont(fontFamily, color: primaryColor, fontSize: 26, fontWeight: FontWeight.bold),
+                    item.localizedName(languageCode),
+                    style: theme.headline(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    isPurchasable ? 'R\$ ${item.price!.toStringAsFixed(2)}' : 'Sob consulta',
-                    style: GoogleFonts.getFont(fontFamily, color: bodyTextColor, fontSize: 17, fontWeight: FontWeight.w500),
+                    isPurchasable
+                        ? 'R\$ ${item.price!.toStringAsFixed(2)}'
+                        : l10n.priceOnRequest,
+                    style: theme.body(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      color: theme.accent,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    item.description,
-                    style: GoogleFonts.getFont(fontFamily, color: bodyTextColor, fontSize: 15, height: 1.5),
+                    item.localizedDescription(languageCode),
+                    style: theme.body(
+                      fontSize: 15,
+                      color: theme.mutedColor,
+                      height: 1.5,
+                    ),
                   ),
-                  if (item.location != null) ...[
+                  if (item.localizedLocation(languageCode) != null) ...[
                     const SizedBox(height: 16),
-                    _DetailRow(icon: Icons.place_outlined, label: item.location!, color: primaryColor, fontFamily: fontFamily),
+                    _DetailRow(
+                      icon: Icons.place_outlined,
+                      label: item.localizedLocation(languageCode)!,
+                      theme: theme,
+                    ),
                   ],
-                  if (item.category != null) ...[
+                  if (item.localizedCategory(languageCode) != null) ...[
                     const SizedBox(height: 8),
-                    _DetailRow(icon: Icons.category_outlined, label: item.category!, color: primaryColor, fontFamily: fontFamily),
+                    _DetailRow(
+                      icon: Icons.category_outlined,
+                      label: item.localizedCategory(languageCode)!,
+                      theme: theme,
+                    ),
                   ],
-                  if (item.extraInfo != null) ...[
+                  if (item.localizedExtraInfo(languageCode) != null) ...[
                     const SizedBox(height: 8),
-                    _DetailRow(icon: Icons.info_outline, label: item.extraInfo!, color: primaryColor, fontFamily: fontFamily),
+                    _DetailRow(
+                      icon: Icons.info_outline,
+                      label: item.localizedExtraInfo(languageCode)!,
+                      theme: theme,
+                    ),
+                  ],
+                  if (_isClosedRoomService) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.mutedColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(
+                          theme.tokens.cardRadius,
+                        ),
+                      ),
+                      child: Text(
+                        widget.service.operatingHoursLabel != null
+                            ? 'Fechado agora — funciona das ${widget.service.operatingHoursLabel}.'
+                            : 'Fechado agora.',
+                        style: theme.body(
+                          fontSize: 13.5,
+                          color: theme.mutedColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (widget.serviceType == ServiceType.roomService && widget.isMinibarReportFlow) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: theme.accent.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(theme.tokens.cardRadius),
+                      ),
+                      child: Text(
+                        l10n.minibarDisclaimer,
+                        style: theme.body(fontSize: 13.5, color: theme.mutedColor),
+                      ),
+                    ),
                   ],
                   if (widget.serviceType != ServiceType.restaurant) ...[
                     const SizedBox(height: 28),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _isSubmitting ? null : () => _confirm(context),
+                        onPressed: (_isSubmitting || _isClosedRoomService)
+                            ? null
+                            : () => _confirm(context),
                         icon: _isSubmitting
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
                             : Icon(
                                 widget.serviceType == ServiceType.roomService
-                                    ? (isPurchasable ? Icons.shopping_cart : Icons.event_available_outlined)
+                                    ? (widget.isMinibarReportFlow
+                                          ? Icons.kitchen_outlined
+                                          : (isPurchasable ? Icons.shopping_cart : Icons.event_available_outlined))
                                     : Icons.calendar_month_outlined,
                                 size: 22,
                               ),
                         label: Text(
                           widget.serviceType == ServiceType.roomService
-                              ? (isPurchasable ? 'Adicionar ao pedido' : 'Solicitar')
-                              : 'Reservar',
-                          style: GoogleFonts.getFont(fontFamily, fontSize: 16),
+                              ? (widget.isMinibarReportFlow
+                                    ? l10n.reportConsumptionButton
+                                    : (isPurchasable ? l10n.addToOrder : l10n.requestButton))
+                              : l10n.reserveButton,
+                          style: theme.body(fontSize: 16, color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
+                          backgroundColor: theme.accent,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              theme.tokens.cardRadius,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -320,18 +473,30 @@ class _ServiceItemDetailPageState extends State<ServiceItemDetailPage> {
 class _DetailRow extends StatelessWidget {
   final IconData icon;
   final String label;
-  final Color color;
-  final String fontFamily;
+  final GuestAppTheme theme;
 
-  const _DetailRow({required this.icon, required this.label, required this.color, required this.fontFamily});
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.theme,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: color),
+        Icon(icon, size: 18, color: theme.accent),
         const SizedBox(width: 8),
-        Expanded(child: Text(label, style: GoogleFonts.getFont(fontFamily, color: color, fontSize: 13.5, fontWeight: FontWeight.w500))),
+        Expanded(
+          child: Text(
+            label,
+            style: theme.body(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w500,
+              color: theme.textColor,
+            ),
+          ),
+        ),
       ],
     );
   }

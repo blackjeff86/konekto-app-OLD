@@ -1,44 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:konekto/app/tenants/minibar_page.dart';
 import 'package:konekto/app/tenants/service_items_list_page.dart';
 import 'package:konekto/data/tenant_repository.dart';
 import 'package:konekto/data/tenant_repository_provider.dart';
+import 'package:konekto/l10n/app_localizations.dart';
 import 'package:konekto/models/service.dart' as models;
-
-Color hexToColor(String hexCode) {
-  return Color(int.parse(hexCode.substring(1, 7), radix: 16) + 0xFF000000);
-}
-
-FontWeight _getFontWeight(String? weight) {
-  switch (weight) {
-    case 'w100':
-      return FontWeight.w100;
-    case 'w200':
-      return FontWeight.w200;
-    case 'w300':
-      return FontWeight.w300;
-    case 'w400':
-      return FontWeight.w400;
-    case 'w500':
-      return FontWeight.w500;
-    case 'w600':
-      return FontWeight.w600;
-    case 'w700':
-      return FontWeight.w700;
-    case 'w800':
-      return FontWeight.w800;
-    case 'w900':
-      return FontWeight.w900;
-    case 'bold':
-      return FontWeight.bold;
-    default:
-      return FontWeight.w400;
-  }
-}
+import 'package:konekto/theme/guest_app_theme.dart';
+import 'package:konekto/widgets/tenant_image.dart';
 
 /// Ícones conhecidos pro `Service.icon` (string) vindo da API — mesmo
 /// conjunto oferecido no portal (`service_icons.dart`), mais alguns legados
-/// (map/book_online) que ainda aparecem em `navigationItems`.
+/// (map/book_online) que ainda aparecem em dados antigos.
 const Map<String, IconData> _iconMapping = {
   'home': Icons.home,
   'history': Icons.history,
@@ -69,103 +41,104 @@ const Map<String, IconData> _iconMapping = {
 /// `tenant_config.json`. Cada card leva pra [ServiceItemsListPage].
 class ServicesPage extends StatelessWidget {
   final Map<String, dynamic> tenantConfig;
+  final GuestAppTheme theme;
 
-  ServicesPage({super.key, required this.tenantConfig});
+  ServicesPage({super.key, required this.tenantConfig, required this.theme});
 
   final TenantRepository _repository = createTenantRepository();
 
   String get _hotelId => tenantConfig['id'] ?? 'hotel_1';
 
-  Future<({Map<String, dynamic> pageConfig, List<models.Service> services})> _load() async {
+  Future<({String? bannerImageUrl, List<models.Service> services})>
+  _load() async {
     final pageConfig = await _repository.getServicesPageConfig(_hotelId);
     final rawServices = await _repository.getServices(_hotelId);
-    final services = rawServices.map((raw) => models.Service.fromJson(raw as Map<String, dynamic>)).toList();
-    return (pageConfig: pageConfig, services: services);
+    final serviceStubs = rawServices
+        .map((raw) => models.Service.fromJson(raw as Map<String, dynamic>))
+        .toList();
+    // `getServices` (lista) não traz os itens de cada serviço — só o
+    // detalhe por id (`getService`) inclui `items`. Precisamos dos itens
+    // aqui pra saber se algum é frigobar (`hasMinibarItems` abaixo), então
+    // busca o detalhe completo de cada serviço em paralelo.
+    final services = await Future.wait(
+      serviceStubs.map(
+        (stub) async {
+          final raw = await _repository.getService(_hotelId, stub.id);
+          return models.Service.fromJson(raw);
+        },
+      ),
+    );
+    final banner =
+        (pageConfig['pageStyles'] as Map<String, dynamic>?)?['banner']
+            as Map<String, dynamic>?;
+    return (bannerImageUrl: banner?['imageUrl'] as String?, services: services);
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<({Map<String, dynamic> pageConfig, List<models.Service> services})>(
+    return FutureBuilder<
+      ({String? bannerImageUrl, List<models.Service> services})
+    >(
       future: _load(),
       builder: (context, snapshot) {
+        final l10n = AppLocalizations.of(context)!;
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return Scaffold(
+            backgroundColor: theme.bg,
+            body: const Center(child: CircularProgressIndicator()),
+          );
         } else if (snapshot.hasError || !snapshot.hasData) {
-          return const Scaffold(body: Center(child: Text('Erro ao carregar os serviços.')));
+          return Scaffold(
+            backgroundColor: theme.bg,
+            body: Center(
+              child: Text(
+                l10n.servicesLoadError,
+                style: theme.body(color: theme.mutedColor),
+              ),
+            ),
+          );
         }
 
-        final pageConfig = snapshot.data!.pageConfig;
+        final bannerImageUrl = snapshot.data!.bannerImageUrl;
         final services = snapshot.data!.services;
-        final pageStyles = pageConfig['pageStyles'];
-        final cardStyles = pageConfig['cardStyles'];
-
-        final String fontFamily = tenantConfig['typography']['fontFamily'];
-        final Color primaryColor = hexToColor(tenantConfig['colorPalette']['primary']);
-        final Color backgroundColor = hexToColor(tenantConfig['colorPalette']['background']);
-        final Color bodyTextColor = hexToColor(tenantConfig['typography']['bodyText']['color']);
-        final Color cardBackgroundColor = hexToColor(tenantConfig['colorPalette']['cardBackground']);
-        final Color cardBorderColor = hexToColor(tenantConfig['colorPalette']['dividerColor']);
+        final hasMinibarItems = services.any((service) => service.items.any((item) => item.isMinibarItem));
 
         return Scaffold(
-          backgroundColor: backgroundColor,
+          backgroundColor: theme.bg,
           body: SafeArea(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: theme.tokens.screenPadding,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
-                    Text(
-                      (tenantConfig['navigationItems'] as List<dynamic>).firstWhere(
-                            (item) => item['route'] == 'services',
-                            orElse: () => {'label': 'Serviços'},
-                          )['label'] ??
-                          'Serviços',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.getFont(fontFamily, color: primaryColor, fontSize: 24, fontWeight: FontWeight.w700),
-                    ),
+                    Text(l10n.servicesTitle, style: theme.headline()),
                     const SizedBox(height: 16),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(pageStyles['banner']['borderRadius']?.toDouble() ?? 16.0),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.16), blurRadius: 18, offset: const Offset(0, 8)),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(pageStyles['banner']['borderRadius']?.toDouble() ?? 16.0),
-                        child: Image.asset(
-                          pageStyles['banner']['imageUrl'] ?? 'assets/app_assets/images/placeholder.png',
-                          height: pageStyles['banner']['height']?.toDouble() ?? 150.0,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Image.asset(
-                            'assets/app_assets/images/placeholder.png',
-                            height: pageStyles['banner']['height']?.toDouble() ?? 150.0,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
+                    if (bannerImageUrl != null)
+                      TenantImage(
+                        imageUrl: bannerImageUrl,
+                        hotelId: _hotelId,
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        borderRadius: BorderRadius.circular(
+                          theme.tokens.heroRadius,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      pageStyles['pageTitle']['text'] ?? 'Serviços Disponíveis',
-                      style: GoogleFonts.getFont(
-                        fontFamily,
-                        color: primaryColor,
-                        fontSize: pageStyles['pageTitle']['size']?.toDouble() ?? 24.0,
-                        fontWeight: _getFontWeight(pageStyles['pageTitle']['weight']),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    if (bannerImageUrl != null) const SizedBox(height: 24),
+                    if (hasMinibarItems) ...[
+                      _MinibarCard(tenantConfig: tenantConfig, theme: theme),
+                      const SizedBox(height: 16),
+                    ],
                     if (services.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Text(
-                          'Nenhum serviço disponível no momento.',
-                          style: GoogleFonts.getFont(fontFamily, color: bodyTextColor, fontSize: 14),
+                          l10n.servicesEmpty,
+                          style: theme.body(color: theme.mutedColor),
                         ),
                       )
                     else
@@ -173,16 +146,12 @@ class ServicesPage extends StatelessWidget {
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         itemCount: services.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 12),
                         itemBuilder: (context, index) => _ServiceCard(
                           service: services[index],
-                          cardStyles: cardStyles,
                           tenantConfig: tenantConfig,
-                          fontFamily: fontFamily,
-                          primaryColor: primaryColor,
-                          bodyTextColor: bodyTextColor,
-                          cardBackgroundColor: cardBackgroundColor,
-                          cardBorderColor: cardBorderColor,
+                          theme: theme,
                         ),
                       ),
                     const SizedBox(height: 32),
@@ -197,64 +166,49 @@ class ServicesPage extends StatelessWidget {
   }
 }
 
-class _ServiceCard extends StatelessWidget {
-  final models.Service service;
-  final Map<String, dynamic> cardStyles;
+/// Atalho pro frigobar do quarto — deliberadamente separado da lista de
+/// serviços do hotel (não é um `Service` que o hóspede navega igual aos
+/// outros, é uma ação direta de "informar consumo"), com um tratamento
+/// visual levemente diferente (fundo tingido) pra reforçar que é uma coisa
+/// diferente de pedir um serviço.
+class _MinibarCard extends StatelessWidget {
   final Map<String, dynamic> tenantConfig;
-  final String fontFamily;
-  final Color primaryColor;
-  final Color bodyTextColor;
-  final Color cardBackgroundColor;
-  final Color cardBorderColor;
+  final GuestAppTheme theme;
 
-  const _ServiceCard({
-    required this.service,
-    required this.cardStyles,
-    required this.tenantConfig,
-    required this.fontFamily,
-    required this.primaryColor,
-    required this.bodyTextColor,
-    required this.cardBackgroundColor,
-    required this.cardBorderColor,
-  });
+  const _MinibarCard({required this.tenantConfig, required this.theme});
 
   @override
   Widget build(BuildContext context) {
-    final icon = _iconMapping[service.icon] ?? Icons.miscellaneous_services;
-    final iconContainerStyles = cardStyles['iconContainer'];
-    final titleStyles = cardStyles['title'];
-    final descriptionStyles = cardStyles['description'];
-
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ServiceItemsListPage(tenantConfig: tenantConfig, serviceId: service.id),
+            builder: (context) => MinibarPage(tenantConfig: tenantConfig, theme: theme),
           ),
         );
       },
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: cardStyles['padding']?.toDouble() ?? 16.0, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
         decoration: BoxDecoration(
-          color: cardBackgroundColor,
-          borderRadius: BorderRadius.circular(cardStyles['borderRadius']?.toDouble() ?? 8.0),
-          border: Border.all(color: cardBorderColor.withValues(alpha: 0.4), width: cardStyles['borderWidth']?.toDouble() ?? 1.0),
-          boxShadow: [
-            BoxShadow(color: primaryColor.withValues(alpha: 0.08), blurRadius: 14, offset: const Offset(0, 6)),
-          ],
+          color: theme.accentSoft,
+          borderRadius: BorderRadius.circular(theme.tokens.cardRadius),
+          border: Border.all(color: theme.accent.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
-              width: iconContainerStyles['size']?.toDouble() ?? 48.0,
-              height: iconContainerStyles['size']?.toDouble() ?? 48.0,
+              width: 48,
+              height: 48,
               decoration: ShapeDecoration(
-                color: primaryColor.withValues(alpha: 0.10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(iconContainerStyles['borderRadius']?.toDouble() ?? 8.0)),
+                color: theme.accent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(theme.tokens.iconTileRadius),
+                ),
               ),
-              child: Icon(icon, size: iconContainerStyles['iconSize']?.toDouble() ?? 24.0, color: primaryColor),
+              child: const Icon(Icons.kitchen_outlined, size: 24.0, color: Colors.white),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -262,31 +216,105 @@ class _ServiceCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    service.name,
-                    style: GoogleFonts.getFont(
-                      fontFamily,
-                      color: primaryColor,
-                      fontSize: titleStyles['size']?.toDouble() ?? 16.0,
-                      fontWeight: _getFontWeight(titleStyles['weight']),
-                      height: 1.50,
+                    l10n.minibarCardTitle,
+                    style: theme.headline(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.minibarCardSubtitle,
+                    style: theme.body(fontSize: 14, color: theme.mutedColor, height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded, color: theme.mutedColor),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ServiceCard extends StatelessWidget {
+  final models.Service service;
+  final Map<String, dynamic> tenantConfig;
+  final GuestAppTheme theme;
+
+  const _ServiceCard({
+    required this.service,
+    required this.tenantConfig,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = _iconMapping[service.icon] ?? Icons.miscellaneous_services;
+    final languageCode = Localizations.localeOf(context).languageCode;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ServiceItemsListPage(
+              tenantConfig: tenantConfig,
+              serviceId: service.id,
+              theme: theme,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+        decoration: BoxDecoration(
+          color: theme.cardBg,
+          borderRadius: BorderRadius.circular(theme.tokens.cardRadius),
+          border: Border.all(color: theme.borderColor),
+          boxShadow: theme.tokens.cardShadow,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: ShapeDecoration(
+                color: theme.accentSoft,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    theme.tokens.iconTileRadius,
+                  ),
+                ),
+              ),
+              child: Icon(icon, size: 24.0, color: theme.accent),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    service.localizedName(languageCode),
+                    style: theme.headline(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    service.description,
-                    style: GoogleFonts.getFont(
-                      fontFamily,
-                      color: bodyTextColor,
-                      fontSize: descriptionStyles['size']?.toDouble() ?? 14.0,
-                      fontWeight: _getFontWeight(descriptionStyles['weight']),
-                      height: 1.50,
+                    service.localizedDescription(languageCode),
+                    style: theme.body(
+                      fontSize: 14,
+                      color: theme.mutedColor,
+                      height: 1.5,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_right_rounded, color: primaryColor.withValues(alpha: 0.4)),
+            Icon(Icons.chevron_right_rounded, color: theme.mutedColor),
           ],
         ),
       ),

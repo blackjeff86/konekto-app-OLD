@@ -14,6 +14,27 @@ abstract class TenantRepository {
   /// getSpaServices, getRestaurants, getEventos, getPasseios).
   Future<List<dynamic>> getServices(String hotelId);
   Future<Map<String, dynamic>> getService(String hotelId, String serviceId);
+
+  /// Grade de horários disponíveis pra um item com agendamento configurado
+  /// (`ServiceItem.durationMinutes != null`) numa data específica —
+  /// `{"schedulingEnabled": false}` quando o item não tem agendamento
+  /// configurado (o app cai no seletor de dia/hora livre de sempre).
+  Future<Map<String, dynamic>> getItemAvailability({
+    required String hotelId,
+    required String serviceId,
+    required String itemId,
+    required DateTime date,
+  });
+
+  /// Disponibilidade de mesas de um restaurante num instante exato — sem
+  /// grade de horários (diferente do agendamento de item): o hóspede
+  /// escolhe livremente dia/hora, e isso devolve quantas mesas de cada
+  /// tipo ainda estão livres naquele instante específico.
+  Future<Map<String, dynamic>> getTableAvailability({
+    required String hotelId,
+    required String serviceId,
+    required DateTime scheduledFor,
+  });
 }
 
 /// Promoções da marca Konekto (não específicas de um hotel), mostradas na

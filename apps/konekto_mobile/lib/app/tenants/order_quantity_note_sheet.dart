@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:konekto/l10n/app_localizations.dart';
 import 'package:konekto/models/coupon.dart';
 
 /// Resultado escolhido pelo hóspede no [showOrderQuantityNoteSheet] —
@@ -28,9 +29,10 @@ Future<OrderQuantityNoteResult?> showOrderQuantityNoteSheet(
   required Color primaryColor,
   required Color backgroundColor,
   required Color bodyTextColor,
+  String? headlineFontFamily,
   int initialQuantity = 1,
   String? initialNote,
-  String confirmLabel = 'Confirmar',
+  String? confirmLabel,
   double? itemPrice,
   List<Coupon> availableCoupons = const [],
 }) {
@@ -44,6 +46,7 @@ Future<OrderQuantityNoteResult?> showOrderQuantityNoteSheet(
       primaryColor: primaryColor,
       backgroundColor: backgroundColor,
       bodyTextColor: bodyTextColor,
+      headlineFontFamily: headlineFontFamily ?? fontFamily,
       initialQuantity: initialQuantity,
       initialNote: initialNote,
       confirmLabel: confirmLabel,
@@ -59,9 +62,10 @@ class _OrderQuantityNoteSheet extends StatefulWidget {
   final Color primaryColor;
   final Color backgroundColor;
   final Color bodyTextColor;
+  final String headlineFontFamily;
   final int initialQuantity;
   final String? initialNote;
-  final String confirmLabel;
+  final String? confirmLabel;
   final double? itemPrice;
   final List<Coupon> availableCoupons;
 
@@ -71,6 +75,7 @@ class _OrderQuantityNoteSheet extends StatefulWidget {
     required this.primaryColor,
     required this.backgroundColor,
     required this.bodyTextColor,
+    required this.headlineFontFamily,
     required this.initialQuantity,
     required this.initialNote,
     required this.confirmLabel,
@@ -111,6 +116,8 @@ class _OrderQuantityNoteSheetState extends State<_OrderQuantityNoteSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmLabel = widget.confirmLabel ?? l10n.confirmDefault;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SafeArea(
@@ -138,11 +145,11 @@ class _OrderQuantityNoteSheetState extends State<_OrderQuantityNoteSheet> {
               ),
               Text(
                 widget.itemName,
-                style: GoogleFonts.getFont(widget.fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: widget.primaryColor),
+                style: GoogleFonts.getFont(widget.headlineFontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: widget.primaryColor),
               ),
               const SizedBox(height: 20),
               Text(
-                'Quantidade',
+                l10n.quantityLabel,
                 style: GoogleFonts.getFont(widget.fontFamily, fontSize: 14, fontWeight: FontWeight.w600, color: widget.bodyTextColor),
               ),
               const SizedBox(height: 8),
@@ -167,7 +174,7 @@ class _OrderQuantityNoteSheetState extends State<_OrderQuantityNoteSheet> {
               if (widget.availableCoupons.isNotEmpty) ...[
                 const SizedBox(height: 20),
                 Text(
-                  'Cupom',
+                  l10n.couponLabel,
                   style: GoogleFonts.getFont(widget.fontFamily, fontSize: 14, fontWeight: FontWeight.w600, color: widget.bodyTextColor),
                 ),
                 const SizedBox(height: 8),
@@ -177,7 +184,7 @@ class _OrderQuantityNoteSheetState extends State<_OrderQuantityNoteSheet> {
                     scrollDirection: Axis.horizontal,
                     children: [
                       _CouponChoiceCard(
-                        title: 'Sem cupom',
+                        title: l10n.noCoupon,
                         subtitle: '',
                         selected: _selectedCouponId == null,
                         enabled: true,
@@ -193,8 +200,8 @@ class _OrderQuantityNoteSheetState extends State<_OrderQuantityNoteSheet> {
                           selected: _selectedCouponId == coupon.id,
                           enabled: coupon.eligible && coupon.meetsMinOrder(_subtotal),
                           disabledReason: !coupon.eligible
-                              ? 'já usado'
-                              : (!coupon.meetsMinOrder(_subtotal) ? 'mín. R\$ ${coupon.minOrderValue!.toStringAsFixed(2)}' : null),
+                              ? l10n.couponAlreadyUsed
+                              : (!coupon.meetsMinOrder(_subtotal) ? l10n.couponMinOrder(coupon.minOrderValue!.toStringAsFixed(2)) : null),
                           fontFamily: widget.fontFamily,
                           primaryColor: widget.primaryColor,
                           bodyTextColor: widget.bodyTextColor,
@@ -206,7 +213,7 @@ class _OrderQuantityNoteSheetState extends State<_OrderQuantityNoteSheet> {
               ],
               const SizedBox(height: 20),
               Text(
-                'Observação (opcional)',
+                l10n.noteOptionalLabel,
                 style: GoogleFonts.getFont(widget.fontFamily, fontSize: 14, fontWeight: FontWeight.w600, color: widget.bodyTextColor),
               ),
               const SizedBox(height: 8),
@@ -216,7 +223,7 @@ class _OrderQuantityNoteSheetState extends State<_OrderQuantityNoteSheet> {
                 maxLength: 250,
                 style: GoogleFonts.getFont(widget.fontFamily, fontSize: 14, color: widget.bodyTextColor),
                 decoration: InputDecoration(
-                  hintText: 'Ex: sem cebola, trocar por suco de laranja...',
+                  hintText: l10n.noteHint,
                   hintStyle: GoogleFonts.getFont(widget.fontFamily, fontSize: 13, color: widget.bodyTextColor.withValues(alpha: 0.5)),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
@@ -237,7 +244,7 @@ class _OrderQuantityNoteSheetState extends State<_OrderQuantityNoteSheet> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Text(widget.confirmLabel, style: GoogleFonts.getFont(widget.fontFamily, fontSize: 16)),
+                  child: Text(confirmLabel, style: GoogleFonts.getFont(widget.fontFamily, fontSize: 16)),
                 ),
               ),
             ],
