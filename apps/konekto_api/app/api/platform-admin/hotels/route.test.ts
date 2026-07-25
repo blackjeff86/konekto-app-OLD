@@ -80,6 +80,7 @@ describe('POST /api/platform-admin/hotels', () => {
     return {
       hotel: { create: vi.fn().mockResolvedValue({ id: 'new-hotel-id' }) },
       staff: { create: vi.fn().mockResolvedValue({ id: 'staff_1' }) },
+      hotelSubscription: { create: vi.fn().mockResolvedValue({ hotelId: 'new-hotel-id' }) },
     }
   }
 
@@ -167,6 +168,26 @@ describe('POST /api/platform-admin/hotels', () => {
     expect(staffCreateCall.data.name).toBe('Maria Gerente')
     expect(staffCreateCall.data.passwordHash).not.toBe(body.temporaryPassword)
     await expect(bcrypt.compare(body.temporaryPassword, staffCreateCall.data.passwordHash)).resolves.toBe(true)
+
+    // Sem `plan` no body, o hotel nasce no plano mais restrito (essential)
+    // — nunca assume um plano pago por omissão.
+    expect(tx.hotelSubscription.create).toHaveBeenCalledWith({
+      data: { hotelId: body.hotelId, plan: 'essential', planName: 'Essential', status: 'trial' },
+    })
+  })
+
+  it('creates the hotel subscription with the requested plan', async () => {
+    const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
+    vi.mocked(prisma.staff.findUnique).mockResolvedValue(null)
+    const tx = fakeTx()
+    vi.mocked(prisma.$transaction).mockImplementation(((callback: (tx: unknown) => unknown) => callback(tx)) as never)
+
+    const response = await POST(postRequest(token, { ...validBody, plan: 'premium' }))
+    const body = await response.json()
+
+    expect(tx.hotelSubscription.create).toHaveBeenCalledWith({
+      data: { hotelId: body.hotelId, plan: 'premium', planName: 'Premium', status: 'trial' },
+    })
   })
 
   it('lowercases and trims the gerente email before checking/creating', async () => {

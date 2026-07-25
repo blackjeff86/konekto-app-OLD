@@ -7,6 +7,9 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    hotelSubscription: {
+      findUnique: vi.fn(),
+    },
   },
 }))
 
@@ -34,15 +37,32 @@ function patchRequest(hotelId: string, token: string | null, body: unknown): Nex
 describe('GET /api/hotels/[hotelId]', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('returns the raw config blob', async () => {
+  it('returns the config blob plus plan and allowedTemplates', async () => {
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'premium' } as never)
 
     const response = await GET(new NextRequest('http://localhost/api/hotels/hotel_1'), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual(baseConfig)
+    const body = await response.json()
+    expect(body).toMatchObject(baseConfig)
+    expect(body.plan).toBe('premium')
+    expect(body.allowedTemplates).toEqual(['aura', 'bosque', 'elite', 'pulse', 'horizon'])
+  })
+
+  it('falls back to the essential plan when the hotel has no subscription row', async () => {
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue(null)
+
+    const response = await GET(new NextRequest('http://localhost/api/hotels/hotel_1'), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    const body = await response.json()
+    expect(body.plan).toBe('essential')
+    expect(body.allowedTemplates).toEqual(['aura', 'bosque'])
   })
 
   it('returns 404 when the hotel does not exist', async () => {
@@ -123,5 +143,72 @@ describe('PATCH /api/hotels/[hotelId]', () => {
     })
 
     expect(response.status).toBe(404)
+  })
+
+  it('rejects an unknown template value', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+
+    const response = await PATCH(patchRequest('hotel_1', token, { template: 'not_a_real_template' }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  it('rejects an essential-plan hotel choosing a premium-only template', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'essential' } as never)
+
+    const response = await PATCH(patchRequest('hotel_1', token, { template: 'elite' }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(403)
+    expect(await response.json()).toEqual({ error: 'template_not_allowed_for_plan' })
+  })
+
+  it('allows an essential-plan hotel to choose an essential template', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'essential' } as never)
+    vi.mocked(prisma.hotel.update).mockImplementation(
+      (async (args: { data: { config: unknown } }) => ({ id: 'hotel_1', config: args.data.config })) as never,
+    )
+
+    const response = await PATCH(patchRequest('hotel_1', token, { template: 'bosque' }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(200)
+    expect((await response.json()).template).toBe('bosque')
+  })
+
+  it('allows a premium-plan hotel to choose an elite template', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'premium' } as never)
+    vi.mocked(prisma.hotel.update).mockImplementation(
+      (async (args: { data: { config: unknown } }) => ({ id: 'hotel_1', config: args.data.config })) as never,
+    )
+
+    const response = await PATCH(patchRequest('hotel_1', token, { template: 'elite' }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(200)
+    expect((await response.json()).template).toBe('elite')
+  })
+
+  it('falls back to the essential plan when the hotel has no subscription row', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue(null)
+
+    const response = await PATCH(patchRequest('hotel_1', token, { template: 'pulse' }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(403)
   })
 })

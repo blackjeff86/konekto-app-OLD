@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    hotel: { findUnique: vi.fn() },
+    hotel: { findUnique: vi.fn(), update: vi.fn() },
     staff: { findMany: vi.fn() },
   },
 }))
@@ -14,11 +14,19 @@ vi.mock('@/lib/platform-admin-hotel-shape', () => ({
 
 import { prisma } from '@/lib/prisma'
 import { signPlatformAdminToken } from '@/lib/platform-auth'
-import { GET } from './route'
+import { GET, PATCH } from './route'
 
 function getRequest(token: string | null): NextRequest {
   return new NextRequest('http://localhost/api/platform-admin/hotels/hotel_1', {
     headers: token ? { authorization: `Bearer ${token}` } : {},
+  })
+}
+
+function patchRequest(token: string | null, body: unknown): NextRequest {
+  return new NextRequest('http://localhost/api/platform-admin/hotels/hotel_1', {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify(body),
   })
 }
 
@@ -53,5 +61,57 @@ describe('GET /api/platform-admin/hotels/[hotelId]', () => {
     expect(body.hotelId).toBe('hotel_1')
     expect(body.staff).toHaveLength(1)
     expect(body.staff[0].email).toBe('g@hotel.com')
+  })
+})
+
+describe('PATCH /api/platform-admin/hotels/[hotelId]', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns 401 without a valid platform-admin token', async () => {
+    const response = await PATCH(patchRequest(null, { enabledFeatures: ['loyalty'] }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+    expect(response.status).toBe(401)
+  })
+
+  it('rejects an unknown feature flag', async () => {
+    const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
+
+    const response = await PATCH(patchRequest(token, { enabledFeatures: ['not_a_real_flag'] }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  it('returns 404 when the hotel does not exist', async () => {
+    const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue(null)
+
+    const response = await PATCH(patchRequest(token, { enabledFeatures: [] }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  it('replaces the courtesy feature list as a whole, preserving the rest of config', async () => {
+    const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({
+      id: 'hotel_1',
+      config: { hotelInfo: { name: 'Hotel 1' }, enabledFeatures: ['loyalty'] },
+    } as never)
+    vi.mocked(prisma.hotel.update).mockImplementation(
+      (async (args: { data: { config: unknown } }) => ({ id: 'hotel_1', config: args.data.config })) as never,
+    )
+
+    const response = await PATCH(patchRequest(token, { enabledFeatures: ['interactive_map', 'digital_wallet'] }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.enabledFeatures).toEqual(['interactive_map', 'digital_wallet'])
+    expect(body.hotelInfo).toEqual({ name: 'Hotel 1' })
   })
 })

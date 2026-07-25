@@ -724,13 +724,27 @@ enum SubscriptionPaymentStatus {
   isento
 }
 
+/// Categoria de produto que controla template/feature flag do app do
+/// hóspede (ver lib/feature-flags.ts) — não confundir com `planName`
+/// abaixo, que é só o rótulo comercial livre exibido no financeiro.
+/// Plano mais alto sempre pode usar tudo que um plano mais baixo usa
+/// (essential ⊂ premium ⊂ enterprise) — ver `templatesOfPlan`/
+/// `defaultFeaturesByPlan`.
+enum HotelPlan {
+  essential
+  premium
+  enterprise
+}
+
 /// Plano/assinatura do hotel com o Konekto — "status do pagamento" nesta
 /// v1 é um campo setado manualmente pelo admin (sem fatura/boleto real
 /// ainda, isso é fase 2, via Pagar.me). `planName` é texto livre (não
 /// enum) pra não precisar de migration toda vez que a Konekto criar ou
-/// renomear um plano comercial.
+/// renomear um plano comercial — `plan` é o campo controlado que de fato
+/// determina acesso a template/feature, `planName` é só exibição.
 model HotelSubscription {
   hotelId       String                    @id
+  plan          HotelPlan                 @default(essential)
   planName      String
   /// Mensalidade em reais — usada pra somar o MRR na tela Financeiro do
   /// konekto_admin. `null` = ainda não precificado (ex: hotel em trial sem

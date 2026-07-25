@@ -35,7 +35,11 @@ export async function GET(request: NextRequest) {
 
 const createHotelSchema = z.object({
   name: z.string().trim().min(1),
-  infra: z.enum(['verde_pousada', 'amara_bay', 'casa_marechal']),
+  infra: z.enum(['verde_pousada', 'amara_bay', 'casa_marechal', 'konekto_classico', 'konekto_noturno']),
+  // Categoria White Label do hotel — default `essential` (o mais
+  // restrito) quando omitido, nunca assume um plano pago sem intenção
+  // explícita de quem está criando o hotel.
+  plan: z.enum(['essential', 'premium', 'enterprise']).default('essential'),
   gerente: z.object({
     name: z.string().trim().min(1),
     email: z.string().trim().toLowerCase().email(),
@@ -88,6 +92,16 @@ export async function POST(request: NextRequest) {
     },
   }
 
+  // Rótulo comercial (`planName`) começa igual ao nome do plano — é só o
+  // default inicial, texto livre editável depois pela equipe Konekto na
+  // tela de assinatura (não existe formulário de nome de plano customizado
+  // ainda no onboarding).
+  const planNameByPlan: Record<typeof parsed.data.plan, string> = {
+    essential: 'Essential',
+    premium: 'Premium',
+    enterprise: 'Enterprise',
+  }
+
   await prisma.$transaction(async (tx) => {
     await tx.hotel.create({ data: { id: hotelId, config: config as unknown as Prisma.InputJsonValue } })
     await tx.staff.create({
@@ -98,6 +112,9 @@ export async function POST(request: NextRequest) {
         role: 'gerente',
         name: parsed.data.gerente.name,
       },
+    })
+    await tx.hotelSubscription.create({
+      data: { hotelId, plan: parsed.data.plan, planName: planNameByPlan[parsed.data.plan], status: 'trial' },
     })
   })
 

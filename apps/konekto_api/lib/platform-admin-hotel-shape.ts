@@ -1,7 +1,10 @@
 import { prisma } from '@/lib/prisma'
+import { defaultFeaturesByPlan, isFeatureFlag, type FeatureFlag } from '@/lib/feature-flags'
+import type { HotelPlan } from '@/app/generated/prisma/client'
 
 interface HotelConfigShape {
   hotelInfo?: { name?: string; address?: string }
+  enabledFeatures?: string[]
   [key: string]: unknown
 }
 
@@ -16,7 +19,16 @@ export interface HotelOverview {
     status: string
     paymentStatus: string
     notes: string | null
+    plan: HotelPlan
   } | null
+  // Flags que o plano já dá por padrão — informativo pro konekto_admin
+  // mostrar como "sempre ligado" (não editável) em vez de duplicar a
+  // lógica de `defaultFeaturesByPlan` na Flutter.
+  defaultFeatures: FeatureFlag[]
+  // Só as extras de cortesia (`Hotel.config.enabledFeatures`) — nunca
+  // inclui as do plano, pra bater exatamente com o que o PATCH de
+  // cortesia espera de volta (substituição total, não união).
+  enabledFeatures: FeatureFlag[]
   activeGuestCount: number
   integration: {
     configured: boolean
@@ -45,6 +57,8 @@ export async function buildHotelOverview(hotel: { id: string; config: unknown; c
     prisma.platformSupportMessage.count({ where: { hotelId: hotel.id, senderType: 'hotel', readByPlatform: false } }),
   ])
 
+  const plan = subscription?.plan ?? 'essential'
+
   return {
     hotelId: hotel.id,
     name: config.hotelInfo?.name ?? hotel.id,
@@ -57,8 +71,11 @@ export async function buildHotelOverview(hotel: { id: string; config: unknown; c
           status: subscription.status,
           paymentStatus: subscription.paymentStatus,
           notes: subscription.notes,
+          plan,
         }
       : null,
+    defaultFeatures: defaultFeaturesByPlan(plan),
+    enabledFeatures: (config.enabledFeatures ?? []).filter(isFeatureFlag),
     activeGuestCount,
     integration: {
       configured: integration !== null,

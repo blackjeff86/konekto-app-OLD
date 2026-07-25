@@ -57,6 +57,52 @@ describe('buildHotelOverview', () => {
     expect(overview.activeGuestCount).toBe(3)
   })
 
+  it('defaults to essential plan (and its empty default features) when no subscription row exists', async () => {
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.guest.count).mockResolvedValue(0)
+    vi.mocked(prisma.hotelIntegration.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.platformSupportMessage.count).mockResolvedValue(0)
+
+    const overview = await buildHotelOverview(baseHotel)
+
+    expect(overview.defaultFeatures).toEqual([])
+    expect(overview.enabledFeatures).toEqual([])
+  })
+
+  it('surfaces the subscription plan and its default features when a subscription row exists', async () => {
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({
+      planName: 'Premium',
+      monthlyAmount: 499,
+      status: 'active',
+      paymentStatus: 'em_dia',
+      notes: null,
+      plan: 'premium',
+    } as never)
+    vi.mocked(prisma.guest.count).mockResolvedValue(0)
+    vi.mocked(prisma.hotelIntegration.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.platformSupportMessage.count).mockResolvedValue(0)
+
+    const overview = await buildHotelOverview(baseHotel)
+
+    expect(overview.subscription?.plan).toBe('premium')
+    expect(overview.defaultFeatures).toContain('loyalty')
+    expect(overview.defaultFeatures).toContain('digital_wallet')
+  })
+
+  it('only surfaces courtesy extras in enabledFeatures, filtering out unknown/stale flag strings', async () => {
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.guest.count).mockResolvedValue(0)
+    vi.mocked(prisma.hotelIntegration.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.platformSupportMessage.count).mockResolvedValue(0)
+
+    const overview = await buildHotelOverview({
+      ...baseHotel,
+      config: { ...baseHotel.config, enabledFeatures: ['interactive_map', 'not_a_real_flag'] },
+    })
+
+    expect(overview.enabledFeatures).toEqual(['interactive_map'])
+  })
+
   it('never leaks apiKeyHash/webhookSecret even though HotelIntegration has them', async () => {
     vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue(null)
     vi.mocked(prisma.guest.count).mockResolvedValue(0)

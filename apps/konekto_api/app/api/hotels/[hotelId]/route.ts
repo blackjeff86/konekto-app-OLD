@@ -2,17 +2,29 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
+import { templatesOfPlan } from '@/lib/feature-flags'
 import type { Prisma } from '@/app/generated/prisma/client'
 
 export const runtime = 'nodejs'
 
+// Endpoint público (sem auth) — usado tanto pelo app do hóspede (busca de
+// tema/config) quanto pelo portal (tela de Aparência). `plan`/
+// `allowedTemplates` são derivados aqui (nunca guardados em `Hotel.config`)
+// pra manter uma única fonte de verdade em `HotelSubscription.plan` — o
+// portal nunca decide sozinho quais templates mostrar como disponíveis.
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = await params
   const hotel = await prisma.hotel.findUnique({ where: { id: hotelId } })
   if (!hotel) {
     return NextResponse.json({ error: 'hotel_not_found' }, { status: 404 })
   }
-  return NextResponse.json(hotel.config)
+  const subscription = await prisma.hotelSubscription.findUnique({ where: { hotelId } })
+  const plan = subscription?.plan ?? 'essential'
+  return NextResponse.json({
+    ...(hotel.config as Record<string, unknown>),
+    plan,
+    allowedTemplates: templatesOfPlan(plan),
+  })
 }
 
 const patchHotelSchema = z.object({
@@ -42,7 +54,15 @@ const patchHotelSchema = z.object({
   // Infraestrutura visual do app do hóspede — controla cores/tipografia/
   // layout fixos das telas do hóspede. Hotéis sem essa chave (dados antigos)
   // caem no fallback 'verde_pousada' no lado Flutter (guestInfraFromString).
-  infra: z.enum(['amara_bay', 'verde_pousada', 'casa_marechal']).optional(),
+  // Legado — substituído por `template` (ver White Label, Fase 4/Task 15
+  // remove este campo depois que todo hotel tiver migrado).
+  infra: z.enum(['amara_bay', 'verde_pousada', 'casa_marechal', 'konekto_classico', 'konekto_noturno']).optional(),
+  // Template White Label do app do hóspede — validado abaixo contra os
+  // templates permitidos pelo plano do hotel (ver lib/feature-flags.ts),
+  // não só pela lista de valores aceitos aqui. `enabledFeatures` (as flags
+  // de cortesia) NÃO entram neste endpoint de propósito — só a equipe
+  // Konekto mexe nisso, via platform-admin.
+  template: z.enum(['aura', 'bosque', 'elite', 'pulse', 'horizon']).optional(),
 })
 
 interface HotelConfigShape {
@@ -75,12 +95,27 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: 'hotel_not_found' }, { status: 404 })
   }
 
+  // Plano decide quais templates o hotel pode escolher — validado aqui
+  // (não só na UI do portal) porque é uma regra de acesso, não só de
+  // apresentação. Hotel sem `HotelSubscription` (não deveria acontecer em
+  // produção, mas dado de seed/demonstração antigo pode não ter) cai no
+  // plano mais restrito (`essential`) por segurança.
+  if (parsed.data.template) {
+    const subscription = await prisma.hotelSubscription.findUnique({ where: { hotelId } })
+    const plan = subscription?.plan ?? 'essential'
+    const allowedTemplates = templatesOfPlan(plan)
+    if (!allowedTemplates.includes(parsed.data.template)) {
+      return NextResponse.json({ error: 'template_not_allowed_for_plan' }, { status: 403 })
+    }
+  }
+
   const currentConfig = hotel.config as HotelConfigShape
   const updatedConfig: HotelConfigShape = {
     ...currentConfig,
     hotelInfo: { ...currentConfig.hotelInfo, ...parsed.data.hotelInfo },
     colorPalette: { ...currentConfig.colorPalette, ...parsed.data.colorPalette },
     infra: parsed.data.infra ?? currentConfig.infra,
+    template: parsed.data.template ?? currentConfig.template,
   }
 
   const updated = await prisma.hotel.update({

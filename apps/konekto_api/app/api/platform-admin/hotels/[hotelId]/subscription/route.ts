@@ -11,6 +11,11 @@ const subscriptionSchema = z.object({
   status: z.enum(['active', 'trial', 'suspended', 'cancelled']),
   paymentStatus: z.enum(['em_dia', 'atrasado', 'isento']),
   notes: z.string().trim().max(2000).nullable().optional(),
+  // Categoria White Label (controla template/feature flag do app do
+  // hóspede — ver lib/feature-flags.ts). Opcional aqui só pra não quebrar
+  // chamadas antigas do konekto_admin que ainda não mandam esse campo; ao
+  // criar (`create`), o `@default(essential)` do Prisma cobre a ausência.
+  plan: z.enum(['essential', 'premium', 'enterprise']).optional(),
 })
 
 // Upsert do plano/assinatura do hotel — quem seta isso é sempre o time do
@@ -36,11 +41,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: 'hotel_not_found' }, { status: 404 })
   }
 
-  const { planName, monthlyAmount, status, paymentStatus, notes } = parsed.data
+  const { planName, monthlyAmount, status, paymentStatus, notes, plan } = parsed.data
   const subscription = await prisma.hotelSubscription.upsert({
     where: { hotelId },
-    create: { hotelId, planName, monthlyAmount, status, paymentStatus, notes },
-    update: { planName, monthlyAmount, status, paymentStatus, notes },
+    create: { hotelId, planName, monthlyAmount, status, paymentStatus, notes, plan },
+    update: { planName, monthlyAmount, status, paymentStatus, notes, plan },
   })
 
   return NextResponse.json(subscription)

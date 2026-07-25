@@ -97,4 +97,31 @@ describe('PATCH /api/platform-admin/hotels/[hotelId]/subscription', () => {
 
     expect(response.status).toBe(400)
   })
+
+  it('accepts and forwards the White Label plan', async () => {
+    const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1' } as never)
+    vi.mocked(prisma.hotelSubscription.upsert).mockResolvedValue({ hotelId: 'hotel_1' } as never)
+
+    await PATCH(patchRequest(token, { ...validBody, plan: 'premium' }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(prisma.hotelSubscription.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ plan: 'premium' }),
+        update: expect.objectContaining({ plan: 'premium' }),
+      }),
+    )
+  })
+
+  it('rejects an invalid plan value', async () => {
+    const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
+
+    const response = await PATCH(patchRequest(token, { ...validBody, plan: 'gold' }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(400)
+  })
 })
