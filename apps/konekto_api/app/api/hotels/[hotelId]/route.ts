@@ -34,6 +34,10 @@ const patchHotelSchema = z.object({
     })
     .optional(),
   colorPalette: z.object({ primary: z.string().min(1).optional(), secondary: z.string().min(1).optional() }).optional(),
+  // Infraestrutura visual do app do hóspede — controla cores/tipografia/
+  // layout fixos das telas do hóspede. Hotéis sem essa chave (dados antigos)
+  // caem no fallback 'verde_pousada' no lado Flutter (guestInfraFromString).
+  infra: z.enum(['amara_bay', 'verde_pousada', 'casa_marechal']).optional(),
 })
 
 interface HotelConfigShape {
@@ -71,6 +75,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     ...currentConfig,
     hotelInfo: { ...currentConfig.hotelInfo, ...parsed.data.hotelInfo },
     colorPalette: { ...currentConfig.colorPalette, ...parsed.data.colorPalette },
+    infra: parsed.data.infra ?? currentConfig.infra,
   }
 
   const updated = await prisma.hotel.update({
