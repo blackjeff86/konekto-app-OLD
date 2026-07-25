@@ -62,7 +62,7 @@ export default function CustomerDetailPage({
   }
 
   return (
-    <div className="mx-auto flex max-w-[640px] flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <Link href="/customers" aria-label="Voltar" className="text-slate">
           ←

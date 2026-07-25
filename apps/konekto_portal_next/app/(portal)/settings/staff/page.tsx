@@ -58,7 +58,7 @@ export default function StaffPage() {
   const errorMessage = actionError ?? (error instanceof Error ? error.message : null)
 
   return (
-    <div className="mx-auto flex max-w-[560px] flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <div className="rounded-2xl border border-border-strong bg-surface p-6">
         <h1 className="text-lg font-bold text-cream">Equipe</h1>
         <p className="mt-1 text-[12.5px] text-slate">Quem já tem acesso ao portal deste hotel.</p>

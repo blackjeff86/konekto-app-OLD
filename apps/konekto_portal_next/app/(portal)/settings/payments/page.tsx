@@ -59,7 +59,7 @@ export default function PaymentsPage() {
   const errorMessage = saveError ?? (error instanceof Error ? error.message : null)
 
   return (
-    <div className="mx-auto flex max-w-[520px] flex-col gap-5 rounded-2xl border border-border-strong bg-surface p-7">
+    <div className="flex flex-col gap-5 rounded-2xl border border-border-strong bg-surface p-7">
       <div>
         <h1 className="text-lg font-bold text-cream">Pagamento online</h1>
         <p className="mt-1 text-[12.5px] text-slate">

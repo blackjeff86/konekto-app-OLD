@@ -23,7 +23,7 @@ export function PortalSidebar({ badgeCounts }: { badgeCounts: PortalBadgeCounts 
   )
 
   return (
-    <div className="flex w-64 shrink-0 flex-col border-r border-border bg-surface px-4 py-8">
+    <div className="sticky top-0 flex h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-border bg-surface px-4 py-8">
       <div className="mb-10 flex items-center gap-2.5 px-2">
         <KonektoMark size={26} />
         <div className="min-w-0">

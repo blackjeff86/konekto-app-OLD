@@ -119,7 +119,7 @@ describe('GuestDetailPage', () => {
     mockUseGuest({ revokeGuest })
     await renderPage()
 
-    await userEvent.click(await screen.findByText('Revogar acesso'))
+    await userEvent.click(await screen.findByText('Revogar acesso ao hóspede'))
     const dialog = screen.getByRole('dialog', { name: 'Revogar acesso?' })
     await userEvent.click(within(dialog).getByRole('button', { name: 'Revogar' }))
 

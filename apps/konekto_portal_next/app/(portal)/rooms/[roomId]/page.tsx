@@ -32,7 +32,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ roomId: s
   }
 
   return (
-    <div className="mx-auto flex max-w-[640px] flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <div className="flex items-center gap-3">
         <Link
           href="/rooms"

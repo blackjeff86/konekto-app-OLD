@@ -4,13 +4,11 @@ interface KpiCardProps {
   label: string
   value: string
   detail: string
-  /** Deslocamento vertical em telas largas — cria o ritmo assimétrico do grid do dashboard. */
-  className?: string
 }
 
-export function KpiCard({ icon, label, value, detail, className = '' }: KpiCardProps) {
+export function KpiCard({ icon, label, value, detail }: KpiCardProps) {
   return (
-    <div className={`whisper-shadow flex h-[168px] flex-col justify-between rounded-xl border border-border bg-surface p-6 ${className}`}>
+    <div className="whisper-shadow flex h-[168px] flex-col justify-between rounded-xl border border-border bg-surface p-6">
       <div className="flex items-center gap-2">
         <span className="text-[15px] text-gold" aria-hidden>
           {icon}

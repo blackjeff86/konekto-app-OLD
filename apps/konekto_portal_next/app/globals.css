@@ -58,3 +58,12 @@ body {
 .hairline-divide > * + * {
   border-top: 1px solid var(--color-border);
 }
+
+/* Usado no miolo do mockup de iPhone (seletor de aparência) — rola sem barra de scroll visível, como um celular de verdade. */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}

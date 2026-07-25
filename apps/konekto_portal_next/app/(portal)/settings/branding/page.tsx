@@ -50,7 +50,7 @@ export default function BrandingPage() {
   const errorMessage = saveError ?? (error instanceof Error ? error.message : null)
 
   return (
-    <div className="mx-auto flex max-w-[520px] flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <ReceptionQrCard />
       <WifiSettingsCard />
       <PromoImagesCard />

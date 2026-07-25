@@ -68,7 +68,7 @@ export default function IntegrationsPage() {
   const errorMessage = actionError ?? (error instanceof Error ? error.message : null)
 
   return (
-    <div className="mx-auto flex max-w-[620px] flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <div>
         <h1 className="text-lg font-bold text-cream">Integração com o PMS</h1>
         <p className="mt-1 text-[12.5px] text-slate">

@@ -75,7 +75,7 @@ export default function ServiceItemsPage({ params }: { params: Promise<{ service
   }
 
   return (
-    <div className="mx-auto flex max-w-[640px] flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <Link href="/settings/services" aria-label="Voltar" className="text-slate">
           ←
