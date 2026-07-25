@@ -57,7 +57,7 @@ describe('buildHotelOverview', () => {
     expect(overview.activeGuestCount).toBe(3)
   })
 
-  it('defaults to essential plan (and its empty default features) when no subscription row exists', async () => {
+  it('defaults to the essential preset (core + basic hospitalidade modules, no premium extras) when no subscription row exists', async () => {
     vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue(null)
     vi.mocked(prisma.guest.count).mockResolvedValue(0)
     vi.mocked(prisma.hotelIntegration.findUnique).mockResolvedValue(null)
@@ -65,11 +65,12 @@ describe('buildHotelOverview', () => {
 
     const overview = await buildHotelOverview(baseHotel)
 
-    expect(overview.defaultFeatures).toEqual([])
-    expect(overview.enabledFeatures).toEqual([])
+    expect(overview.allowedModules).toContain('room_service')
+    expect(overview.allowedModules).not.toContain('digital_wallet')
+    expect(overview.extraModules).toEqual([])
   })
 
-  it('surfaces the subscription plan and its default features when a subscription row exists', async () => {
+  it('surfaces the subscription plan and its preset modules when a subscription row exists', async () => {
     vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({
       planName: 'Premium',
       monthlyAmount: 499,
@@ -77,6 +78,7 @@ describe('buildHotelOverview', () => {
       paymentStatus: 'em_dia',
       notes: null,
       plan: 'premium',
+      presetId: 'premium',
     } as never)
     vi.mocked(prisma.guest.count).mockResolvedValue(0)
     vi.mocked(prisma.hotelIntegration.findUnique).mockResolvedValue(null)
@@ -85,11 +87,12 @@ describe('buildHotelOverview', () => {
     const overview = await buildHotelOverview(baseHotel)
 
     expect(overview.subscription?.plan).toBe('premium')
-    expect(overview.defaultFeatures).toContain('loyalty')
-    expect(overview.defaultFeatures).toContain('digital_wallet')
+    expect(overview.subscription?.presetId).toBe('premium')
+    expect(overview.allowedModules).toContain('loyalty')
+    expect(overview.allowedModules).toContain('digital_wallet')
   })
 
-  it('only surfaces courtesy extras in enabledFeatures, filtering out unknown/stale flag strings', async () => {
+  it('only surfaces courtesy extras in extraModules, filtering out unknown/stale module ids', async () => {
     vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue(null)
     vi.mocked(prisma.guest.count).mockResolvedValue(0)
     vi.mocked(prisma.hotelIntegration.findUnique).mockResolvedValue(null)
@@ -97,10 +100,10 @@ describe('buildHotelOverview', () => {
 
     const overview = await buildHotelOverview({
       ...baseHotel,
-      config: { ...baseHotel.config, enabledFeatures: ['interactive_map', 'not_a_real_flag'] },
+      config: { ...baseHotel.config, extraModules: ['interactive_map', 'not_a_real_module'] },
     })
 
-    expect(overview.enabledFeatures).toEqual(['interactive_map'])
+    expect(overview.extraModules).toEqual(['interactive_map'])
   })
 
   it('never leaks apiKeyHash/webhookSecret even though HotelIntegration has them', async () => {

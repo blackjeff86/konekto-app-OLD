@@ -37,7 +37,7 @@ function patchRequest(hotelId: string, token: string | null, body: unknown): Nex
 describe('GET /api/hotels/[hotelId]', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('returns the config blob plus plan and allowedTemplates', async () => {
+  it('returns the config blob plus plan, allowedTemplates and enabledModules', async () => {
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
     vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'premium' } as never)
 
@@ -50,6 +50,7 @@ describe('GET /api/hotels/[hotelId]', () => {
     expect(body).toMatchObject(baseConfig)
     expect(body.plan).toBe('premium')
     expect(body.allowedTemplates).toEqual(['aura', 'bosque', 'elite', 'pulse', 'horizon'])
+    expect(body.enabledModules.some((module: { id: string }) => module.id === 'digital_wallet')).toBe(true)
   })
 
   it('falls back to the essential plan when the hotel has no subscription row', async () => {
@@ -200,5 +201,75 @@ describe('PATCH /api/hotels/[hotelId]', () => {
     })
 
     expect(response.status).toBe(403)
+  })
+
+  it('allows disabling a module the plan already permits', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'essential' } as never)
+    vi.mocked(prisma.hotel.update).mockImplementation(
+      (async (args: { data: { config: unknown } }) => ({ id: 'hotel_1', config: args.data.config })) as never,
+    )
+
+    const response = await PATCH(patchRequest('hotel_1', token, { modules: { restaurant: { enabled: false } } }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.modules.restaurant.enabled).toBe(false)
+  })
+
+  it('rejects a module the plan does not allow', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'essential' } as never)
+
+    const response = await PATCH(patchRequest('hotel_1', token, { modules: { digital_wallet: { enabled: true } } }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(403)
+    expect((await response.json()).error).toBe('module_not_allowed_for_plan')
+  })
+
+  it('rejects an unknown module id in modules', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'enterprise' } as never)
+
+    const response = await PATCH(patchRequest('hotel_1', token, { modules: { not_a_real_module: { enabled: false } } }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(400)
+    expect((await response.json()).error).toBe('unknown_module')
+  })
+
+  it('rejects an invalid configuration for a module', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'essential' } as never)
+
+    const response = await PATCH(
+      patchRequest('hotel_1', token, { modules: { room_service: { configuration: { order: 'first' } } } }),
+      { params: Promise.resolve({ hotelId: 'hotel_1' }) },
+    )
+
+    expect(response.status).toBe(400)
+    expect((await response.json()).error).toBe('invalid_configuration')
+  })
+
+  it('rejects configuration for a core module that has no configSchema', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'essential' } as never)
+
+    const response = await PATCH(patchRequest('hotel_1', token, { modules: { home: { configuration: { foo: 'bar' } } } }), {
+      params: Promise.resolve({ hotelId: 'hotel_1' }),
+    })
+
+    expect(response.status).toBe(400)
+    expect((await response.json()).error).toBe('module_has_no_configuration')
   })
 })

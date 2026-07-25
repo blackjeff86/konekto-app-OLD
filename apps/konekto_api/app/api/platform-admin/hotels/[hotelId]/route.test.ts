@@ -68,16 +68,16 @@ describe('PATCH /api/platform-admin/hotels/[hotelId]', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('returns 401 without a valid platform-admin token', async () => {
-    const response = await PATCH(patchRequest(null, { enabledFeatures: ['loyalty'] }), {
+    const response = await PATCH(patchRequest(null, { extraModules: ['loyalty'] }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
     expect(response.status).toBe(401)
   })
 
-  it('rejects an unknown feature flag', async () => {
+  it('rejects an unknown module id', async () => {
     const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
 
-    const response = await PATCH(patchRequest(token, { enabledFeatures: ['not_a_real_flag'] }), {
+    const response = await PATCH(patchRequest(token, { extraModules: ['not_a_real_flag'] }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
@@ -88,30 +88,30 @@ describe('PATCH /api/platform-admin/hotels/[hotelId]', () => {
     const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue(null)
 
-    const response = await PATCH(patchRequest(token, { enabledFeatures: [] }), {
+    const response = await PATCH(patchRequest(token, { extraModules: [] }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
     expect(response.status).toBe(404)
   })
 
-  it('replaces the courtesy feature list as a whole, preserving the rest of config', async () => {
+  it('replaces the courtesy module list as a whole, preserving the rest of config', async () => {
     const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue({
       id: 'hotel_1',
-      config: { hotelInfo: { name: 'Hotel 1' }, enabledFeatures: ['loyalty'] },
+      config: { hotelInfo: { name: 'Hotel 1' }, extraModules: ['loyalty'] },
     } as never)
     vi.mocked(prisma.hotel.update).mockImplementation(
       (async (args: { data: { config: unknown } }) => ({ id: 'hotel_1', config: args.data.config })) as never,
     )
 
-    const response = await PATCH(patchRequest(token, { enabledFeatures: ['interactive_map', 'digital_wallet'] }), {
+    const response = await PATCH(patchRequest(token, { extraModules: ['interactive_map', 'digital_wallet'] }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
     expect(response.status).toBe(200)
     const body = await response.json()
-    expect(body.enabledFeatures).toEqual(['interactive_map', 'digital_wallet'])
+    expect(body.extraModules).toEqual(['interactive_map', 'digital_wallet'])
     expect(body.hotelInfo).toEqual({ name: 'Hotel 1' })
   })
 })

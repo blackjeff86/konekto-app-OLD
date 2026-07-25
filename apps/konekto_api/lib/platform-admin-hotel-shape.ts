@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma'
-import { defaultFeaturesByPlan, isFeatureFlag, type FeatureFlag } from '@/lib/feature-flags'
+import { getPlanPreset } from '@/lib/plan-presets'
+import { isModuleId } from '@/lib/module-catalog'
 import type { HotelPlan } from '@/app/generated/prisma/client'
 
 interface HotelConfigShape {
   hotelInfo?: { name?: string; address?: string }
-  enabledFeatures?: string[]
+  extraModules?: string[]
   [key: string]: unknown
 }
 
@@ -20,15 +21,16 @@ export interface HotelOverview {
     paymentStatus: string
     notes: string | null
     plan: HotelPlan
+    presetId: string
   } | null
-  // Flags que o plano já dá por padrão — informativo pro konekto_admin
-  // mostrar como "sempre ligado" (não editável) em vez de duplicar a
-  // lógica de `defaultFeaturesByPlan` na Flutter.
-  defaultFeatures: FeatureFlag[]
-  // Só as extras de cortesia (`Hotel.config.enabledFeatures`) — nunca
-  // inclui as do plano, pra bater exatamente com o que o PATCH de
-  // cortesia espera de volta (substituição total, não união).
-  enabledFeatures: FeatureFlag[]
+  // Módulos permitidos pelo Plan Preset — informativo pro konekto_admin
+  // mostrar como "sempre ligado" (não editável) em vez de duplicar
+  // PLAN_PRESETS no lado Flutter.
+  allowedModules: string[]
+  // Só as extras de cortesia (`Hotel.config.extraModules`) — nunca inclui
+  // os do preset, pra bater exatamente com o que o PATCH de cortesia
+  // espera de volta (substituição total, não união).
+  extraModules: string[]
   activeGuestCount: number
   integration: {
     configured: boolean
@@ -58,6 +60,7 @@ export async function buildHotelOverview(hotel: { id: string; config: unknown; c
   ])
 
   const plan = subscription?.plan ?? 'essential'
+  const presetId = subscription?.presetId ?? plan
 
   return {
     hotelId: hotel.id,
@@ -72,10 +75,11 @@ export async function buildHotelOverview(hotel: { id: string; config: unknown; c
           paymentStatus: subscription.paymentStatus,
           notes: subscription.notes,
           plan,
+          presetId,
         }
       : null,
-    defaultFeatures: defaultFeaturesByPlan(plan),
-    enabledFeatures: (config.enabledFeatures ?? []).filter(isFeatureFlag),
+    allowedModules: getPlanPreset(presetId).moduleIds,
+    extraModules: (config.extraModules ?? []).filter(isModuleId),
     activeGuestCount,
     integration: {
       configured: integration !== null,
