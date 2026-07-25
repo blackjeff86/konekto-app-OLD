@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 
-/// As três infraestruturas visuais selecionáveis por hotel — cada uma é um
+/// As cinco infraestruturas visuais selecionáveis por hotel — cada uma é um
 /// sistema fixo (cores/tipografia/raios/nav), não editável por hotel. O que
 /// muda por hotel é só [GuestAppTheme] (logo, nome, fotos, endereço).
 ///
-/// Tokens portados dos sistemas de design gerados no Stitch (ver DESIGN.md
-/// de cada um: Amara Bay Resort, Serene Organic Editorial [Verde Trilha] e
-/// Casa Marechal Heritage System) — só cor/tipografia/raio, a estrutura das
-/// telas continua igual nas três.
-enum GuestInfra { amaraBay, verdePousada, casaMarechal }
+/// Amara Bay, Verde Pousada e Casa Marechal vêm dos sistemas de design
+/// gerados no Stitch (ver DESIGN.md de cada um: Amara Bay Resort, Serene
+/// Organic Editorial [Verde Trilha] e Casa Marechal Heritage System) — só
+/// cor/tipografia/raio, a estrutura das telas continua igual. Konekto
+/// Clássico e Konekto Noturno não vêm do Stitch — recriam a identidade
+/// visual da marca de antes do rebrand rosa (tinta/dourado de
+/// `lib/theme/konekto_brand.dart` e do `colorPalette` legado que ainda
+/// existia em hotéis antigos), já que o visual original das duas infras
+/// que existiam antes do Stitch (Amara Bay/Verde Pousada com esses nomes)
+/// nunca chegou a ser versionado em nenhum lugar do código.
+enum GuestInfra { amaraBay, verdePousada, casaMarechal, konektoClassico, konektoNoturno }
 
 /// Tokens fixos de uma infra — nunca lidos de `tenantConfig`, sempre vêm
 /// daqui. Ver READMEs de design de cada infra pra origem exata dos valores.
@@ -122,11 +128,63 @@ const casaMarechalTokens = GuestInfraTokens(
   cardShadow: _cardShadow,
 );
 
+/// "Konekto Clássico" — cream/tinta/dourado quente, a identidade da marca
+/// de antes do rebrand rosa (paleta idêntica à de `KonektoBrand` em
+/// lib/theme/konekto_brand.dart). Playfair Display (títulos) + Inter
+/// (corpo) — a mesma dupla tipográfica já usada nas telas de marca.
+const konektoClassicoTokens = GuestInfraTokens(
+  bg: Color(0xFFF5F3EE),
+  card: Colors.white,
+  text: Color(0xFF0B0D12),
+  muted: Color(0xFF6B6456),
+  accent: Color(0xFFB8935F),
+  accentSoft: Color(0xFFE4CFA6),
+  navInactive: Color(0xFF9099A6),
+  bottomNavBg: Color(0xF0F5F3EE),
+  bottomNavBorder: Color(0x0F0B0D12),
+  headlineFontFamily: 'Playfair Display',
+  bodyFontFamily: 'Inter',
+  cardRadius: 14,
+  heroRadius: 20,
+  pillRadius: 999,
+  iconTileRadius: 10,
+  screenPadding: 22,
+  cardShadow: _cardShadow,
+);
+
+/// "Konekto Noturno" — a única infra de fundo escuro (as outras quatro são
+/// claras): azul-marinho profundo + dourado, a paleta que ainda estava
+/// configurada em hotéis antigos (`colorPalette.primary`/`secondary` do
+/// tenantConfig legado) antes da infra `amara_bay`/`verde_pousada`
+/// existir. Cormorant Garamond (títulos, serifa fina e alta) + Inter
+/// (corpo).
+const konektoNoturnoTokens = GuestInfraTokens(
+  bg: Color(0xFF0D1B2A),
+  card: Color(0xFF16283D),
+  text: Color(0xFFF5F3EE),
+  muted: Color(0xFF9AA5B1),
+  accent: Color(0xFFC9A227),
+  accentSoft: Color(0xFF3A331A),
+  navInactive: Color(0xFF6B7280),
+  bottomNavBg: Color(0xF00D1B2A),
+  bottomNavBorder: Color(0x1FFFFFFF),
+  headlineFontFamily: 'Cormorant Garamond',
+  bodyFontFamily: 'Inter',
+  cardRadius: 10,
+  heroRadius: 14,
+  pillRadius: 10,
+  iconTileRadius: 6,
+  screenPadding: 22,
+  cardShadow: _cardShadow,
+);
+
 extension GuestInfraTokenResolver on GuestInfra {
   GuestInfraTokens get tokens => switch (this) {
         GuestInfra.amaraBay => amaraBayTokens,
         GuestInfra.verdePousada => verdePousadaTokens,
         GuestInfra.casaMarechal => casaMarechalTokens,
+        GuestInfra.konektoClassico => konektoClassicoTokens,
+        GuestInfra.konektoNoturno => konektoNoturnoTokens,
       };
 }
 
@@ -137,6 +195,8 @@ GuestInfra guestInfraFromString(String? raw) => switch (raw) {
       'amara_bay' => GuestInfra.amaraBay,
       'verde_pousada' => GuestInfra.verdePousada,
       'casa_marechal' => GuestInfra.casaMarechal,
+      'konekto_classico' => GuestInfra.konektoClassico,
+      'konekto_noturno' => GuestInfra.konektoNoturno,
       _ => GuestInfra.verdePousada,
     };
 

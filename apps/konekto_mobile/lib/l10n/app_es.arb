@@ -110,12 +110,17 @@
   "timeLabel": "Hora",
 
   "amaraResortTag": "RESORT",
+  "eliteTag": "ELITE",
+  "pulseTag": "PULSE",
   "casaMarechalTag": "HERENCIA",
+  "konektoClassicoTag": "CLÁSICO",
+  "konektoNoturnoTag": "NOCTURNO",
   "casaFeaturedTitle": "Destacados de la Casa",
   "casaFeaturedSubtitle": "Fotos y momentos seleccionados del hotel",
   "casaConciergeTitle": "Hable con recepción",
   "casaConciergeSubtitle": "Solicite servicios, haga preguntas o pida algo especial — nuestro equipo está a su disposición.",
   "casaConciergeCta": "Ver servicios",
+  "bosqueQuote": "En cada paseo por la naturaleza, recibimos mucho más de lo que buscamos.",
 
   "myAccountTile": "Mi cuenta",
   "stayBillTitle": "Mi cuenta",

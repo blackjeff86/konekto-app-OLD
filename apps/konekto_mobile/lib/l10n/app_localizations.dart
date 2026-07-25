@@ -658,6 +658,30 @@ abstract class AppLocalizations {
   /// **'HERANÇA'**
   String get casaMarechalTag;
 
+  /// No description provided for @konektoClassicoTag.
+  ///
+  /// In pt, this message translates to:
+  /// **'CLÁSSICO'**
+  String get konektoClassicoTag;
+
+  /// No description provided for @konektoNoturnoTag.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOTURNO'**
+  String get konektoNoturnoTag;
+
+  /// No description provided for @eliteTag.
+  ///
+  /// In pt, this message translates to:
+  /// **'ELITE'**
+  String get eliteTag;
+
+  /// No description provided for @pulseTag.
+  ///
+  /// In pt, this message translates to:
+  /// **'PULSE'**
+  String get pulseTag;
+
   /// No description provided for @casaFeaturedTitle.
   ///
   /// In pt, this message translates to:
@@ -687,6 +711,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Ver serviços'**
   String get casaConciergeCta;
+
+  /// No description provided for @bosqueQuote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em cada passeio pela natureza, recebemos muito mais do que buscamos.'**
+  String get bosqueQuote;
 
   /// No description provided for @myAccountTile.
   ///

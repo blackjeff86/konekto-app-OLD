@@ -318,6 +318,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get casaMarechalTag => 'HERITAGE';
 
   @override
+  String get konektoClassicoTag => 'CLASSIC';
+
+  @override
+  String get konektoNoturnoTag => 'NOCTURNAL';
+
+  @override
+  String get eliteTag => 'ELITE';
+
+  @override
+  String get pulseTag => 'PULSE';
+
+  @override
   String get casaFeaturedTitle => 'House Highlights';
 
   @override
@@ -333,6 +345,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get casaConciergeCta => 'View services';
+
+  @override
+  String get bosqueQuote =>
+      'In every walk with nature, one receives far more than he seeks.';
 
   @override
   String get myAccountTile => 'My account';

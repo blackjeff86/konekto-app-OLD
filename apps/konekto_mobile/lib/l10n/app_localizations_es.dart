@@ -321,6 +321,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get casaMarechalTag => 'HERENCIA';
 
   @override
+  String get konektoClassicoTag => 'CLÁSICO';
+
+  @override
+  String get konektoNoturnoTag => 'NOCTURNO';
+
+  @override
+  String get eliteTag => 'ELITE';
+
+  @override
+  String get pulseTag => 'PULSE';
+
+  @override
   String get casaFeaturedTitle => 'Destacados de la Casa';
 
   @override
@@ -335,6 +347,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get casaConciergeCta => 'Ver servicios';
+
+  @override
+  String get bosqueQuote =>
+      'En cada paseo por la naturaleza, recibimos mucho más de lo que buscamos.';
 
   @override
   String get myAccountTile => 'Mi cuenta';

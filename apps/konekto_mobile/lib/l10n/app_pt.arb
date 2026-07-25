@@ -122,11 +122,16 @@
 
   "amaraResortTag": "RESORT",
   "casaMarechalTag": "HERANÇA",
+  "konektoClassicoTag": "CLÁSSICO",
+  "konektoNoturnoTag": "NOTURNO",
+  "eliteTag": "ELITE",
+  "pulseTag": "PULSE",
   "casaFeaturedTitle": "Destaques da Casa",
   "casaFeaturedSubtitle": "Fotos e momentos selecionados do hotel",
   "casaConciergeTitle": "Fale com a recepção",
   "casaConciergeSubtitle": "Peça serviços, tire dúvidas ou solicite algo especial — nossa equipe está à disposição.",
   "casaConciergeCta": "Ver serviços",
+  "bosqueQuote": "Em cada passeio pela natureza, recebemos muito mais do que buscamos.",
 
   "myAccountTile": "Minha conta",
   "stayBillTitle": "Minha conta",

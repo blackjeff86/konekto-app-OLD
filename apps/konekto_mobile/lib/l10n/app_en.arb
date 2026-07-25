@@ -110,11 +110,16 @@
   "timeLabel": "Time",
 
   "amaraResortTag": "RESORT",
+  "eliteTag": "ELITE",
+  "pulseTag": "PULSE",
   "casaMarechalTag": "HERITAGE",
+  "konektoClassicoTag": "CLASSIC",
+  "konektoNoturnoTag": "NOCTURNAL",
   "casaFeaturedTitle": "House Highlights",
   "casaFeaturedSubtitle": "Curated photos and moments from the hotel",
   "casaConciergeTitle": "Talk to the front desk",
   "casaConciergeSubtitle": "Request services, ask questions, or ask for anything special — our team is at your disposal.",
+  "bosqueQuote": "In every walk with nature, one receives far more than he seeks.",
   "casaConciergeCta": "View services",
 
   "myAccountTile": "My account",
