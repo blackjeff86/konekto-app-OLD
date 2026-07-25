@@ -166,7 +166,12 @@
   //
   // Ajuste esses dois valores pra cada ambiente (local vs produção).
   const API_BASE_URL = 'https://konekto-api.vercel.app';
-  const PORTAL_URL = 'https://konekto-portal.vercel.app';
+  // ?dev=1 na URL deste login (ex: login.html?dev=1) manda o token pro
+  // portal rodando local (`npm run dev` em apps/konekto_portal_next, porta
+  // 3000) em vez do Vercel de produção — só pra facilitar teste local do
+  // portal contra a API real. Nunca usar isso em produção.
+  const isDev = new URLSearchParams(window.location.search).get('dev') === '1';
+  const PORTAL_URL = isDev ? 'http://localhost:3000' : 'https://konekto-portal.vercel.app';
 
   const form = document.getElementById('login-form');
   const errorEl = document.getElementById('error');
