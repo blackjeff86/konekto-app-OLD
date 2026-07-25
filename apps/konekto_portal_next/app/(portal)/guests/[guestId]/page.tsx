@@ -63,12 +63,16 @@ export default function GuestDetailPage({ params }: { params: Promise<{ guestId:
   }
 
   return (
-    <div className="mx-auto flex max-w-[640px] flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Link href="/guests" aria-label="Voltar" className="text-slate">
+    <div className="mx-auto flex max-w-[640px] flex-col gap-5">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/guests"
+          aria-label="Voltar"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-slate transition-colors hover:bg-surface-alt"
+        >
           ←
         </Link>
-        <h1 className="flex-1 text-lg font-bold text-cream">{guestFullName(guest)}</h1>
+        <h1 className="flex-1 text-2xl font-extrabold tracking-tight text-cream">{guestFullName(guest)}</h1>
       </div>
 
       {errorMessage && (
@@ -137,7 +141,7 @@ export default function GuestDetailPage({ params }: { params: Promise<{ guestId:
         <button
           type="button"
           onClick={() => setIsConfirmingRevoke(true)}
-          className="rounded-[10px] border border-[#DC262680] py-3 text-[13px] text-[#B3261E]"
+          className="rounded-full border border-[#DC262680] py-3 text-[13px] font-semibold text-[#B3261E] transition-colors hover:bg-[#DC26260D]"
         >
           Revogar acesso
         </button>
@@ -193,9 +197,9 @@ function SectionCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-border-strong bg-surface p-4.5">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-[15px] font-bold text-cream">{title}</h2>
+    <div className="whisper-shadow rounded-xl border border-border bg-surface p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-[11px] font-bold tracking-[0.14em] text-slate uppercase">{title}</h2>
         {trailing}
       </div>
       {children}

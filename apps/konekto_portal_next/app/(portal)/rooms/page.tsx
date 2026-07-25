@@ -21,12 +21,24 @@ export default function RoomsPage() {
   const occupiedRooms = rooms.filter((room) => isRoomOccupied(room))
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-bold text-cream">Quartos</h1>
-      <p className="text-[12.5px] text-slate">
-        Toque num quarto vago pra registrar um hóspede e iniciar a estadia — ou num quarto ocupado
-        pra ver hóspedes, avisos e o valor em aberto.
-      </p>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+        <div className="max-w-xl">
+          <h1 className="text-[28px] font-extrabold tracking-tight text-cream">Quartos</h1>
+          <p className="mt-2 text-[13.5px] leading-relaxed text-slate">
+            Toque num quarto vago pra registrar um hóspede e iniciar a estadia — ou num quarto
+            ocupado pra ver hóspedes, avisos e o valor em aberto.
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-5 rounded-xl border border-border bg-surface px-6 py-4">
+          <span className="flex items-center gap-2 text-[10.5px] font-bold tracking-wide text-slate uppercase">
+            <span className="h-2 w-2 rounded-full bg-gold" /> Legenda: ocupado
+          </span>
+          <span className="flex items-center gap-2 text-[10.5px] font-bold tracking-wide text-slate uppercase">
+            <span className="h-2 w-2 rounded-full border border-border-strong bg-surface-alt" /> Legenda: livre
+          </span>
+        </div>
+      </div>
 
       {errorMessage && (
         <div className="rounded-[10px] border border-[#DC262680] bg-[#DC26261A] px-3 py-2.5 text-[12.5px] text-[#B3261E]">
@@ -35,7 +47,7 @@ export default function RoomsPage() {
       )}
 
       {rooms.length === 0 ? (
-        <div className="rounded-2xl border border-border-strong bg-surface p-7 text-[13.5px] text-cream">
+        <div className="whisper-shadow rounded-xl border border-border bg-surface p-7 text-[13.5px] text-cream">
           Nenhum quarto cadastrado ainda — cadastre em Configurações → Quartos.
         </div>
       ) : (
@@ -50,19 +62,17 @@ export default function RoomsPage() {
 
 function RoomSection({ title, rooms }: { title: string; rooms: Room[] }) {
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <h2 className="text-[15px] font-bold text-cream">{title}</h2>
-        <span className="rounded-full bg-black/5 px-2 py-0.5 text-[11.5px] font-semibold text-slate">
-          {rooms.length}
-        </span>
+    <section className="flex flex-col gap-4">
+      <div className="flex items-baseline gap-3 border-b border-border pb-3">
+        <h2 className="text-lg font-bold text-cream">{title}</h2>
+        <span className="text-[11px] font-bold tracking-wide text-slate-soft uppercase">{rooms.length}</span>
       </div>
       {rooms.length === 0 ? (
-        <div className="rounded-2xl border border-border-strong bg-surface p-5 text-[13px] text-cream">
+        <div className="whisper-shadow rounded-xl border border-border bg-surface p-5 text-[13px] text-cream">
           Nenhum quarto nessa situação agora.
         </div>
       ) : (
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {rooms.map((room) => (
             <RoomCard key={room.id} room={room} />
           ))}
@@ -77,32 +87,35 @@ function RoomCard({ room }: { room: Room }) {
   return (
     <Link
       href={`/rooms/${room.id}`}
-      className={`w-[172px] rounded-2xl border p-4 ${
-        occupied ? 'border-gold/50' : 'border-border-strong'
-      } bg-surface`}
+      className={`whisper-shadow rounded-xl border p-6 transition-transform hover:-translate-y-0.5 ${
+        occupied ? 'border-border bg-surface' : 'border-border bg-surface-alt/60'
+      }`}
     >
-      <div className="flex items-center justify-between">
-        <span className={occupied ? 'text-gold-light' : 'text-slate'}>{occupied ? '🛏' : '🚪'}</span>
+      <div className="flex items-start justify-between">
+        <span className={`text-lg font-extrabold tracking-tight ${occupied ? 'text-cream' : 'text-slate-soft'}`}>
+          Quarto {room.number}
+        </span>
         <span
-          className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${
-            occupied ? 'bg-gold/14 text-gold-light' : 'bg-black/5 text-slate-soft'
+          className={`rounded-full px-2.5 py-1 text-[9.5px] font-bold tracking-wide uppercase ${
+            occupied ? 'bg-gold text-white' : 'border border-border-strong bg-surface text-slate'
           }`}
         >
           {occupied ? 'Ocupado' : 'Livre'}
         </span>
       </div>
-      <p className="mt-3 text-[15px] font-bold text-cream">Quarto {room.number}</p>
       {occupied && room.activeStay ? (
         <>
-          <p className="mt-1 text-xs text-slate">
+          <p className="mt-4 text-[10px] font-bold tracking-wide text-slate uppercase">
             {room.activeStay.guestCount} hóspede{room.activeStay.guestCount === 1 ? '' : 's'}
           </p>
-          <p className="mt-1 text-[12.5px] font-semibold text-gold-light">
+          <p className="mt-1 text-[13px] font-bold text-gold-light">
             R$ {room.activeStay.consumptionTotal.toFixed(2)}
           </p>
         </>
       ) : (
-        room.description && <p className="mt-1 line-clamp-2 text-xs text-slate">{room.description}</p>
+        <p className="mt-4 text-[11px] text-slate">
+          {room.description || 'Pronto para receber um hóspede'}
+        </p>
       )}
     </Link>
   )

@@ -43,3 +43,18 @@ body {
   color: var(--color-cream);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/*
+ * Linguagem visual "editorial minimalista" — inspirada no design system do
+ * Stitch (konektto_brand_identity/DESIGN.md: sombras quase imperceptíveis,
+ * grandes raios de blur e baixíssima opacidade, ao invés de sombras
+ * "encardidas" tradicionais). Usado nos cards do portal (dashboard,
+ * hóspedes, quartos, pedidos, suporte).
+ */
+.whisper-shadow {
+  box-shadow: 0 24px 48px -16px rgba(22, 24, 29, 0.08);
+}
+
+.hairline-divide > * + * {
+  border-top: 1px solid var(--color-border);
+}

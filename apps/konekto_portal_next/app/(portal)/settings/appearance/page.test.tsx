@@ -47,4 +47,16 @@ describe('AppearancePage', () => {
 
     await waitFor(() => expect(updateInfra).toHaveBeenCalledWith('amara_bay'))
   })
+
+  it('offers Casa Marechal as a third template and saves it', async () => {
+    const updateInfra = vi.fn().mockResolvedValue(undefined)
+    mockHooks({ updateInfra })
+    render(<AppearancePage />)
+
+    await userEvent.click(screen.getByText('Casa Marechal'))
+    expect(screen.getByText('Prévia — Casa Marechal')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+    await waitFor(() => expect(updateInfra).toHaveBeenCalledWith('casa_marechal'))
+  })
 })

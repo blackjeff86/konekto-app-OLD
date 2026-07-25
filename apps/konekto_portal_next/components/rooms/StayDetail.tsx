@@ -151,41 +151,41 @@ export function StayDetail({ stayId }: { stayId: string }) {
         </div>
       )}
 
-      <div className="rounded-2xl border border-border-strong bg-surface p-4.5">
+      <div className="whisper-shadow rounded-xl border border-border bg-surface p-6">
         <div className="flex items-center justify-between">
           <p className="text-[13.5px] text-cream">
             {formatDate(stay.checkInDate)} até {formatDate(stay.checkOutDate)}
           </p>
           <span
-            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-              isActive ? 'bg-gold/12 text-gold-light' : 'bg-black/5 text-slate-soft'
+            className={`rounded-full px-3 py-1 text-[10px] font-bold tracking-wide uppercase ${
+              isActive ? 'bg-gold/10 text-gold-light' : 'bg-black/5 text-slate-soft'
             }`}
           >
             {stayStatusLabel[stay.status]}
           </span>
         </div>
-        <div className="mt-3.5 flex items-center gap-2">
-          <span className="text-[12.5px] text-slate">Valor em aberto:</span>
-          <span className="text-base font-bold text-gold-light">R$ {total.toFixed(2)}</span>
+        <div className="mt-4 flex items-center gap-2">
+          <span className="text-[10.5px] font-bold tracking-wide text-slate uppercase">Valor em aberto:</span>
+          <span className="text-lg font-extrabold text-gold-light">R$ {total.toFixed(2)}</span>
         </div>
 
         {isActive && (
           <>
-            <div className="mt-3.5 flex gap-2.5">
+            <div className="mt-4 flex gap-2.5">
               <button
                 type="button"
                 onClick={() => {
                   setNewCheckOutDate(stay.checkOutDate.slice(0, 10))
                   setIsExtending(true)
                 }}
-                className="flex-1 rounded-[10px] border border-border-strong py-2.5 text-[13px] text-gold-light"
+                className="flex-1 rounded-full border border-border-strong py-2.5 text-[12.5px] font-semibold text-gold-light transition-colors hover:bg-gold/5"
               >
                 Estender estadia
               </button>
               <button
                 type="button"
                 onClick={() => setIsChangingRoom(true)}
-                className="flex-1 rounded-[10px] border border-border-strong py-2.5 text-[13px] text-gold-light"
+                className="flex-1 rounded-full border border-border-strong py-2.5 text-[12.5px] font-semibold text-gold-light transition-colors hover:bg-gold/5"
               >
                 Trocar quarto
               </button>
@@ -193,7 +193,7 @@ export function StayDetail({ stayId }: { stayId: string }) {
             <button
               type="button"
               onClick={() => setIsConfirmingClose(true)}
-              className="mt-2.5 w-full rounded-[10px] border border-[#DC262680] py-2.5 text-[13px] text-[#B3261E]"
+              className="mt-2.5 w-full rounded-full border border-[#DC262680] py-2.5 text-[12.5px] font-semibold text-[#B3261E] transition-colors hover:bg-[#DC26260D]"
             >
               Fechar conta
             </button>
@@ -202,7 +202,7 @@ export function StayDetail({ stayId }: { stayId: string }) {
       </div>
 
       <div className="flex items-center justify-between">
-        <h2 className="text-[15px] font-bold text-cream">Hóspedes</h2>
+        <h2 className="text-[11px] font-bold tracking-[0.14em] text-slate uppercase">Hóspedes</h2>
         {isActive && (
           <button
             type="button"
@@ -213,7 +213,7 @@ export function StayDetail({ stayId }: { stayId: string }) {
           </button>
         )}
       </div>
-      <div className="divide-y divide-border-strong rounded-2xl border border-border-strong bg-surface">
+      <div className="whisper-shadow hairline-divide overflow-hidden rounded-xl border border-border bg-surface">
         {stay.guests.length === 0 ? (
           <p className="p-5 text-[13.5px] text-cream">Nenhum hóspede neste quarto ainda.</p>
         ) : (
@@ -223,7 +223,7 @@ export function StayDetail({ stayId }: { stayId: string }) {
               <Link
                 key={guest.id}
                 href={`/guests/${guest.id}`}
-                className="flex items-center gap-3.5 px-5 py-3.5"
+                className="flex items-center gap-3.5 px-6 py-4 transition-colors hover:bg-surface-alt"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-cream">
@@ -232,13 +232,13 @@ export function StayDetail({ stayId }: { stayId: string }) {
                   <p className="truncate text-xs text-slate">{guest.accessCode}</p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                    guestIsActive ? 'bg-gold/12 text-gold-light' : 'bg-black/5 text-slate-soft'
+                  className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold tracking-wide uppercase ${
+                    guestIsActive ? 'bg-gold/10 text-gold-light' : 'bg-black/5 text-slate-soft'
                   }`}
                 >
                   {guestIsActive ? 'Ativo' : 'Revogado'}
                 </span>
-                <span className="shrink-0 text-slate">›</span>
+                <span className="shrink-0 text-slate-soft">›</span>
               </Link>
             )
           })
@@ -246,8 +246,8 @@ export function StayDetail({ stayId }: { stayId: string }) {
       </div>
 
       <div>
-        <h2 className="text-[15px] font-bold text-cream">Chat com o hóspede</h2>
-        <p className="mt-1 text-[12.5px] text-slate">
+        <h2 className="text-[11px] font-bold tracking-[0.14em] text-slate uppercase">Chat com o hóspede</h2>
+        <p className="mt-1.5 text-[12.5px] text-slate">
           Visível pra todos os hóspedes deste quarto — eles podem responder pelo app.
         </p>
       </div>
@@ -257,14 +257,14 @@ export function StayDetail({ stayId }: { stayId: string }) {
           onChange={(event) => setNoticeText(event.target.value)}
           placeholder="Ex: seu jantar está pronto, checkout às 12h..."
           rows={2}
-          className="flex-1 rounded-[10px] border border-border-strong bg-transparent px-3 py-2.5 text-[13.5px] text-cream outline-none focus:border-gold"
+          className="flex-1 rounded-xl border border-border-strong bg-transparent px-3.5 py-3 text-[13.5px] text-cream outline-none focus:border-gold"
         />
         <button
           type="button"
           aria-label="Enviar mensagem"
           onClick={handleSendMessage}
           disabled={isSendingNotice}
-          className="text-gold-light disabled:opacity-60"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           ➤
         </button>
@@ -278,7 +278,7 @@ export function StayDetail({ stayId }: { stayId: string }) {
       )}
 
       <div className="flex items-center justify-between">
-        <h2 className="text-[15px] font-bold text-cream">Pedidos</h2>
+        <h2 className="text-[11px] font-bold tracking-[0.14em] text-slate uppercase">Pedidos</h2>
         {isActive && (
           <button
             type="button"
@@ -293,7 +293,7 @@ export function StayDetail({ stayId }: { stayId: string }) {
         Todos os pedidos e reservas feitos pelos hóspedes deste quarto — é o que forma o valor em
         aberto acima.
       </p>
-      <div className="divide-y divide-border-strong rounded-2xl border border-border-strong bg-surface">
+      <div className="whisper-shadow hairline-divide overflow-hidden rounded-xl border border-border bg-surface">
         {allOrders(stay).length === 0 ? (
           <p className="p-5 text-[13.5px] text-cream">Nenhum pedido registrado ainda.</p>
         ) : (
@@ -417,10 +417,10 @@ function ChatEntryLine({ entry }: { entry: ChatEntry }) {
   const isStaff = entry.kind === 'message' && entry.message.senderType === 'staff'
 
   return (
-    <div className="rounded-[10px] border border-border-strong bg-surface px-3 py-2.5">
-      <p className={`text-[11px] font-bold ${isStaff ? 'text-gold-light' : 'text-slate'}`}>{label}</p>
+    <div className="rounded-xl border border-border bg-surface-alt/60 px-4 py-3">
+      <p className={`text-[10.5px] font-bold tracking-wide uppercase ${isStaff ? 'text-gold-light' : 'text-slate'}`}>{label}</p>
       <p className="mt-1 text-[13px] text-cream">{body}</p>
-      <p className="mt-1 text-[11px] text-slate">{formatDateTime(createdAt)}</p>
+      <p className="mt-1 text-[11px] text-slate-soft">{formatDateTime(createdAt)}</p>
     </div>
   )
 }
@@ -443,7 +443,7 @@ function StayOrderRow({
   const isBooking = order.scheduledFor != null
 
   return (
-    <div className="flex items-start gap-3 px-5 py-3.5">
+    <div className="flex items-start gap-3 px-6 py-4">
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold text-cream">
           {order.quantity}x {order.itemName}

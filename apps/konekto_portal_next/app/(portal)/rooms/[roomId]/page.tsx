@@ -32,12 +32,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ roomId: s
   }
 
   return (
-    <div className="mx-auto flex max-w-[640px] flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Link href="/rooms" aria-label="Voltar" className="text-slate">
+    <div className="mx-auto flex max-w-[640px] flex-col gap-5">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/rooms"
+          aria-label="Voltar"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-slate transition-colors hover:bg-surface-alt"
+        >
           ←
         </Link>
-        <h1 className="flex-1 text-lg font-bold text-cream">Quarto {room.number}</h1>
+        <h1 className="flex-1 text-2xl font-extrabold tracking-tight text-cream">Quarto {room.number}</h1>
       </div>
 
       {isRoomOccupied(room) ? (

@@ -144,15 +144,15 @@ export function OccupancyForm({ room }: { room: Room }) {
         </div>
       )}
 
-      <div className="flex items-center justify-between rounded-2xl border border-border-strong bg-surface p-4.5">
+      <div className="whisper-shadow flex items-center justify-between rounded-xl border border-border bg-surface p-6">
         <p className="text-[13.5px] text-cream">Este quarto está livre.</p>
-        <span className="rounded-full bg-black/5 px-2.5 py-1 text-[11px] font-semibold text-slate-soft">
+        <span className="rounded-full border border-border-strong bg-surface px-3 py-1 text-[10px] font-bold tracking-wide text-slate uppercase">
           Livre
         </span>
       </div>
       {room.description && <p className="text-[12.5px] text-slate">{room.description}</p>}
 
-      <h2 className="text-[15px] font-bold text-cream">Nova estadia</h2>
+      <h2 className="text-[11px] font-bold tracking-[0.14em] text-slate uppercase">Nova estadia</h2>
       <div className="flex gap-2.5">
         <label className="flex-1 text-xs text-slate">
           Check-in
@@ -175,7 +175,7 @@ export function OccupancyForm({ room }: { room: Room }) {
       </div>
 
       <div>
-        <h2 className="text-[15px] font-bold text-cream">Hóspede</h2>
+        <h2 className="text-[11px] font-bold tracking-[0.14em] text-slate uppercase">Hóspede</h2>
         <p className="mt-1 text-[12.5px] text-slate">
           Busque pelo documento pra reaproveitar o cadastro de quem já se hospedou antes, ou
           preencha um hóspede novo.

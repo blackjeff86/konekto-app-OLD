@@ -13,12 +13,9 @@ export function PortalBreadcrumb() {
   const hotelName = config?.hotelInfo?.name ?? '...'
 
   return (
-    <div className="border-b border-border-strong px-8 py-5">
-      <p className="text-[13px] text-slate">
-        {hotelName}
-        <span>{'  /  '}</span>
-        <span className="font-bold text-cream">{section?.title ?? ''}</span>
-      </p>
+    <div className="border-b border-border px-10 py-6">
+      <p className="text-[11px] font-bold tracking-[0.2em] text-gold uppercase">{hotelName}</p>
+      <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-cream">{section?.title ?? ''}</h1>
     </div>
   )
 }

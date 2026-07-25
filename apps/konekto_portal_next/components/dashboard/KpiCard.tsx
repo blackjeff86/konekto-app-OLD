@@ -4,19 +4,23 @@ interface KpiCardProps {
   label: string
   value: string
   detail: string
+  /** Deslocamento vertical em telas largas — cria o ritmo assimétrico do grid do dashboard. */
+  className?: string
 }
 
-export function KpiCard({ icon, label, value, detail }: KpiCardProps) {
+export function KpiCard({ icon, label, value, detail, className = '' }: KpiCardProps) {
   return (
-    <div className="w-[240px] rounded-2xl border border-border-strong bg-surface p-[18px]">
+    <div className={`whisper-shadow flex h-[168px] flex-col justify-between rounded-xl border border-border bg-surface p-6 ${className}`}>
       <div className="flex items-center gap-2">
-        <span className="text-[15px] text-gold-light" aria-hidden>
+        <span className="text-[15px] text-gold" aria-hidden>
           {icon}
         </span>
-        <p className="text-[12.5px] text-slate">{label}</p>
+        <p className="text-[10.5px] font-bold tracking-[0.14em] text-slate uppercase">{label}</p>
       </div>
-      <p className="mt-2.5 text-2xl font-bold text-cream">{value}</p>
-      <p className="mt-1 text-[11.5px] text-slate-soft">{detail}</p>
+      <div>
+        <p className="text-3xl font-extrabold tracking-tight text-cream">{value}</p>
+        <p className="mt-1.5 text-[11.5px] text-slate-soft">{detail}</p>
+      </div>
     </div>
   )
 }

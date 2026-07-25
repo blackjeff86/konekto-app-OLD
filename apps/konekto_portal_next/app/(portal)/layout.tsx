@@ -23,7 +23,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
         <PortalSidebar badgeCounts={badgeCounts} />
         <div className="flex min-w-0 flex-1 flex-col">
           <PortalBreadcrumb />
-          <div className="flex-1 p-8">{children}</div>
+          <div className="flex-1 px-10 py-10">{children}</div>
         </div>
       </div>
     </RequireAuth>

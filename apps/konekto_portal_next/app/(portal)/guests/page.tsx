@@ -45,23 +45,26 @@ export default function GuestsPage() {
   }
 
   const errorMessage = createError ?? (error instanceof Error ? error.message : null)
+  const activeGuestCount = guests.filter((guest) => guest.status === 'active').length
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-cream">Hóspedes</h1>
+    <div className="flex flex-col gap-7">
+      <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+        <div className="max-w-xl">
+          <h1 className="text-[28px] font-extrabold tracking-tight text-cream">Hóspedes</h1>
+          <p className="mt-2 text-[13.5px] leading-relaxed text-slate">
+            Cada hóspede recebe um código individual pra entrar no app — sem senha, sem cadastro.
+            Vários hóspedes do mesmo quarto ficam agrupados na aba Quartos.
+          </p>
+        </div>
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="text-[12.5px] font-semibold text-gold-light"
+          className="shrink-0 rounded-full bg-ink px-6 py-3 text-[11px] font-bold tracking-[0.1em] text-white uppercase transition-opacity hover:opacity-90"
         >
           + Criar hóspede
         </button>
       </div>
-      <p className="text-[12.5px] text-slate">
-        Cada hóspede recebe um código individual pra entrar no app — sem senha, sem cadastro.
-        Vários hóspedes do mesmo quarto ficam agrupados na aba Quartos.
-      </p>
 
       {errorMessage && (
         <div className="rounded-[10px] border border-[#DC262680] bg-[#DC26261A] px-3 py-2.5 text-[12.5px] text-[#B3261E]">
@@ -69,35 +72,46 @@ export default function GuestsPage() {
         </div>
       )}
 
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-2">
+        <div className="whisper-shadow rounded-xl border border-border bg-surface p-6">
+          <p className="text-[10.5px] font-bold tracking-[0.14em] text-slate uppercase">Total cadastrados</p>
+          <p className="mt-2 text-3xl font-extrabold tracking-tight text-cream">{guests.length}</p>
+        </div>
+        <div className="whisper-shadow rounded-xl bg-ink p-6 text-white">
+          <p className="text-[10.5px] font-bold tracking-[0.14em] text-white/60 uppercase">Com acesso ativo</p>
+          <p className="mt-2 text-3xl font-extrabold tracking-tight">{activeGuestCount}</p>
+        </div>
+      </div>
+
       {guests.length === 0 ? (
-        <div className="rounded-2xl border border-border-strong bg-surface p-7 text-[13.5px] text-cream">
+        <div className="whisper-shadow rounded-xl border border-border bg-surface p-7 text-[13.5px] text-cream">
           Nenhum hóspede cadastrado ainda.
         </div>
       ) : (
-        <div className="divide-y divide-border-strong rounded-2xl border border-border-strong bg-surface">
+        <div className="whisper-shadow hairline-divide overflow-hidden rounded-xl border border-border bg-surface">
           {guests.map((guest) => (
             <Link
               key={guest.id}
               href={`/guests/${guest.id}`}
-              className="flex items-center gap-3.5 px-5 py-3.5"
+              className="flex items-center gap-4 px-7 py-5 transition-colors hover:bg-surface-alt"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-cream">
                   {guest.firstName} {guest.lastName}
                 </p>
-                <p className="truncate text-xs text-slate">
+                <p className="mt-0.5 truncate text-xs text-slate">
                   Quarto {guest.stay.roomNumber}  ·  {guest.accessCode}  ·{' '}
                   {formatDate(guest.stay.checkInDate)}–{formatDate(guest.stay.checkOutDate)}
                 </p>
               </div>
               <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                  guest.status === 'active' ? 'bg-gold/12 text-gold-light' : 'bg-black/5 text-slate-soft'
+                className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold tracking-wide uppercase ${
+                  guest.status === 'active' ? 'bg-gold/10 text-gold-light' : 'bg-black/5 text-slate-soft'
                 }`}
               >
                 {guest.status === 'active' ? 'Ativo' : 'Revogado'}
               </span>
-              <span className="shrink-0 text-slate">›</span>
+              <span className="shrink-0 text-slate-soft">›</span>
             </Link>
           ))}
         </div>

@@ -12,13 +12,6 @@ function formatScheduledFor(iso: string): string {
   return `${day}/${month} às ${hour}:${minute}`
 }
 
-const STATUS_COLOR: Record<OrderStatus, string> = {
-  pending: 'text-gold',
-  in_progress: 'text-[#5B9BD5]',
-  completed: 'text-[#5CB85C]',
-  cancelled: 'text-slate-soft',
-}
-
 function nextStatusOptions(status: OrderStatus): OrderStatus[] {
   switch (status) {
     case 'pending':
@@ -50,12 +43,19 @@ export default function OrdersPage() {
   const errorMessage = error instanceof Error ? error.message : null
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-bold text-cream">Pedidos</h1>
-      <p className="text-[12.5px] text-slate">
-        Atualiza automaticamente a cada 5 segundos — você recebe um alerta sonoro quando chegar um
-        pedido novo, mesmo em outra aba do portal.
-      </p>
+    <div className="flex flex-col gap-7">
+      <div>
+        <h1 className="text-[28px] font-extrabold tracking-tight text-cream">Pedidos</h1>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="flex items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1 text-[10px] font-bold tracking-wide text-gold-light uppercase">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" /> Ao vivo
+          </span>
+          <p className="text-[12.5px] text-slate">
+            Atualiza a cada 5 segundos — alerta sonoro quando chegar um pedido novo, mesmo em outra
+            aba do portal.
+          </p>
+        </div>
+      </div>
 
       {errorMessage && (
         <div className="rounded-[10px] border border-[#DC262680] bg-[#DC26261A] px-3 py-2.5 text-[12.5px] text-[#B3261E]">
@@ -64,11 +64,11 @@ export default function OrdersPage() {
       )}
 
       {orders.length === 0 ? (
-        <div className="rounded-2xl border border-border-strong bg-surface p-7 text-[13.5px] text-cream">
+        <div className="whisper-shadow rounded-xl border border-border bg-surface p-7 text-[13.5px] text-cream">
           Nenhum pedido ainda.
         </div>
       ) : (
-        <div className="divide-y divide-border-strong rounded-2xl border border-border-strong bg-surface">
+        <div className="flex flex-col gap-3">
           {orders.map((order) => (
             <OrderRow
               key={order.id}
@@ -82,6 +82,13 @@ export default function OrdersPage() {
   )
 }
 
+const STATUS_ACCENT: Record<OrderStatus, string> = {
+  pending: 'var(--color-gold)',
+  in_progress: '#5B9BD5',
+  completed: '#5CB85C',
+  cancelled: 'var(--color-slate-soft)',
+}
+
 function OrderRow({
   order,
   onStatusChange,
@@ -93,38 +100,42 @@ function OrderRow({
   const options = nextStatusOptions(order.status)
 
   return (
-    <div className="flex items-start gap-3 px-5 py-3.5">
+    <div
+      className="whisper-shadow flex items-start gap-4 rounded-xl border border-border bg-surface py-5 pr-5 pl-6"
+      style={{ borderLeft: `3px solid ${STATUS_ACCENT[order.status]}` }}
+    >
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold text-cream">
           {order.itemName}
           {order.quantity > 1 ? ` ×${order.quantity}` : ''}
         </p>
-        <p className="text-xs text-slate">
+        <p className="mt-0.5 text-xs text-slate">
           {order.guestName} · Quarto {order.guestRoomNumber}
           {order.price != null ? ` · R$ ${(order.price * order.quantity).toFixed(2)}` : ' · Sob consulta'}
         </p>
         {order.scheduledFor && (
-          <p className="text-xs font-semibold text-gold">
+          <p className="mt-1 text-xs font-semibold text-gold">
             Agendado: {formatScheduledFor(order.scheduledFor)}
           </p>
         )}
-        {order.note && <p className="text-xs italic text-gold">Obs: {order.note}</p>}
+        {order.note && <p className="mt-1 text-xs italic text-gold">Obs: {order.note}</p>}
         {order.couponTitle && (
-          <p className="text-[11.5px] font-semibold text-gold-light">
+          <p className="mt-1 text-[11.5px] font-semibold text-gold-light">
             🏷 {order.couponTitle} (-R$ {(order.discountAmount ?? 0).toFixed(2)})
           </p>
         )}
         {order.recordedByStaffId != null && (
-          <p className="text-[11px] italic text-slate-soft">Lançado pela recepção</p>
+          <p className="mt-1 text-[11px] italic text-slate-soft">Lançado pela recepção</p>
         )}
         {order.isPartnerPaid && (
-          <p className="text-[11px] italic text-slate-soft">
+          <p className="mt-1 text-[11px] italic text-slate-soft">
             Pago diretamente ao parceiro{order.partnerName ? ` (${order.partnerName})` : ''}
           </p>
         )}
       </div>
       <span
-        className={`shrink-0 rounded-full bg-black/10 px-2.5 py-1 text-[11px] font-semibold ${STATUS_COLOR[order.status]}`}
+        className="shrink-0 rounded-full px-3 py-1 text-[10px] font-bold tracking-wide uppercase"
+        style={{ backgroundColor: `${STATUS_ACCENT[order.status]}1A`, color: STATUS_ACCENT[order.status] }}
       >
         {orderStatusLabel(order.status, isBooking)}
       </span>
@@ -135,7 +146,7 @@ function OrderRow({
           onChange={(event) => {
             if (event.target.value) onStatusChange(event.target.value as OrderStatus)
           }}
-          className="shrink-0 rounded-[8px] border border-border-strong bg-surface px-2 py-1 text-xs text-cream"
+          className="shrink-0 rounded-full border border-border-strong bg-surface px-3 py-1.5 text-xs text-cream"
         >
           <option value="" disabled>
             •••

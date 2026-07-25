@@ -23,16 +23,15 @@ export function PortalSidebar({ badgeCounts }: { badgeCounts: PortalBadgeCounts 
   )
 
   return (
-    <div className="flex w-[232px] shrink-0 flex-col border-r border-border-strong bg-surface">
-      <div className="flex items-center gap-2.5 px-5 pb-6 pt-7">
+    <div className="flex w-64 shrink-0 flex-col border-r border-border bg-surface px-4 py-8">
+      <div className="mb-10 flex items-center gap-2.5 px-2">
         <KonektoMark size={26} />
         <div className="min-w-0">
-          <p className="text-[15px] font-extrabold text-cream">Konekto</p>
-          <p className="text-[9px] font-bold tracking-widest text-slate uppercase">Portal do hotel</p>
+          <p className="text-base font-extrabold tracking-tight text-cream">Konekto</p>
+          <p className="text-[10px] font-bold tracking-[0.2em] text-slate-soft uppercase">Portal do hotel</p>
         </div>
       </div>
-      <div className="border-t border-border-strong" />
-      <nav className="flex flex-1 flex-col gap-1 py-3">
+      <nav className="flex flex-1 flex-col gap-1">
         {sections.map((section) => {
           const isActive = pathname?.startsWith(section.matchPrefix) ?? false
           const badgeCount = section.badgeKey ? badgeCounts[section.badgeKey] : 0
@@ -40,26 +39,23 @@ export function PortalSidebar({ badgeCounts }: { badgeCounts: PortalBadgeCounts 
             <Link
               key={section.href}
               href={section.href}
-              className="flex h-[46px] items-center gap-4 px-5"
+              className="flex items-center gap-3 rounded-lg px-4 py-3 transition-colors"
+              style={{ backgroundColor: isActive ? 'rgba(255,46,136,0.06)' : 'transparent' }}
             >
-              <span
-                className="h-[18px] w-0.5 shrink-0"
-                style={{ backgroundColor: isActive ? 'var(--color-gold)' : 'transparent' }}
-              />
-              <span className="shrink-0 text-[15px]" aria-hidden>
+              <span className="shrink-0 text-base" aria-hidden>
                 {section.icon}
               </span>
               <span
                 className="min-w-0 flex-1 truncate text-[13.5px]"
                 style={{
-                  color: isActive ? 'var(--color-cream)' : 'var(--color-slate)',
+                  color: isActive ? 'var(--color-gold-light)' : 'var(--color-slate)',
                   fontWeight: isActive ? 700 : 500,
                 }}
               >
                 {section.title}
               </span>
               {badgeCount > 0 && (
-                <span className="shrink-0 rounded-full bg-gold px-[7px] py-0.5 text-[10.5px] font-bold text-ink">
+                <span className="shrink-0 rounded-full bg-gold px-[7px] py-0.5 text-[10.5px] font-bold text-white">
                   {badgeCount > 99 ? '99+' : badgeCount}
                 </span>
               )}
@@ -67,8 +63,7 @@ export function PortalSidebar({ badgeCounts }: { badgeCounts: PortalBadgeCounts 
           )
         })}
       </nav>
-      <div className="border-t border-border-strong" />
-      <div className="flex items-center gap-2 p-4">
+      <div className="mt-auto flex items-center gap-2 rounded-lg bg-surface-alt p-3">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[12.5px] font-semibold text-cream">{session?.name}</p>
           <p className="text-[11px] text-gold-light">{session ? staffRoleLabel[session.role] : ''}</p>
