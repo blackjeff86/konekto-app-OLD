@@ -69,7 +69,9 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
   { id: 'hotel_info', name: 'Informações da hospedagem', description: 'Wi-Fi, número do quarto, dados da estadia.', category: 'core', icon: 'info', placement: ['home'], screenId: 'hotel_info', defaultOrder: 1, dependencies: [], implemented: true },
   { id: 'services', name: 'Serviços', description: 'Agregador dos módulos de Hospitalidade habilitados.', category: 'core', icon: 'grid_view', placement: ['bottomNav', 'home'], screenId: 'services', defaultOrder: 2, dependencies: [], implemented: true },
   { id: 'bookings', name: 'Reservas', description: 'Pedidos e reservas do hóspede.', category: 'core', icon: 'event_note', placement: ['bottomNav'], screenId: 'bookings', defaultOrder: 3, dependencies: [], implemented: true },
-  { id: 'messages', name: 'Mensagens', description: 'Chat com a recepção do hotel.', category: 'core', icon: 'chat_bubble_outline', placement: ['bottomNav', 'home'], screenId: 'messages', defaultOrder: 4, dependencies: [], implemented: true },
+  // Sem 'bottomNav': hoje não existe aba própria de Mensagens — é acessado
+  // pelo sino de notificação na Home (NoticesPage), não uma aba na nav.
+  { id: 'messages', name: 'Mensagens', description: 'Chat com a recepção do hotel.', category: 'core', icon: 'chat_bubble_outline', placement: ['home'], screenId: 'messages', defaultOrder: 4, dependencies: [], implemented: true },
   { id: 'profile', name: 'Perfil', description: 'Dados do hóspede e conta da estadia.', category: 'core', icon: 'person_outline', placement: ['bottomNav'], screenId: 'profile', defaultOrder: 5, dependencies: [], implemented: true },
   { id: 'basic_notifications', name: 'Notificações Básicas', description: 'Avisos da recepção e status de pedidos.', category: 'core', icon: 'notifications_none', placement: ['home'], screenId: 'notices', defaultOrder: 6, dependencies: [], implemented: true },
 

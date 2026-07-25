@@ -11,6 +11,9 @@ import 'package:konekto/data/orders_repository.dart';
 import 'package:konekto/data/tenant_repository.dart';
 import 'package:konekto/data/tenant_repository_provider.dart';
 import 'package:konekto/l10n/app_localizations.dart';
+import 'package:konekto/modules/module_catalog_repository.dart';
+import 'package:konekto/modules/module_definition.dart';
+import 'package:konekto/modules/module_engine.dart';
 import 'package:konekto/templates/guest_template_registry.dart';
 import 'package:konekto/templates/shared/guest_template_content_params.dart';
 import 'package:konekto/templates/shared/widgets/profile_page.dart';
@@ -56,8 +59,15 @@ class _TenantHomePageState extends State<TenantHomePage> {
   final GuestClaimRepository _guestClaimRepository = GuestClaimRepository();
   final MessagesRepository _messagesRepository = MessagesRepository();
   final OrdersRepository _ordersRepository = OrdersRepository();
+  final ModuleCatalogRepository _moduleCatalogRepository = ModuleCatalogRepository();
   int _unreadMessagesCount = 0;
   int _unseenOrdersCount = 0;
+  // Module Engine (Fase 6) — nav dinâmica por hotel, a partir de
+  // `tenantConfig['enabledModules']`. Começa com o fallback fixo de sempre
+  // e só troca depois que `_loadTheme()` resolve; hotel sem módulos
+  // configurados no backend (ou catálogo indisponível) nunca fica com nav
+  // vazia.
+  List<GuestNavItem> _navItems = kGuestNavItems;
 
   int get _notificationCount => _unreadMessagesCount + _unseenOrdersCount;
 
@@ -71,7 +81,19 @@ class _TenantHomePageState extends State<TenantHomePage> {
   Future<GuestAppTheme> _loadTheme() async {
     final tenantConfigMap = await _repository.getTenantConfig(widget.tenantId);
     _tenantConfig = tenantConfigMap;
+    await _resolveNavItems(tenantConfigMap);
     return GuestAppTheme.fromTenantConfig(tenantConfigMap);
+  }
+
+  Future<void> _resolveNavItems(Map<String, dynamic> tenantConfigMap) async {
+    try {
+      final catalog = await _moduleCatalogRepository.getCatalog();
+      final resolvedModules = resolvedModulesFromTenantConfig(tenantConfigMap);
+      _navItems = ModuleEngine.resolveNavItems(enabledModules: resolvedModules, catalog: catalog);
+    } on StateError {
+      // Catálogo indisponível (sem rede, backend fora do ar): mantém o
+      // fallback fixo já setado — nunca deixa a nav vazia/quebrada.
+    }
   }
 
   /// Soma mensagens não lidas da recepção + pedidos com mudança de status
@@ -99,7 +121,7 @@ class _TenantHomePageState extends State<TenantHomePage> {
 
   Widget _getWidgetForIndex(int index, GuestAppTheme theme, AppLocalizations l10n) {
     final tenantConfig = _tenantConfig!;
-    return switch (kGuestNavItems[index].route) {
+    return switch (_navItems[index].route) {
       'home' => TenantHomeBody(
           tenantId: widget.tenantId,
           userName: widget.guestName,
@@ -156,8 +178,8 @@ class _TenantHomePageState extends State<TenantHomePage> {
               child: SizedBox(
                 height: 64,
                 child: Row(
-                  children: List.generate(kGuestNavItems.length, (index) {
-                    final item = kGuestNavItems[index];
+                  children: List.generate(_navItems.length, (index) {
+                    final item = _navItems[index];
                     final selected = _selectedIndex == index;
                     final color = selected ? theme.accent : theme.tokens.navInactive;
                     return Expanded(
