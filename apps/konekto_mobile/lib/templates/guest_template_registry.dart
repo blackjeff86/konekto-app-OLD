@@ -13,17 +13,15 @@ import 'package:konekto/templates/shared/guest_template_content_params.dart';
 import 'package:konekto/templates/shared/guest_template_theme.dart';
 
 /// Os 5 templates White Label (`template` no `Hotel.config`, ver
-/// `apps/konekto_api/lib/feature-flags.ts` → `GuestTemplateId`). Task 14
-/// (Fase 4) ligou a Home de verdade a isso em `tenant_home_page.dart`
-/// quando `tenantConfig['template']` está presente — nenhum hotel real tem
-/// esse campo setado ainda (a migração de dado hotel a hotel é decisão
-/// separada, feita depois, não parte desta mudança), então esse caminho
-/// continua inalcançável em produção por ora; só prova que o mecanismo
-/// funciona. As outras abas (Serviços/Reservas/Perfil) continuam no visual
-/// antigo mesmo quando `template` está presente — só a Home foi migrada
-/// com dado real (Task 8/11); as demais telas dos templates novos usam
-/// dado fictício (Room Service, Diretório) e não têm onde plugar dado real
-/// ainda.
+/// `apps/konekto_api/lib/feature-flags.ts` → `GuestTemplateId`) — únicos
+/// templates válidos do app do hóspede. `tenant_home_page.dart` sempre
+/// renderiza a Home por aqui (fallback `aura` se `template` estiver
+/// ausente). As demais abas (Serviços/Reservas/Perfil) usam um tema
+/// compartilhado único (`GuestAppTheme`, `lib/theme/guest_app_theme.dart`)
+/// — não trocam de visual por template; só a Home troca. As telas
+/// específicas de cada template além da Home (Room Service, Diretório,
+/// Chat, Onboarding, Loyalty/Wallet) usam dado de demonstração e ainda não
+/// têm onde plugar dado real — não estão ligadas a nenhuma rota.
 enum GuestTemplateId { aura, bosque, elite, pulse, horizon }
 
 /// `null` quando `raw` é nulo/vazio/desconhecido — mesmo padrão de
@@ -52,9 +50,8 @@ final Map<GuestTemplateId, Widget Function(GuestTemplateContentParams params)> _
   GuestTemplateId.horizon: (params) => HorizonHomeContent(params: params),
 };
 
-/// `null` só se um template novo for adicionado ao enum sem Home migrada
-/// ainda — hoje os 5 têm Home.
-Widget? buildGuestTemplateHomeContent(GuestTemplateId id, GuestTemplateContentParams params) {
+Widget buildGuestTemplateHomeContent(GuestTemplateId id, GuestTemplateContentParams params) {
   final builder = _homeContentBuilders[id];
-  return builder?.call(params);
+  assert(builder != null, 'Nenhuma Home registrada para $id — os 5 templates precisam de builder.');
+  return builder!(params);
 }

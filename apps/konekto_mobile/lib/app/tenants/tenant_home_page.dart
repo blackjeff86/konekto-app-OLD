@@ -12,12 +12,9 @@ import 'package:konekto/data/tenant_repository.dart';
 import 'package:konekto/data/tenant_repository_provider.dart';
 import 'package:konekto/l10n/app_localizations.dart';
 import 'package:konekto/templates/guest_template_registry.dart';
-import 'package:konekto/templates/shared/guest_home_content_params.dart';
 import 'package:konekto/templates/shared/guest_template_content_params.dart';
 import 'package:konekto/templates/shared/widgets/profile_page.dart';
-import 'package:konekto/templates/template_registry.dart';
 import 'package:konekto/theme/guest_app_theme.dart';
-import 'package:konekto/theme/guest_infra.dart';
 
 String navItemLabel(AppLocalizations l10n, String route) => switch (route) {
       'home' => l10n.navHome,
@@ -250,63 +247,38 @@ class TenantHomeBody extends StatelessWidget {
         ),
       );
 
-  /// White Label (Task 14, Fase 4): quando o hotel já tem `template` setado
-  /// no config, a Home usa o sistema de templates novo (Aura/Bosque/Elite/
-  /// Pulse/Horizon) em vez do antigo. Nenhum hotel real tem `template`
-  /// setado ainda — a migração de dado hotel a hotel é uma decisão
-  /// separada, feita depois — então este caminho ainda não é alcançado em
-  /// produção; só prova que o mecanismo funciona sem risco. Só a Home
-  /// muda: bottomNavigationBar/Serviços/Reservas/Perfil continuam no
-  /// sistema antigo mesmo quando `template` está presente (não migrados).
+  /// White Label: a Home sempre usa um dos 5 templates novos
+  /// (Aura/Bosque/Elite/Pulse/Horizon), conforme `tenantConfig['template']`
+  /// — hotel sem esse campo setado (não deveria acontecer em produção,
+  /// todo hotel novo já nasce com `template: aura`) cai no fallback Aura,
+  /// nunca quebra por falta de dado. O sistema antigo de 5 infraestruturas
+  /// visuais (Amara Bay/Verde Pousada/Casa Marechal/Konekto Clássico/
+  /// Konekto Noturno) foi arquivado — ver `legacy-templates/` na raiz do
+  /// projeto.
   @override
   Widget build(BuildContext context) {
-    final newTemplateId = guestTemplateIdFromString(tenantConfig['template'] as String?);
-
-    final Widget content;
-    if (newTemplateId != null) {
-      final newTemplateParams = GuestTemplateContentParams(
-        tenantId: tenantId,
-        userName: userName,
-        roomNumber: roomNumber,
-        wifiNetworkName: wifiNetworkName,
-        wifiPassword: wifiPassword,
-        theme: guestTemplateThemes[newTemplateId]!,
-        notificationCount: notificationCount,
-        onNavigateToServices: onNavigateToServices,
-        onOpenNotices: _openNotices,
-        onOpenMyOrders: _openMyOrders,
-        onOpenHotelInfo: _openHotelInfo,
-      );
-      content = buildGuestTemplateHomeContent(newTemplateId, newTemplateParams) ??
-          _buildLegacyContent(context);
-    } else {
-      content = _buildLegacyContent(context);
-    }
-
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: theme.tokens.screenPadding),
-          child: content,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLegacyContent(BuildContext context) {
-    final params = GuestHomeContentParams(
+    final templateId = guestTemplateIdFromString(tenantConfig['template'] as String?) ?? GuestTemplateId.aura;
+    final templateParams = GuestTemplateContentParams(
       tenantId: tenantId,
       userName: userName,
       roomNumber: roomNumber,
       wifiNetworkName: wifiNetworkName,
       wifiPassword: wifiPassword,
-      theme: theme,
+      theme: guestTemplateThemes[templateId]!,
       notificationCount: notificationCount,
       onNavigateToServices: onNavigateToServices,
       onOpenNotices: _openNotices,
       onOpenMyOrders: _openMyOrders,
       onOpenHotelInfo: _openHotelInfo,
     );
-    return buildGuestHomeContent(context, theme.infra, params);
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: theme.tokens.screenPadding),
+          child: buildGuestTemplateHomeContent(templateId, templateParams),
+        ),
+      ),
+    );
   }
 }

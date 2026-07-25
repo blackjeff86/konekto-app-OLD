@@ -1,17 +1,106 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:konekto/theme/guest_infra.dart';
 
-/// Tema resolvido do app do hóspede — combina os tokens fixos da infra
-/// escolhida ([GuestInfraTokens], nunca editável por hotel) com os dados
-/// específicos do hotel (logo, nome, fotos, endereço) vindos de
-/// `tenantConfig`. Passado como parâmetro de construtor explícito pelas
-/// telas, no mesmo estilo em que `tenantConfig` já circula hoje — não é
-/// `InheritedWidget`/Provider, pra não introduzir um mecanismo de DI novo
-/// só por causa desta feature.
+/// Tokens visuais fixos das telas compartilhadas do app do hóspede
+/// (Serviços, Reservas, Perfil, Avisos, Meus Pedidos, Info do Hotel, Conta
+/// da estadia etc.) — nunca editáveis por hotel, nunca variam por template.
+///
+/// Essas telas são funcionalidade, não identidade visual de marca: existem
+/// por conta própria e continuam iguais não importa qual dos 5 templates
+/// (Aura/Bosque/Elite/Pulse/Horizon) o hotel escolheu pra Home — só a Home
+/// troca de cara por template (ver `lib/templates/<nome>/home_screen.dart`).
+/// Antes desta decisão, essas telas trocavam de visual junto com 5
+/// infraestruturas antigas (Amara Bay/Verde Pousada/Casa Marechal/Konekto
+/// Clássico/Konekto Noturno, arquivadas em `legacy-templates/`) — os
+/// valores abaixo são os da antiga "Verde Pousada" (o fallback padrão de
+/// sempre), agora fixos em vez de um entre cinco.
+class GuestSharedTokens {
+  final Color bg;
+  final Color card;
+  final Color text;
+  final Color muted;
+  final Color accent;
+  final Color accentSoft;
+  final Color navInactive;
+  final Color bottomNavBg;
+  final Color bottomNavBorder;
+  final String headlineFontFamily;
+  final String bodyFontFamily;
+  final double cardRadius;
+  final double heroRadius;
+  final double pillRadius;
+  final double iconTileRadius;
+  final double screenPadding;
+  final List<BoxShadow> cardShadow;
+
+  const GuestSharedTokens({
+    required this.bg,
+    required this.card,
+    required this.text,
+    required this.muted,
+    required this.accent,
+    required this.accentSoft,
+    required this.navInactive,
+    required this.bottomNavBg,
+    required this.bottomNavBorder,
+    required this.headlineFontFamily,
+    required this.bodyFontFamily,
+    required this.cardRadius,
+    required this.heroRadius,
+    required this.pillRadius,
+    required this.iconTileRadius,
+    required this.screenPadding,
+    required this.cardShadow,
+  });
+}
+
+const _cardShadow = [BoxShadow(color: Color(0x0D000000), blurRadius: 2, offset: Offset(0, 1))];
+
+const guestSharedTokens = GuestSharedTokens(
+  bg: Color(0xFFF9FAF2),
+  card: Colors.white,
+  text: Color(0xFF191C18),
+  muted: Color(0xFF444840),
+  accent: Color(0xFF45553C),
+  accentSoft: Color(0xFFDCE5D3),
+  navInactive: Color(0xFF757870),
+  bottomNavBg: Color(0xF0F9FAF2),
+  bottomNavBorder: Color(0x0F191C18),
+  headlineFontFamily: 'DM Sans',
+  bodyFontFamily: 'Hanken Grotesk',
+  cardRadius: 15,
+  heroRadius: 21,
+  pillRadius: 999,
+  iconTileRadius: 9.5,
+  screenPadding: 22,
+  cardShadow: _cardShadow,
+);
+
+/// Item da navegação inferior — conteúdo fixo, igual em qualquer template
+/// (só o estilo visual da barra usa [GuestSharedTokens], não a lista de
+/// abas). O rótulo vem de `AppLocalizations` na hora de renderizar (ver
+/// `navItemLabel` em `tenant_home_page.dart`), não daqui.
+class GuestNavItem {
+  final IconData icon;
+  final String route;
+  const GuestNavItem(this.icon, this.route);
+}
+
+const kGuestNavItems = [
+  GuestNavItem(Icons.home_outlined, 'home'),
+  GuestNavItem(Icons.grid_view_outlined, 'services'),
+  GuestNavItem(Icons.event_note_outlined, 'bookings'),
+  GuestNavItem(Icons.person_outline, 'profile'),
+];
+
+/// Tema resolvido das telas compartilhadas do app do hóspede — combina os
+/// tokens fixos ([guestSharedTokens]) com os dados específicos do hotel
+/// (logo, nome, fotos, endereço) vindos de `tenantConfig`. Passado como
+/// parâmetro de construtor explícito pelas telas, no mesmo estilo em que
+/// `tenantConfig` já circula hoje — não é `InheritedWidget`/Provider, pra
+/// não introduzir um mecanismo de DI novo só por causa disso.
 class GuestAppTheme {
-  final GuestInfra infra;
-  final GuestInfraTokens tokens;
+  final GuestSharedTokens tokens;
   final String hotelName;
   final String? logoUrl;
   final List<String> promoImages;
@@ -19,7 +108,6 @@ class GuestAppTheme {
   final String? hotelAddress;
 
   const GuestAppTheme({
-    required this.infra,
     required this.tokens,
     required this.hotelName,
     this.logoUrl,
@@ -29,12 +117,10 @@ class GuestAppTheme {
   });
 
   factory GuestAppTheme.fromTenantConfig(Map<String, dynamic> tenantConfig) {
-    final infra = guestInfraFromString(tenantConfig['infra'] as String?);
     final hotelInfo = tenantConfig['hotelInfo'] as Map<String, dynamic>? ?? {};
     final promo = hotelInfo['promoImages'] as Map<String, dynamic>? ?? {};
     return GuestAppTheme(
-      infra: infra,
-      tokens: infra.tokens,
+      tokens: guestSharedTokens,
       hotelName: hotelInfo['name'] as String? ?? '',
       logoUrl: hotelInfo['logoUrl'] as String?,
       promoImages: List<String>.from(promo['images'] as List? ?? const []),
