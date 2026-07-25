@@ -1,5 +1,12 @@
 # Implementation Plan: Portal do Hotel — Configurações (+ Convite de Staff)
 
+> **Nota histórica**: escrito quando o portal do hotel era o app Flutter
+> `apps/konekto_portal`. Esse app foi descontinuado e removido do repositório — o
+> portal em produção hoje é `apps/konekto_portal_next` (Next.js). Todas as
+> referências a `apps/konekto_portal` abaixo (e a `apps/konekto_admin` nas fases mais
+> recentes, se houver) registram fielmente o que foi construído em cada momento; não
+> são instruções válidas pro código atual.
+
 Spec de referência: `specs/portal-fase5-hospedes-pedidos-config.md`. Este plano cobre só a **primeira sub-entrega** da Fase 5 (Configurações), que foi definida como a mais independente/menor risco. Hóspedes e Pedidos recebem seu próprio Plan depois que esta parte estiver completa e testada.
 
 ## Overview

@@ -1,5 +1,11 @@
 # Spec: Portal do Hotel — Fase 5 (Hóspedes, Pedidos, Configurações)
 
+> **Nota histórica**: este spec foi escrito na época em que o portal do hotel era o
+> app Flutter `apps/konekto_portal`. Esse app foi descontinuado e removido do
+> repositório — o portal em produção hoje é `apps/konekto_portal_next` (Next.js). As
+> referências a `apps/konekto_portal` abaixo são um registro fiel do que foi
+> construído naquele momento, não instruções válidas pro código atual.
+
 ## Objective
 
 O portal do hotel (`apps/konekto_portal`) hoje só tem login funcional e um dashboard-esqueleto: as três seções da navegação (Hóspedes, Pedidos, Configurações) são cartões "Em breve" sem lógica real por trás. Esta fase entrega as três funcionalidades de verdade, permitindo que o staff do hotel (gerente/recepção) opere o dia a dia sem depender de um desenvolvedor.
