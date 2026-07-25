@@ -50,6 +50,7 @@ model Hotel {
   integration     HotelIntegration?
   subscription    HotelSubscription?
   supportMessages PlatformSupportMessage[]
+  analyticsEvents AnalyticsEvent[]
 
   @@map("hotels")
 }
@@ -790,4 +791,27 @@ model PlatformSupportMessage {
 
   @@index([hotelId])
   @@map("platform_support_messages")
+}
+
+/// Analytics Engine — só grava, sem dashboard nesta entrega (ver plano de
+/// migração de arquitetura de módulos). Assinante do Event Bus do lado
+/// Flutter (`lib/events/analytics_subscriber.dart`), que publica em lote.
+/// `type` é uma das constantes de evento de domínio (ex: 'ModuleOpened',
+/// 'RoomServiceOrdered') — string livre de propósito, catálogo de eventos
+/// vive no código Flutter, não é um enum aqui (mesmo motivo de `presetId`
+/// não ser enum: adicionar evento novo não pode exigir migration).
+/// `guestId` é nullable porque nem todo evento tem hóspede identificado
+/// ainda (ex: app aberto antes do claim).
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  hotelId   String
+  guestId   String?
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+  hotel     Hotel    @relation(fields: [hotelId], references: [id])
+
+  @@index([hotelId, type])
+  @@index([hotelId, createdAt])
+  @@map("analytics_events")
 }
