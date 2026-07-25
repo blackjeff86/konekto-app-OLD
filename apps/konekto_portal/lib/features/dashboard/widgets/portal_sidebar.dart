@@ -15,6 +15,11 @@ class PortalSidebar extends StatelessWidget {
   final StaffSession session;
   final AuthRepository authRepository;
 
+  /// Contador exibido como uma pastilha depois do título — indexado pela
+  /// posição em [sections]. Índices ausentes ou com valor 0 não mostram
+  /// nada (ex: pedidos pendentes na aba "Pedidos").
+  final Map<int, int> badgeCounts;
+
   const PortalSidebar({
     super.key,
     required this.sections,
@@ -22,6 +27,7 @@ class PortalSidebar extends StatelessWidget {
     required this.onSelected,
     required this.session,
     required this.authRepository,
+    this.badgeCounts = const {},
   });
 
   @override
@@ -57,6 +63,7 @@ class PortalSidebar extends StatelessWidget {
             section: sections[i],
             isSelected: i == selectedIndex,
             onTap: () => onSelected(i),
+            badgeCount: badgeCounts[i] ?? 0,
           ),
           const Spacer(),
           const Divider(height: 1, color: KonektoBrand.borderStrong),
@@ -71,8 +78,9 @@ class _NavItem extends StatelessWidget {
   final DashboardSection section;
   final bool isSelected;
   final VoidCallback onTap;
+  final int badgeCount;
 
-  const _NavItem({required this.section, required this.isSelected, required this.onTap});
+  const _NavItem({required this.section, required this.isSelected, required this.onTap, this.badgeCount = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -91,14 +99,25 @@ class _NavItem extends StatelessWidget {
             const SizedBox(width: 16),
             Icon(section.icon, size: 19, color: isSelected ? KonektoBrand.goldLight : KonektoBrand.slate),
             const SizedBox(width: 12),
-            Text(
-              section.title,
-              style: KonektoBrand.body(
-                fontSize: 13.5,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? KonektoBrand.cream : KonektoBrand.slate,
+            Expanded(
+              child: Text(
+                section.title,
+                style: KonektoBrand.body(
+                  fontSize: 13.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? KonektoBrand.cream : KonektoBrand.slate,
+                ),
               ),
             ),
+            if (badgeCount > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(color: KonektoBrand.gold, borderRadius: BorderRadius.circular(999)),
+                child: Text(
+                  badgeCount > 99 ? '99+' : '$badgeCount',
+                  style: KonektoBrand.body(fontSize: 10.5, fontWeight: FontWeight.w700, color: KonektoBrand.ink),
+                ),
+              ),
           ],
         ),
       ),

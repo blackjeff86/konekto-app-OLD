@@ -41,6 +41,8 @@ dependencies:
   qr_flutter: ^4.1.0
   intl_phone_field: ^3.2.0
   fl_chart: ^0.69.0
+  file_picker: ^11.0.2
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:

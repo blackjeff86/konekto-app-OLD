@@ -35,4 +35,25 @@ class OrdersRepository {
       throw StateError('Falha ao atualizar status (status ${response.statusCode}).');
     }
   }
+
+  /// Recepção lança um consumo de frigobar em nome de um hóspede da
+  /// estadia (ex: item notado faltando na conferência do quarto) — só
+  /// funciona pra itens marcados como frigobar no catálogo.
+  Future<void> recordConsumption({
+    required String hotelId,
+    required String stayId,
+    required String token,
+    required String guestId,
+    required String serviceItemId,
+    required int quantity,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('$apiBaseUrl/api/hotels/$hotelId/stays/$stayId/consumption'),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      body: jsonEncode({'guestId': guestId, 'serviceItemId': serviceItemId, 'quantity': quantity}),
+    );
+    if (response.statusCode != 201) {
+      throw StateError('Falha ao lançar consumo (status ${response.statusCode}).');
+    }
+  }
 }

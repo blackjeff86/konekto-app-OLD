@@ -363,6 +363,16 @@ class _OrderLine extends StatelessWidget {
                     'Obs: ${order.note}',
                     style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate).copyWith(fontStyle: FontStyle.italic),
                   ),
+                if (order.isStaffRecorded)
+                  Text(
+                    'Lançado pela recepção',
+                    style: KonektoBrand.body(fontSize: 11, color: KonektoBrand.slateSoft).copyWith(fontStyle: FontStyle.italic),
+                  ),
+                if (order.isPartnerPaid)
+                  Text(
+                    'Pago diretamente ao parceiro${order.partnerName != null ? ' (${order.partnerName})' : ''}',
+                    style: KonektoBrand.body(fontSize: 11, color: KonektoBrand.slateSoft).copyWith(fontStyle: FontStyle.italic),
+                  ),
               ],
             ),
           ),
@@ -370,7 +380,7 @@ class _OrderLine extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(color: _statusColor.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(999)),
             child: Text(
-              order.status.label,
+              order.status.label(order.isBooking),
               style: KonektoBrand.body(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor),
             ),
           ),
@@ -438,7 +448,9 @@ class _GuestEditDialogState extends State<_GuestEditDialog> {
   void _submit() {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
-    final documentNumber = _documentNumberController.text.trim();
+    final documentNumber = _documentType == DocumentType.cpf
+        ? stripNonDigits(_documentNumberController.text.trim())
+        : _documentNumberController.text.trim();
     final country = _countryController.text.trim();
     final phone = _phone;
     final phoneCountryCode = phone?.countryCode ?? widget.guest.phoneCountryCode;

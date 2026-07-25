@@ -7,13 +7,28 @@ import 'package:konekto_portal/auth/staff_role.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
 import 'package:konekto_portal/data/hotel_config_repository.dart';
 import 'package:konekto_portal/features/services/services_list_page.dart';
+import 'package:konekto_portal/features/settings/appearance_section.dart';
 import 'package:konekto_portal/features/settings/coupons_page.dart';
+import 'package:konekto_portal/features/settings/integration_section.dart';
+import 'package:konekto_portal/features/settings/partners_page.dart';
+import 'package:konekto_portal/features/settings/payments_section.dart';
 import 'package:konekto_portal/features/settings/room_registry_page.dart';
 import 'package:konekto_portal/features/staff/invite_staff_page.dart';
 import 'package:konekto_portal/guest_app_config.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
+import 'package:konekto_portal/widgets/image_upload_field.dart';
 
-const List<String> _kConfigSections = ['Marca', 'Serviços', 'Quartos', 'Cupons', 'Equipe'];
+const List<String> _kConfigSections = [
+  'Marca',
+  'Aparência',
+  'Serviços',
+  'Quartos',
+  'Cupons',
+  'Parceiros',
+  'Pagamentos',
+  'Integrações',
+  'Equipe',
+];
 
 /// Shell de Configurações — só `gerente` acessa. Alterna entre a edição de
 /// marca e a gestão de serviços dinâmicos (`ServicesListPage`).
@@ -69,19 +84,35 @@ class _SettingsPageState extends State<SettingsPage> {
               session: widget.session,
               authRepository: widget.authRepository,
             ),
-            1 => ServicesListPage(
+            1 => AppearanceSection(
               session: widget.session,
               authRepository: widget.authRepository,
             ),
-            2 => RoomRegistryPage(
+            2 => ServicesListPage(
               session: widget.session,
               authRepository: widget.authRepository,
             ),
-            3 => CouponsPage(
+            3 => RoomRegistryPage(
               session: widget.session,
               authRepository: widget.authRepository,
             ),
-            4 => InviteStaffPage(
+            4 => CouponsPage(
+              session: widget.session,
+              authRepository: widget.authRepository,
+            ),
+            5 => PartnersPage(
+              session: widget.session,
+              authRepository: widget.authRepository,
+            ),
+            6 => PaymentsSection(
+              session: widget.session,
+              authRepository: widget.authRepository,
+            ),
+            7 => IntegrationSection(
+              session: widget.session,
+              authRepository: widget.authRepository,
+            ),
+            8 => InviteStaffPage(
               session: widget.session,
               authRepository: widget.authRepository,
             ),
@@ -149,8 +180,7 @@ class _BrandingSectionState extends State<_BrandingSection> {
   final _repository = HotelConfigRepository();
   final _nameController = TextEditingController();
   final _logoUrlController = TextEditingController();
-  final _primaryController = TextEditingController();
-  final _secondaryController = TextEditingController();
+  final _addressController = TextEditingController();
 
   bool _isLoading = true;
   bool _isSaving = false;
@@ -166,8 +196,7 @@ class _BrandingSectionState extends State<_BrandingSection> {
   void dispose() {
     _nameController.dispose();
     _logoUrlController.dispose();
-    _primaryController.dispose();
-    _secondaryController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -175,12 +204,9 @@ class _BrandingSectionState extends State<_BrandingSection> {
     try {
       final config = await _repository.getConfig(widget.session.hotelId);
       final hotelInfo = config['hotelInfo'] as Map<String, dynamic>? ?? {};
-      final colorPalette =
-          config['colorPalette'] as Map<String, dynamic>? ?? {};
       _nameController.text = hotelInfo['name'] as String? ?? '';
       _logoUrlController.text = hotelInfo['logoUrl'] as String? ?? '';
-      _primaryController.text = colorPalette['primary'] as String? ?? '';
-      _secondaryController.text = colorPalette['secondary'] as String? ?? '';
+      _addressController.text = hotelInfo['address'] as String? ?? '';
     } on StateError catch (error) {
       _errorMessage = error.message;
     } on http.ClientException catch (error) {
@@ -204,13 +230,20 @@ class _BrandingSectionState extends State<_BrandingSection> {
       _errorMessage = null;
     });
     try {
+      // Campo vazio -> null (chave omitida no PATCH) em vez de string vazia
+      // -- o backend exige `min(1)` quando a chave está presente, então
+      // mandar '' pro campo de logo (opcional, muitas vezes em branco)
+      // sempre derrubava o salvamento inteiro com 400, mesmo só mudando o
+      // nome.
+      final name = _nameController.text.trim();
+      final logoUrl = _logoUrlController.text.trim();
+      final address = _addressController.text.trim();
       await _repository.updateBranding(
         hotelId: widget.session.hotelId,
         token: token,
-        name: _nameController.text.trim(),
-        logoUrl: _logoUrlController.text.trim(),
-        primary: _primaryController.text.trim(),
-        secondary: _secondaryController.text.trim(),
+        name: name.isEmpty ? null : name,
+        logoUrl: logoUrl.isEmpty ? null : logoUrl,
+        address: address.isEmpty ? null : address,
       );
       if (mounted) {
         ScaffoldMessenger.of(
@@ -242,9 +275,15 @@ class _BrandingSectionState extends State<_BrandingSection> {
           children: [
             const _ReceptionQrCard(),
             const SizedBox(height: 24),
-            _WifiSettingsCard(session: widget.session, authRepository: widget.authRepository),
+            _WifiSettingsCard(
+              session: widget.session,
+              authRepository: widget.authRepository,
+            ),
             const SizedBox(height: 24),
-            _PromoImagesCard(session: widget.session, authRepository: widget.authRepository),
+            _PromoImagesCard(
+              session: widget.session,
+              authRepository: widget.authRepository,
+            ),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(28),
@@ -292,19 +331,16 @@ class _BrandingSectionState extends State<_BrandingSection> {
                     controller: _nameController,
                   ),
                   const SizedBox(height: 14),
-                  _SettingsField(
+                  ImageUploadField(
                     label: 'URL do logo',
                     controller: _logoUrlController,
+                    hotelId: widget.session.hotelId,
+                    authRepository: widget.authRepository,
                   ),
                   const SizedBox(height: 14),
                   _SettingsField(
-                    label: 'Cor primária (hex)',
-                    controller: _primaryController,
-                  ),
-                  const SizedBox(height: 14),
-                  _SettingsField(
-                    label: 'Cor secundária (hex)',
-                    controller: _secondaryController,
+                    label: 'Endereço do hotel',
+                    controller: _addressController,
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
@@ -356,7 +392,10 @@ class _WifiSettingsCard extends StatefulWidget {
   final StaffSession session;
   final AuthRepository authRepository;
 
-  const _WifiSettingsCard({required this.session, required this.authRepository});
+  const _WifiSettingsCard({
+    required this.session,
+    required this.authRepository,
+  });
 
   @override
   State<_WifiSettingsCard> createState() => _WifiSettingsCardState();
@@ -386,7 +425,9 @@ class _WifiSettingsCardState extends State<_WifiSettingsCard> {
 
   Future<void> _load() async {
     try {
-      final wifi = await _repository.getWifiSettings(hotelId: widget.session.hotelId);
+      final wifi = await _repository.getWifiSettings(
+        hotelId: widget.session.hotelId,
+      );
       _networkController.text = wifi.networkName;
       _passwordController.text = wifi.password;
     } on StateError catch (error) {
@@ -399,7 +440,9 @@ class _WifiSettingsCardState extends State<_WifiSettingsCard> {
   Future<void> _save() async {
     final token = await widget.authRepository.getStoredToken();
     if (token == null) {
-      setState(() => _errorMessage = 'Sessão expirada — saia e entre novamente.');
+      setState(
+        () => _errorMessage = 'Sessão expirada — saia e entre novamente.',
+      );
       return;
     }
     setState(() {
@@ -414,7 +457,9 @@ class _WifiSettingsCardState extends State<_WifiSettingsCard> {
         password: _passwordController.text.trim(),
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wi-Fi salvo.')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Wi-Fi salvo.')));
       }
     } on StateError catch (error) {
       setState(() => _errorMessage = error.message);
@@ -443,23 +488,40 @@ class _WifiSettingsCardState extends State<_WifiSettingsCard> {
           ),
           const SizedBox(height: 24),
           if (_isLoading)
-            const Center(child: CircularProgressIndicator(color: KonektoBrand.gold))
+            const Center(
+              child: CircularProgressIndicator(color: KonektoBrand.gold),
+            )
           else ...[
             if (_errorMessage != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0x1ADC2626),
                   border: Border.all(color: const Color(0x4DDC2626)),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
+                child: Text(
+                  _errorMessage!,
+                  style: KonektoBrand.body(
+                    fontSize: 12.5,
+                    color: const Color(0xFFF1A6A0),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
             ],
-            _SettingsField(label: 'Nome da rede', controller: _networkController),
+            _SettingsField(
+              label: 'Nome da rede',
+              controller: _networkController,
+            ),
             const SizedBox(height: 14),
-            _SettingsField(label: 'Senha padrão', controller: _passwordController),
+            _SettingsField(
+              label: 'Senha padrão',
+              controller: _passwordController,
+            ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -470,15 +532,27 @@ class _WifiSettingsCardState extends State<_WifiSettingsCard> {
                   backgroundColor: KonektoBrand.gold,
                   foregroundColor: KonektoBrand.ink,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
                 child: _isSaving
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.4, color: KonektoBrand.ink),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          color: KonektoBrand.ink,
+                        ),
                       )
-                    : Text('Salvar', style: KonektoBrand.body(fontSize: 14, fontWeight: FontWeight.w700, color: KonektoBrand.ink)),
+                    : Text(
+                        'Salvar',
+                        style: KonektoBrand.body(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: KonektoBrand.ink,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -528,12 +602,18 @@ class _PromoImagesCardState extends State<_PromoImagesCard> {
     try {
       final config = await _repository.getConfig(widget.session.hotelId);
       final hotelInfo = config['hotelInfo'] as Map<String, dynamic>? ?? {};
-      final promoImages = hotelInfo['promoImages'] as Map<String, dynamic>? ?? {};
-      final images = (promoImages['images'] as List<dynamic>?)?.cast<String>() ?? const [];
-      _carouselHeight = (promoImages['carouselHeight'] as num?)?.toDouble() ?? 250;
+      final promoImages =
+          hotelInfo['promoImages'] as Map<String, dynamic>? ?? {};
+      final images =
+          (promoImages['images'] as List<dynamic>?)?.cast<String>() ?? const [];
+      _carouselHeight =
+          (promoImages['carouselHeight'] as num?)?.toDouble() ?? 250;
       setState(() {
-        _imageControllers.addAll(images.map((url) => TextEditingController(text: url)));
-        if (_imageControllers.isEmpty) _imageControllers.add(TextEditingController());
+        _imageControllers.addAll(
+          images.map((url) => TextEditingController(text: url)),
+        );
+        if (_imageControllers.isEmpty)
+          _imageControllers.add(TextEditingController());
       });
     } on StateError catch (error) {
       _errorMessage = error.message;
@@ -553,10 +633,15 @@ class _PromoImagesCardState extends State<_PromoImagesCard> {
   Future<void> _save() async {
     final token = await widget.authRepository.getStoredToken();
     if (token == null) {
-      setState(() => _errorMessage = 'Sessão expirada — saia e entre novamente.');
+      setState(
+        () => _errorMessage = 'Sessão expirada — saia e entre novamente.',
+      );
       return;
     }
-    final images = _imageControllers.map((c) => c.text.trim()).where((url) => url.isNotEmpty).toList();
+    final images = _imageControllers
+        .map((c) => c.text.trim())
+        .where((url) => url.isNotEmpty)
+        .toList();
     if (images.isEmpty) {
       setState(() => _errorMessage = 'Adicione pelo menos uma imagem.');
       return;
@@ -573,7 +658,9 @@ class _PromoImagesCardState extends State<_PromoImagesCard> {
         carouselHeight: _carouselHeight,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Carrossel salvo.')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Carrossel salvo.')));
       }
     } on StateError catch (error) {
       setState(() => _errorMessage = error.message);
@@ -594,7 +681,10 @@ class _PromoImagesCardState extends State<_PromoImagesCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Carrossel de destaque', style: KonektoBrand.display(fontSize: 18)),
+          Text(
+            'Carrossel de destaque',
+            style: KonektoBrand.display(fontSize: 18),
+          ),
           const SizedBox(height: 4),
           Text(
             'Imagens mostradas na tela inicial do hóspede depois que ele entra — use URLs de imagens hospedadas (ex: um link direto de foto).',
@@ -602,17 +692,28 @@ class _PromoImagesCardState extends State<_PromoImagesCard> {
           ),
           const SizedBox(height: 24),
           if (_isLoading)
-            const Center(child: CircularProgressIndicator(color: KonektoBrand.gold))
+            const Center(
+              child: CircularProgressIndicator(color: KonektoBrand.gold),
+            )
           else ...[
             if (_errorMessage != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0x1ADC2626),
                   border: Border.all(color: const Color(0x4DDC2626)),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
+                child: Text(
+                  _errorMessage!,
+                  style: KonektoBrand.body(
+                    fontSize: 12.5,
+                    color: const Color(0xFFF1A6A0),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
             ],
@@ -620,10 +721,23 @@ class _PromoImagesCardState extends State<_PromoImagesCard> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _SettingsField(label: 'URL da imagem ${i + 1}', controller: _imageControllers[i])),
+                  Expanded(
+                    child: ImageUploadField(
+                      label: 'URL da imagem ${i + 1}',
+                      controller: _imageControllers[i],
+                      hotelId: widget.session.hotelId,
+                      authRepository: widget.authRepository,
+                    ),
+                  ),
                   IconButton(
-                    onPressed: _imageControllers.length > 1 ? () => _removeRow(i) : null,
-                    icon: const Icon(Icons.remove_circle_outline, size: 20, color: KonektoBrand.slate),
+                    onPressed: _imageControllers.length > 1
+                        ? () => _removeRow(i)
+                        : null,
+                    icon: const Icon(
+                      Icons.remove_circle_outline,
+                      size: 20,
+                      color: KonektoBrand.slate,
+                    ),
                   ),
                 ],
               ),
@@ -631,8 +745,18 @@ class _PromoImagesCardState extends State<_PromoImagesCard> {
             ],
             TextButton.icon(
               onPressed: _addRow,
-              icon: const Icon(Icons.add, size: 16, color: KonektoBrand.goldLight),
-              label: Text('Adicionar imagem', style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.goldLight)),
+              icon: const Icon(
+                Icons.add,
+                size: 16,
+                color: KonektoBrand.goldLight,
+              ),
+              label: Text(
+                'Adicionar imagem',
+                style: KonektoBrand.body(
+                  fontSize: 12.5,
+                  color: KonektoBrand.goldLight,
+                ),
+              ),
             ),
             const SizedBox(height: 14),
             SizedBox(
@@ -644,15 +768,27 @@ class _PromoImagesCardState extends State<_PromoImagesCard> {
                   backgroundColor: KonektoBrand.gold,
                   foregroundColor: KonektoBrand.ink,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
                 child: _isSaving
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.4, color: KonektoBrand.ink),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          color: KonektoBrand.ink,
+                        ),
                       )
-                    : Text('Salvar', style: KonektoBrand.body(fontSize: 14, fontWeight: FontWeight.w700, color: KonektoBrand.ink)),
+                    : Text(
+                        'Salvar',
+                        style: KonektoBrand.body(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: KonektoBrand.ink,
+                        ),
+                      ),
               ),
             ),
           ],

@@ -58,6 +58,9 @@ class GuestOrderSummary {
   final DateTime createdAt;
   final double? discountAmount;
   final String? couponTitle;
+  final String? recordedByStaffId;
+  final String? partnerName;
+  final bool isPartnerPaid;
 
   const GuestOrderSummary({
     required this.id,
@@ -70,7 +73,19 @@ class GuestOrderSummary {
     required this.createdAt,
     this.discountAmount,
     this.couponTitle,
+    this.recordedByStaffId,
+    this.partnerName,
+    this.isPartnerPaid = false,
   });
+
+  /// `true` pra itens que passaram pelo fluxo de agendamento (restaurantes,
+  /// spa, eventos, passeios) — `false` pra pedidos simples de Serviço de
+  /// Quarto, que nunca têm horário marcado.
+  bool get isBooking => scheduledFor != null;
+
+  /// `true` quando a RECEPÇÃO lançou esse consumo em nome do hóspede —
+  /// `false` quando o próprio hóspede criou o pedido.
+  bool get isStaffRecorded => recordedByStaffId != null;
 
   factory GuestOrderSummary.fromJson(Map<String, dynamic> json) {
     final coupon = json['coupon'] as Map<String, dynamic>?;
@@ -85,6 +100,9 @@ class GuestOrderSummary {
       createdAt: DateTime.parse(json['createdAt'] as String),
       discountAmount: (json['discountAmount'] as num?)?.toDouble(),
       couponTitle: coupon?['title'] as String?,
+      recordedByStaffId: json['recordedByStaffId'] as String?,
+      partnerName: json['partnerName'] as String?,
+      isPartnerPaid: json['paymentMode'] == 'partner',
     );
   }
 }
@@ -148,6 +166,38 @@ class StayNotice {
 /// Reserva de um quarto — agrupa um ou mais hóspedes (marido, esposa,
 /// filhos), cada um com seu próprio código de acesso, todos centralizados
 /// no mesmo quarto/estadia.
+enum MessageSender { guest, staff }
+
+/// Mensagem de chat entre hóspede e recepção, por estadia — substitui
+/// `StayNotice` pra qualquer envio novo (o hóspede pode responder); os
+/// avisos antigos continuam aparecendo, só mesclados por data.
+class StayMessage {
+  final String id;
+  final MessageSender senderType;
+  final String? guestFirstName;
+  final String body;
+  final DateTime createdAt;
+
+  const StayMessage({
+    required this.id,
+    required this.senderType,
+    this.guestFirstName,
+    required this.body,
+    required this.createdAt,
+  });
+
+  factory StayMessage.fromJson(Map<String, dynamic> json) {
+    final guest = json['guest'] as Map<String, dynamic>?;
+    return StayMessage(
+      id: json['id'] as String,
+      senderType: json['senderType'] == 'staff' ? MessageSender.staff : MessageSender.guest,
+      guestFirstName: guest?['firstName'] as String?,
+      body: json['body'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+}
+
 class Stay {
   final String id;
   final String roomNumber;
@@ -157,6 +207,7 @@ class Stay {
   final DateTime createdAt;
   final List<StayGuestSummary> guests;
   final List<StayNotice> notices;
+  final List<StayMessage> messages;
 
   const Stay({
     required this.id,
@@ -167,11 +218,13 @@ class Stay {
     required this.createdAt,
     this.guests = const [],
     this.notices = const [],
+    this.messages = const [],
   });
 
   factory Stay.fromJson(Map<String, dynamic> json) {
     final rawGuests = json['guests'] as List<dynamic>?;
     final rawNotices = json['notices'] as List<dynamic>?;
+    final rawMessages = json['messages'] as List<dynamic>?;
     return Stay(
       id: json['id'] as String,
       roomNumber: json['roomNumber'] as String,
@@ -185,6 +238,9 @@ class Stay {
       notices: rawNotices == null
           ? const []
           : rawNotices.map((raw) => StayNotice.fromJson(raw as Map<String, dynamic>)).toList(),
+      messages: rawMessages == null
+          ? const []
+          : rawMessages.map((raw) => StayMessage.fromJson(raw as Map<String, dynamic>)).toList(),
     );
   }
 }

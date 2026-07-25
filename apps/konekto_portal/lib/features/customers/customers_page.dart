@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:konekto_portal/auth/auth_repository.dart';
 import 'package:konekto_portal/auth/staff_session.dart';
+import 'package:konekto_portal/data/coupons_repository.dart';
 import 'package:konekto_portal/data/customers_repository.dart';
+import 'package:konekto_portal/models/coupon.dart';
 import 'package:konekto_portal/models/customer.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
 
@@ -116,7 +118,12 @@ class _CustomersPageState extends State<CustomersPage> {
         (c) => c.documentNumber == _viewingDocumentNumber,
         orElse: () => _customers.first,
       );
-      return _CustomerDetail(customer: customer, onBack: () => setState(() => _viewingDocumentNumber = ''));
+      return _CustomerDetail(
+        customer: customer,
+        session: widget.session,
+        authRepository: widget.authRepository,
+        onBack: () => setState(() => _viewingDocumentNumber = ''),
+      );
     }
 
     if (_isLoading) {
@@ -285,11 +292,119 @@ class _CustomerRow extends StatelessWidget {
   }
 }
 
-class _CustomerDetail extends StatelessWidget {
+class _CustomerDetail extends StatefulWidget {
   final Customer customer;
+  final StaffSession session;
+  final AuthRepository authRepository;
   final VoidCallback onBack;
 
-  const _CustomerDetail({required this.customer, required this.onBack});
+  const _CustomerDetail({
+    required this.customer,
+    required this.session,
+    required this.authRepository,
+    required this.onBack,
+  });
+
+  @override
+  State<_CustomerDetail> createState() => _CustomerDetailState();
+}
+
+class _CustomerDetailState extends State<_CustomerDetail> {
+  final _customersRepository = CustomersRepository();
+  final _couponsRepository = CouponsRepository();
+  final _messageController = TextEditingController();
+
+  bool _couponsLoading = true;
+  List<Coupon> _coupons = const [];
+  String? _selectedCouponId;
+  bool _isSending = false;
+  String? _feedback;
+  bool _feedbackIsError = false;
+
+  Customer get customer => widget.customer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCoupons();
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCoupons() async {
+    final token = await widget.authRepository.getStoredToken();
+    if (token == null) {
+      setState(() {
+        _feedback = 'Sessão expirada — saia e entre novamente.';
+        _feedbackIsError = true;
+        _couponsLoading = false;
+      });
+      return;
+    }
+    try {
+      final coupons = await _couponsRepository.listCoupons(hotelId: widget.session.hotelId, token: token);
+      final enabled = coupons.where((coupon) => coupon.enabled).toList();
+      if (!mounted) return;
+      setState(() {
+        _coupons = enabled;
+        _selectedCouponId = enabled.isEmpty ? null : enabled.first.id;
+      });
+    } on StateError catch (error) {
+      if (mounted) {
+        setState(() {
+          _feedback = error.message;
+          _feedbackIsError = true;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _couponsLoading = false);
+    }
+  }
+
+  Future<void> _sendPromo() async {
+    final couponId = _selectedCouponId;
+    if (couponId == null) return;
+
+    final token = await widget.authRepository.getStoredToken();
+    if (token == null) {
+      setState(() {
+        _feedback = 'Sessão expirada — saia e entre novamente.';
+        _feedbackIsError = true;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSending = true;
+      _feedback = null;
+    });
+    try {
+      await _customersRepository.sendPromo(
+        hotelId: widget.session.hotelId,
+        documentNumber: customer.documentNumber,
+        token: token,
+        couponId: couponId,
+        message: _messageController.text.trim(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _feedback = 'E-mail enviado pra ${customer.email}.';
+        _feedbackIsError = false;
+        _messageController.clear();
+      });
+    } on StateError catch (error) {
+      setState(() {
+        _feedback = error.message;
+        _feedbackIsError = true;
+      });
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -301,7 +416,7 @@ class _CustomerDetail extends StatelessWidget {
           children: [
             Row(
               children: [
-                IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back, size: 18, color: KonektoBrand.slate)),
+                IconButton(onPressed: widget.onBack, icon: const Icon(Icons.arrow_back, size: 18, color: KonektoBrand.slate)),
                 Expanded(child: Text(customer.fullName, style: KonektoBrand.display(fontSize: 18))),
               ],
             ),
@@ -359,25 +474,114 @@ class _CustomerDetail extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            Text('Enviar promoção', style: KonektoBrand.display(fontSize: 15)),
+            const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(12),
+                color: KonektoBrand.surface,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: KonektoBrand.borderStrong),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.mail_outline, size: 18, color: KonektoBrand.slate),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Em breve: enviar e-mails com promoções e cupons direto pra esse cliente.',
-                      style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slate),
-                    ),
-                  ),
-                ],
-              ),
+              child: customer.email == null
+                  ? Row(
+                      children: [
+                        const Icon(Icons.mail_outline, size: 18, color: KonektoBrand.slate),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Esse cliente não tem e-mail cadastrado — não é possível enviar promoções.',
+                            style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slate),
+                          ),
+                        ),
+                      ],
+                    )
+                  : _couponsLoading
+                      ? const Center(child: CircularProgressIndicator(color: KonektoBrand.gold))
+                      : _coupons.isEmpty
+                          ? Text(
+                              'Nenhum cupom ativo no momento — crie um em Configurações > Cupons.',
+                              style: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slate),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  'Manda um e-mail pra ${customer.email} com o cupom escolhido.',
+                                  style: KonektoBrand.body(fontSize: 12.5),
+                                ),
+                                const SizedBox(height: 14),
+                                DropdownButtonFormField<String>(
+                                  initialValue: _selectedCouponId,
+                                  dropdownColor: KonektoBrand.surface,
+                                  style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
+                                    focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+                                  ),
+                                  items: [
+                                    for (final coupon in _coupons)
+                                      DropdownMenuItem(value: coupon.id, child: Text('${coupon.title} · ${coupon.discountLabel}')),
+                                  ],
+                                  onChanged: (value) => setState(() => _selectedCouponId = value),
+                                ),
+                                const SizedBox(height: 12),
+                                TextField(
+                                  controller: _messageController,
+                                  maxLines: 3,
+                                  style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
+                                  decoration: InputDecoration(
+                                    hintText: 'Mensagem adicional (opcional)',
+                                    hintStyle: KonektoBrand.body(fontSize: 12.5, color: KonektoBrand.slateSoft),
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                    enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.borderStrong)),
+                                    focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: KonektoBrand.gold)),
+                                  ),
+                                ),
+                                if (_feedback != null) ...[
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: _feedbackIsError ? const Color(0x1ADC2626) : const Color(0x1A5CB85C),
+                                      border: Border.all(color: _feedbackIsError ? const Color(0x4DDC2626) : const Color(0x4D5CB85C)),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      _feedback!,
+                                      style: KonektoBrand.body(
+                                        fontSize: 12.5,
+                                        color: _feedbackIsError ? const Color(0xFFF1A6A0) : const Color(0xFF9FDE9F),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 14),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 44,
+                                  child: ElevatedButton(
+                                    onPressed: _isSending || _selectedCouponId == null ? null : _sendPromo,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: KonektoBrand.gold,
+                                      foregroundColor: KonektoBrand.ink,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                                    ),
+                                    child: _isSending
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(strokeWidth: 2.2, color: KonektoBrand.ink),
+                                          )
+                                        : Text('Enviar e-mail', style: KonektoBrand.body(fontSize: 13.5, fontWeight: FontWeight.w700, color: KonektoBrand.ink)),
+                                  ),
+                                ),
+                              ],
+                            ),
             ),
           ],
         ),

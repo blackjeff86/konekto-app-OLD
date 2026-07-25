@@ -324,6 +324,7 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
   final _guestsRepository = GuestsRepository();
 
   final _documentNumberController = TextEditingController();
+  final _documentFocusNode = FocusNode();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -349,8 +350,23 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
   bool _lookupBannerFound = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Dispara a busca automaticamente ao sair do campo de documento (não só
+    // no clique do botão "Buscar") — staff que digita o CPF e já vai pro
+    // próximo campo, sem perceber o botão, ainda assim recebe os dados do
+    // hóspede que já se hospedou antes.
+    _documentFocusNode.addListener(() {
+      if (!_documentFocusNode.hasFocus && _documentNumberController.text.trim().isNotEmpty) {
+        _searchGuest();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _documentNumberController.dispose();
+    _documentFocusNode.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -387,7 +403,12 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
   }
 
   Future<void> _searchGuest() async {
-    final documentNumber = _documentNumberController.text.trim();
+    // CPF é sempre buscado só em dígitos — o cadastro é salvo sem máscara
+    // (mesmo formato usado antes da máscara visual existir), então buscar
+    // com pontuação nunca bate com um hóspede que já se hospedou antes.
+    final documentNumber = _documentType == DocumentType.cpf
+        ? stripNonDigits(_documentNumberController.text.trim())
+        : _documentNumberController.text.trim();
     if (documentNumber.isEmpty) {
       setState(() => _errorMessage = 'Digite o número do documento pra buscar.');
       return;
@@ -423,6 +444,18 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
         _prefillPhone = BrazilPhoneInputFormatter.format(result.phoneNumber);
         _prefillWhatsapp = result.whatsappNumber != null ? BrazilPhoneInputFormatter.format(result.whatsappNumber!) : null;
         _whatsappSameAsPhone = result.whatsappNumber == null || result.whatsappNumber == result.phoneNumber;
+        // `initialValue` do IntlPhoneField só preenche a exibição — o
+        // pacote nunca chama `onChanged` sozinho por causa disso, então sem
+        // atribuir aqui o `_phone`/`_whatsapp` ficam `null` e a validação do
+        // formulário barra o envio mesmo com os campos visualmente cheios.
+        _phone = PhoneNumber(countryISOCode: 'BR', countryCode: result.phoneCountryCode, number: result.phoneNumber);
+        _whatsapp = result.whatsappNumber != null
+            ? PhoneNumber(
+                countryISOCode: 'BR',
+                countryCode: result.whatsappCountryCode ?? result.phoneCountryCode,
+                number: result.whatsappNumber!,
+              )
+            : null;
         _prefillGeneration++;
         _lookupBanner = 'Hóspede encontrado: ${result.firstName} ${result.lastName} — dados preenchidos, revise se necessário.';
         _lookupBannerFound = true;
@@ -439,7 +472,9 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
     final checkOutDate = _checkOutDate;
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
-    final documentNumber = _documentNumberController.text.trim();
+    final documentNumber = _documentType == DocumentType.cpf
+        ? stripNonDigits(_documentNumberController.text.trim())
+        : _documentNumberController.text.trim();
     final country = _countryController.text.trim();
     final phone = _phone;
 
@@ -619,6 +654,7 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
                   child: _FormField(
                     label: _documentType == DocumentType.cpf ? 'CPF' : 'Número do documento',
                     controller: _documentNumberController,
+                    focusNode: _documentFocusNode,
                     inputFormatters: _documentType == DocumentType.cpf ? [CpfInputFormatter()] : null,
                   ),
                 ),
@@ -730,8 +766,11 @@ class _FreeRoomDetailState extends State<_FreeRoomDetail> {
                 onPressed: _isSubmitting ? null : _submit,
                 icon: _isSubmitting
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: KonektoBrand.ink))
-                    : const Icon(Icons.login, size: 18),
-                label: Text('Registrar hóspede e iniciar estadia', style: KonektoBrand.body(fontSize: 13.5, fontWeight: FontWeight.w700)),
+                    : const Icon(Icons.login, size: 18, color: KonektoBrand.ink),
+                label: Text(
+                  'Registrar hóspede e iniciar estadia',
+                  style: KonektoBrand.body(fontSize: 13.5, fontWeight: FontWeight.w700, color: KonektoBrand.ink),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: KonektoBrand.gold,
                   foregroundColor: KonektoBrand.ink,
@@ -787,13 +826,21 @@ class _FormField extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
+  final FocusNode? focusNode;
 
-  const _FormField({required this.label, required this.controller, this.keyboardType, this.inputFormatters});
+  const _FormField({
+    required this.label,
+    required this.controller,
+    this.keyboardType,
+    this.inputFormatters,
+    this.focusNode,
+  });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      focusNode: focusNode,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),

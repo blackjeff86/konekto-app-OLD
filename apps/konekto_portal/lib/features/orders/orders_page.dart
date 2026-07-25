@@ -1,90 +1,29 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:konekto_portal/auth/auth_repository.dart';
-import 'package:konekto_portal/auth/staff_session.dart';
-import 'package:konekto_portal/data/orders_repository.dart';
 import 'package:konekto_portal/models/order.dart';
 import 'package:konekto_portal/theme/konekto_brand.dart';
 
-const Duration _kPollInterval = Duration(seconds: 5);
-
 /// Tela "Pedidos" — lista os pedidos dos hóspedes (qualquer item de
-/// qualquer serviço, sem distinção por tipo) com polling a cada 5s
-/// enquanto a aba está aberta, e permite avançar o status.
-class OrdersPage extends StatefulWidget {
-  final StaffSession session;
-  final AuthRepository authRepository;
+/// qualquer serviço, sem distinção por tipo). Puramente apresentacional:
+/// o polling e o estado vivem em `DashboardPage`, que também é responsável
+/// por notificar (som + notificação do navegador) quando chega pedido novo
+/// mesmo com esta aba fechada.
+class OrdersPage extends StatelessWidget {
+  final bool isLoading;
+  final String? errorMessage;
+  final List<Order> orders;
+  final ValueChanged<(Order, OrderStatus)> onStatusChange;
 
-  const OrdersPage({super.key, required this.session, required this.authRepository});
-
-  @override
-  State<OrdersPage> createState() => _OrdersPageState();
-}
-
-class _OrdersPageState extends State<OrdersPage> {
-  final _repository = OrdersRepository();
-  Timer? _pollTimer;
-
-  bool _isLoading = true;
-  String? _errorMessage;
-  List<Order> _orders = const [];
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-    _pollTimer = Timer.periodic(_kPollInterval, (_) => _load(silent: true));
-  }
-
-  @override
-  void dispose() {
-    _pollTimer?.cancel();
-    super.dispose();
-  }
-
-  Future<String?> _requireToken() async {
-    final token = await widget.authRepository.getStoredToken();
-    if (token == null) {
-      setState(() => _errorMessage = 'Sessão expirada — saia e entre novamente.');
-    }
-    return token;
-  }
-
-  Future<void> _load({bool silent = false}) async {
-    if (!silent) setState(() => _isLoading = true);
-    final token = await _requireToken();
-    if (token == null) {
-      if (!silent) setState(() => _isLoading = false);
-      return;
-    }
-    try {
-      final orders = await _repository.listOrders(hotelId: widget.session.hotelId, token: token);
-      if (!mounted) return;
-      setState(() {
-        _orders = orders;
-        _errorMessage = null;
-      });
-    } on StateError catch (error) {
-      if (mounted) setState(() => _errorMessage = error.message);
-    } finally {
-      if (mounted && !silent) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _updateStatus(Order order, OrderStatus status) async {
-    final token = await _requireToken();
-    if (token == null) return;
-    try {
-      await _repository.updateStatus(hotelId: widget.session.hotelId, orderId: order.id, token: token, status: status);
-      await _load(silent: true);
-    } on StateError catch (error) {
-      setState(() => _errorMessage = error.message);
-    }
-  }
+  const OrdersPage({
+    super.key,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.orders,
+    required this.onStatusChange,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (isLoading) {
       return const Center(child: CircularProgressIndicator(color: KonektoBrand.gold));
     }
 
@@ -95,11 +34,11 @@ class _OrdersPageState extends State<OrdersPage> {
           Text('Pedidos', style: KonektoBrand.display(fontSize: 18)),
           const SizedBox(height: 4),
           Text(
-            'Atualiza automaticamente a cada 5 segundos.',
+            'Atualiza automaticamente a cada 5 segundos — você recebe um alerta sonoro quando chegar um pedido novo, mesmo em outra aba do portal.',
             style: KonektoBrand.body(fontSize: 12.5),
           ),
           const SizedBox(height: 20),
-          if (_errorMessage != null) ...[
+          if (errorMessage != null) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
@@ -107,11 +46,11 @@ class _OrdersPageState extends State<OrdersPage> {
                 border: Border.all(color: const Color(0x4DDC2626)),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(_errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
+              child: Text(errorMessage!, style: KonektoBrand.body(fontSize: 12.5, color: const Color(0xFFF1A6A0))),
             ),
             const SizedBox(height: 16),
           ],
-          if (_orders.isEmpty)
+          if (orders.isEmpty)
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
@@ -131,9 +70,9 @@ class _OrdersPageState extends State<OrdersPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final order in _orders) ...[
-                    if (order != _orders.first) const Divider(height: 1, color: KonektoBrand.borderStrong),
-                    _OrderRow(order: order, onStatusChange: (status) => _updateStatus(order, status)),
+                  for (final order in orders) ...[
+                    if (order != orders.first) const Divider(height: 1, color: KonektoBrand.borderStrong),
+                    _OrderRow(order: order, onStatusChange: (status) => onStatusChange((order, status))),
                   ],
                 ],
               ),
@@ -227,6 +166,20 @@ class _OrderRow extends StatelessWidget {
                     ],
                   ),
                 ],
+                if (order.isStaffRecorded) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Lançado pela recepção',
+                    style: KonektoBrand.body(fontSize: 11, color: KonektoBrand.slateSoft).copyWith(fontStyle: FontStyle.italic),
+                  ),
+                ],
+                if (order.isPartnerPaid) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Pago diretamente ao parceiro${order.partnerName != null ? ' (${order.partnerName})' : ''}',
+                    style: KonektoBrand.body(fontSize: 11, color: KonektoBrand.slateSoft).copyWith(fontStyle: FontStyle.italic),
+                  ),
+                ],
               ],
             ),
           ),
@@ -234,7 +187,7 @@ class _OrderRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(999)),
             child: Text(
-              order.status.label,
+              order.status.label(order.isBooking),
               style: KonektoBrand.body(fontSize: 11, fontWeight: FontWeight.w600, color: color),
             ),
           ),
@@ -246,7 +199,10 @@ class _OrderRow extends StatelessWidget {
               onSelected: onStatusChange,
               itemBuilder: (context) => [
                 for (final option in options)
-                  PopupMenuItem(value: option, child: Text(option.label, style: KonektoBrand.body(fontSize: 13, color: KonektoBrand.cream))),
+                  PopupMenuItem(
+                    value: option,
+                    child: Text(option.label(order.isBooking), style: KonektoBrand.body(fontSize: 13, color: KonektoBrand.cream)),
+                  ),
               ],
             ),
           ],

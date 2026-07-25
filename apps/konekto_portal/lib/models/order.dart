@@ -21,9 +21,13 @@ enum OrderStatus {
         OrderStatus.cancelled => 'cancelled',
       };
 
-  String get label => switch (this) {
-        OrderStatus.pending => 'Pendente',
-        OrderStatus.inProgress => 'Em andamento',
+  /// O rótulo muda conforme o tipo de pedido: item físico (Serviço de
+  /// Quarto) segue um fluxo de preparo/entrega, enquanto reserva agendada
+  /// (atividade, spa, mesa de restaurante) não "anda" fisicamente — só é
+  /// confirmada e depois concluída após o horário marcado.
+  String label(bool isBooking) => switch (this) {
+        OrderStatus.pending => isBooking ? 'Aguardando confirmação' : 'Pendente',
+        OrderStatus.inProgress => isBooking ? 'Confirmado' : 'Preparando',
         OrderStatus.completed => 'Concluído',
         OrderStatus.cancelled => 'Cancelado',
       };
@@ -44,6 +48,9 @@ class Order {
   final DateTime createdAt;
   final double? discountAmount;
   final String? couponTitle;
+  final String? recordedByStaffId;
+  final String? partnerName;
+  final bool isPartnerPaid;
 
   const Order({
     required this.id,
@@ -58,7 +65,20 @@ class Order {
     required this.createdAt,
     this.discountAmount,
     this.couponTitle,
+    this.recordedByStaffId,
+    this.partnerName,
+    this.isPartnerPaid = false,
   });
+
+  /// `true` pra itens que passaram pelo fluxo de agendamento (restaurantes,
+  /// spa, eventos, passeios) — `false` pra pedidos simples de Serviço de
+  /// Quarto, que nunca têm horário marcado.
+  bool get isBooking => scheduledFor != null;
+
+  /// `true` quando a RECEPÇÃO lançou esse consumo em nome do hóspede (ex:
+  /// item de frigobar notado faltando na conferência do quarto) — `false`
+  /// quando o próprio hóspede criou o pedido.
+  bool get isStaffRecorded => recordedByStaffId != null;
 
   factory Order.fromJson(Map<String, dynamic> json) {
     final guest = json['guest'] as Map<String, dynamic>;
@@ -76,6 +96,9 @@ class Order {
       createdAt: DateTime.parse(json['createdAt'] as String),
       discountAmount: (json['discountAmount'] as num?)?.toDouble(),
       couponTitle: coupon?['title'] as String?,
+      recordedByStaffId: json['recordedByStaffId'] as String?,
+      partnerName: json['partnerName'] as String?,
+      isPartnerPaid: json['paymentMode'] == 'partner',
     );
   }
 }
