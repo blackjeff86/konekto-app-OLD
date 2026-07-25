@@ -3,25 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:konekto_admin/auth/auth_repository.dart';
 import 'package:konekto_admin/data/admin_support_repository.dart' as support;
 import 'package:konekto_admin/data/clients_repository.dart';
+import 'package:konekto_admin/data/modules_catalog_repository.dart';
 import 'package:konekto_admin/theme/konekto_brand.dart';
 
 const List<String> _kStatusOptions = ['trial', 'active', 'suspended', 'cancelled'];
 const List<String> _kPaymentStatusOptions = ['em_dia', 'atrasado', 'isento'];
 const List<String> _kPlanOptions = ['essential', 'premium', 'enterprise'];
-
-/// Espelha `FEATURE_FLAGS` em apps/konekto_api/lib/feature-flags.ts — rótulo
-/// em PT-BR só pra exibição aqui, o backend segue trabalhando com o id.
-const List<(String id, String label)> _kFeatureFlags = [
-  ('digital_checkin', 'Check-in digital'),
-  ('digital_checkout', 'Check-out digital'),
-  ('interactive_map', 'Mapa interativo'),
-  ('promotions', 'Promoções'),
-  ('loyalty', 'Programa de fidelidade'),
-  ('digital_wallet', 'Carteira digital'),
-  ('multilingual_chat', 'Chat multilíngue'),
-  ('service_reviews', 'Avaliação de serviço'),
-  ('smart_notifications', 'Notificações inteligentes'),
-];
 
 class ClientDetailPage extends StatefulWidget {
   final String hotelId;
@@ -42,6 +29,7 @@ class ClientDetailPage extends StatefulWidget {
 class _ClientDetailPageState extends State<ClientDetailPage> {
   final _repository = ClientsRepository();
   final _supportRepository = support.AdminSupportRepository();
+  final _modulesCatalogRepository = ModulesCatalogRepository();
   final _messageController = TextEditingController();
   final _planNameController = TextEditingController();
   final _monthlyAmountController = TextEditingController();
@@ -49,15 +37,18 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
 
   bool _isLoading = true;
   bool _isSavingSubscription = false;
-  bool _isSavingFeatures = false;
+  bool _isSavingModules = false;
   bool _isSendingMessage = false;
   String? _errorMessage;
   HotelOverview? _hotel;
   List<support.SupportMessage> _messages = const [];
+  List<ModuleDefinition> _catalogModules = const [];
+  List<PlanPreset> _planPresets = const [];
   String _status = 'trial';
   String _paymentStatus = 'em_dia';
   String _plan = 'essential';
-  Set<String> _selectedEnabledFeatures = {};
+  String _presetId = 'essential';
+  Set<String> _selectedExtraModules = {};
 
   @override
   void initState() {
@@ -87,18 +78,23 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
       final results = await Future.wait([
         _repository.getHotel(hotelId: widget.hotelId, token: token),
         _supportRepository.listMessages(hotelId: widget.hotelId, token: token),
+        _modulesCatalogRepository.getCatalog(),
       ]);
       final hotel = results[0] as HotelOverview;
+      final catalog = results[2] as ModulesCatalog;
       setState(() {
         _hotel = hotel;
         _messages = results[1] as List<support.SupportMessage>;
+        _catalogModules = catalog.modules;
+        _planPresets = catalog.planPresets;
         _planNameController.text = hotel.subscription?.planName ?? '';
         _monthlyAmountController.text = hotel.subscription?.monthlyAmount?.toStringAsFixed(2) ?? '';
         _status = hotel.subscription?.status ?? 'trial';
         _paymentStatus = hotel.subscription?.paymentStatus ?? 'em_dia';
         _notesController.text = hotel.subscription?.notes ?? '';
         _plan = hotel.subscription?.plan ?? 'essential';
-        _selectedEnabledFeatures = hotel.enabledFeatures.toSet();
+        _presetId = hotel.subscription?.presetId ?? _plan;
+        _selectedExtraModules = hotel.extraModules.toSet();
       });
       unawaited(_supportRepository.markThreadRead(hotelId: widget.hotelId, token: token));
     } on StateError catch (error) {
@@ -137,6 +133,7 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
         paymentStatus: _paymentStatus,
         notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         plan: _plan,
+        presetId: _presetId,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Plano atualizado.')));
@@ -149,28 +146,28 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
     }
   }
 
-  Future<void> _saveEnabledFeatures() async {
+  Future<void> _saveExtraModules() async {
     final token = await widget.authRepository.getStoredToken();
     if (token == null) return;
 
     setState(() {
-      _isSavingFeatures = true;
+      _isSavingModules = true;
       _errorMessage = null;
     });
     try {
-      await _repository.updateEnabledFeatures(
+      await _repository.updateExtraModules(
         hotelId: widget.hotelId,
         token: token,
-        enabledFeatures: _selectedEnabledFeatures.toList(),
+        extraModules: _selectedExtraModules.toList(),
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Recursos de cortesia atualizados.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Módulos de cortesia atualizados.')));
       }
       await _load();
     } on StateError catch (error) {
       setState(() => _errorMessage = error.message);
     } finally {
-      if (mounted) setState(() => _isSavingFeatures = false);
+      if (mounted) setState(() => _isSavingModules = false);
     }
   }
 
@@ -289,7 +286,15 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
             decoration: _fieldDecoration('Mensalidade (R\$, opcional)'),
           ),
           const SizedBox(height: 12),
-          _buildDropdown('Plano White Label', _plan, _kPlanOptions, (value) => setState(() => _plan = value)),
+          _buildDropdown('Plano (billing/relatório)', _plan, _kPlanOptions, (value) => setState(() => _plan = value)),
+          const SizedBox(height: 12),
+          _buildDropdown(
+            'Plan Preset (módulos/templates)',
+            _planPresets.any((preset) => preset.id == _presetId) ? _presetId : _plan,
+            _planPresets.map((preset) => preset.id).toList(),
+            (value) => setState(() => _presetId = value),
+            optionLabel: (id) => _planPresets.firstWhere((preset) => preset.id == id, orElse: () => PlanPreset(id: id, name: id)).name,
+          ),
           const SizedBox(height: 12),
           _buildDropdown('Status', _status, _kStatusOptions, (value) => setState(() => _status = value)),
           const SizedBox(height: 12),
@@ -323,13 +328,19 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
     );
   }
 
-  Widget _buildDropdown(String label, String value, List<String> options, ValueChanged<String> onChanged) {
+  Widget _buildDropdown(
+    String label,
+    String value,
+    List<String> options,
+    ValueChanged<String> onChanged, {
+    String Function(String id)? optionLabel,
+  }) {
     return DropdownButtonFormField<String>(
       initialValue: value,
       dropdownColor: KonektoBrand.surfaceAlt,
       style: KonektoBrand.body(fontSize: 13.5, color: KonektoBrand.cream),
       decoration: _fieldDecoration(label),
-      items: options.map((option) => DropdownMenuItem(value: option, child: Text(option))).toList(),
+      items: options.map((option) => DropdownMenuItem(value: option, child: Text(optionLabel?.call(option) ?? option))).toList(),
       onChanged: (value) {
         if (value != null) onChanged(value);
       },
@@ -390,9 +401,14 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
     );
   }
 
-  /// Recursos Premium liberados de cortesia pra este hotel, além do que o
-  /// plano já dá por padrão (`hotel.defaultFeatures`, sempre marcado e
-  /// travado aqui — não dá pra "desligar" o que o plano inclui). Só a
+  /// Módulos liberados de cortesia pra este hotel, além do que o Plan
+  /// Preset já dá por padrão (`hotel.allowedModules`, sempre marcado e
+  /// travado aqui — não dá pra "desligar" o que o preset inclui, isso o
+  /// próprio hotel faz no portal dele). Lista vem do catálogo
+  /// (`GET /api/modules-catalog`), nunca hardcoded — módulo novo aparece
+  /// aqui automaticamente. `implemented: false` fica visível (a equipe
+  /// Konekto pode querer conferir o catálogo inteiro) mas sem toggle, pra
+  /// não liberar cortesia de algo que ainda não tem tela nenhuma. Só a
   /// equipe Konekto vê essa tela; não existe equivalente no portal do
   /// hotel (ver PATCH /api/platform-admin/hotels/{hotelId}).
   Widget _buildFeaturesCard(HotelOverview hotel) {
@@ -406,10 +422,10 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Recursos Premium', style: KonektoBrand.display(fontSize: 15)),
+          Text('Módulos', style: KonektoBrand.display(fontSize: 15)),
           const SizedBox(height: 4),
           Text(
-            'Marcados e travados = incluídos no plano atual. Os demais podem ser liberados como cortesia, sem mudar o plano do hotel.',
+            'Marcados e travados = incluídos no preset atual. Os demais podem ser liberados como cortesia, sem mudar o plano do hotel. Cinza = ainda sem tela pronta.',
             style: KonektoBrand.body(fontSize: 11.5),
           ),
           const SizedBox(height: 14),
@@ -417,18 +433,19 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
             spacing: 10,
             runSpacing: 10,
             children: [
-              for (final (id, label) in _kFeatureFlags)
+              for (final module in _catalogModules)
                 _FeatureFlagChip(
-                  label: label,
-                  includedInPlan: hotel.defaultFeatures.contains(id),
-                  selected: hotel.defaultFeatures.contains(id) || _selectedEnabledFeatures.contains(id),
-                  onTap: hotel.defaultFeatures.contains(id)
+                  label: module.name,
+                  includedInPlan: hotel.allowedModules.contains(module.id),
+                  implemented: module.implemented,
+                  selected: hotel.allowedModules.contains(module.id) || _selectedExtraModules.contains(module.id),
+                  onTap: !module.implemented || hotel.allowedModules.contains(module.id)
                       ? null
                       : () => setState(() {
-                            if (_selectedEnabledFeatures.contains(id)) {
-                              _selectedEnabledFeatures.remove(id);
+                            if (_selectedExtraModules.contains(module.id)) {
+                              _selectedExtraModules.remove(module.id);
                             } else {
-                              _selectedEnabledFeatures.add(id);
+                              _selectedExtraModules.add(module.id);
                             }
                           }),
                 ),
@@ -439,14 +456,14 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
             height: 42,
             width: 160,
             child: ElevatedButton(
-              onPressed: _isSavingFeatures ? null : _saveEnabledFeatures,
+              onPressed: _isSavingModules ? null : _saveExtraModules,
               style: ElevatedButton.styleFrom(
                 backgroundColor: KonektoBrand.gold,
                 foregroundColor: KonektoBrand.ink,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
               ),
-              child: _isSavingFeatures
+              child: _isSavingModules
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: KonektoBrand.ink))
                   : Text('Salvar', style: KonektoBrand.body(fontSize: 13.5, fontWeight: FontWeight.w700, color: KonektoBrand.ink)),
             ),
@@ -569,33 +586,45 @@ class _FeatureFlagChip extends StatelessWidget {
   final String label;
   final bool selected;
   final bool includedInPlan;
+  final bool implemented;
   final VoidCallback? onTap;
 
-  const _FeatureFlagChip({required this.label, required this.selected, required this.includedInPlan, required this.onTap});
+  const _FeatureFlagChip({
+    required this.label,
+    required this.selected,
+    required this.includedInPlan,
+    this.implemented = true,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? KonektoBrand.gold.withValues(alpha: 0.14) : Colors.white.withValues(alpha: 0.02),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: selected ? KonektoBrand.gold : KonektoBrand.borderStrong, width: selected ? 1.4 : 1),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              includedInPlan ? Icons.lock_outline : (selected ? Icons.check_circle : Icons.circle_outlined),
-              size: 15,
-              color: selected ? KonektoBrand.gold : KonektoBrand.slate,
-            ),
-            const SizedBox(width: 6),
-            Text(label, style: KonektoBrand.body(fontSize: 12, fontWeight: FontWeight.w600, color: selected ? KonektoBrand.cream : KonektoBrand.slate)),
-          ],
+    return Opacity(
+      opacity: implemented ? 1 : 0.45,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? KonektoBrand.gold.withValues(alpha: 0.14) : Colors.white.withValues(alpha: 0.02),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: selected ? KonektoBrand.gold : KonektoBrand.borderStrong, width: selected ? 1.4 : 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                !implemented
+                    ? Icons.hourglass_empty
+                    : (includedInPlan ? Icons.lock_outline : (selected ? Icons.check_circle : Icons.circle_outlined)),
+                size: 15,
+                color: selected ? KonektoBrand.gold : KonektoBrand.slate,
+              ),
+              const SizedBox(width: 6),
+              Text(label, style: KonektoBrand.body(fontSize: 12, fontWeight: FontWeight.w600, color: selected ? KonektoBrand.cream : KonektoBrand.slate)),
+            ],
+          ),
         ),
       ),
     );

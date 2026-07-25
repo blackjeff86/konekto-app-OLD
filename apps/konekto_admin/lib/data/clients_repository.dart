@@ -8,10 +8,13 @@ class Subscription {
   final String status;
   final String paymentStatus;
   final String? notes;
-  // Categoria White Label (essential/premium/enterprise) — controla
-  // template/feature flag do app do hóspede, distinto de `planName` (texto
-  // livre exibido no financeiro). Ver apps/konekto_api/lib/feature-flags.ts.
+  // Rótulo de billing/relatório (essential/premium/enterprise) — não
+  // controla mais módulo/template diretamente, ver `presetId` abaixo.
   final String plan;
+  // Plan Preset — quem de fato controla módulo/template permitido (ver
+  // apps/konekto_api/lib/plan-presets.ts). Sincronizado com `plan` por
+  // padrão, mas pode divergir pra uma atribuição sob medida.
+  final String presetId;
 
   const Subscription({
     required this.planName,
@@ -20,6 +23,7 @@ class Subscription {
     required this.paymentStatus,
     this.notes,
     required this.plan,
+    required this.presetId,
   });
 
   factory Subscription.fromJson(Map<String, dynamic> json) {
@@ -30,6 +34,7 @@ class Subscription {
       paymentStatus: json['paymentStatus'] as String,
       notes: json['notes'] as String?,
       plan: json['plan'] as String? ?? 'essential',
+      presetId: json['presetId'] as String? ?? json['plan'] as String? ?? 'essential',
     );
   }
 }
@@ -88,12 +93,13 @@ class HotelOverview {
   final String name;
   final String? address;
   final Subscription? subscription;
-  // Flags que o plano já dá por padrão (somente leitura na UI de cortesia —
-  // não faz sentido "desligar" o que o plano já inclui).
-  final List<String> defaultFeatures;
-  // Só as extras de cortesia (`Hotel.config.enabledFeatures`), nunca as do
-  // plano — é exatamente o que `updateEnabledFeatures` espera de volta.
-  final List<String> enabledFeatures;
+  // Módulos que o Plan Preset já permite (somente leitura na UI de
+  // cortesia — não faz sentido "desligar" o que o preset já inclui, isso o
+  // próprio hotel faz no portal dele).
+  final List<String> allowedModules;
+  // Só as extras de cortesia (`Hotel.config.extraModules`), nunca as do
+  // preset — é exatamente o que `updateExtraModules` espera de volta.
+  final List<String> extraModules;
   final int activeGuestCount;
   final IntegrationHealth integration;
   final int unreadSupportMessages;
@@ -104,8 +110,8 @@ class HotelOverview {
     required this.name,
     required this.address,
     required this.subscription,
-    this.defaultFeatures = const [],
-    this.enabledFeatures = const [],
+    this.allowedModules = const [],
+    this.extraModules = const [],
     required this.activeGuestCount,
     required this.integration,
     required this.unreadSupportMessages,
@@ -118,8 +124,8 @@ class HotelOverview {
       name: json['name'] as String,
       address: json['address'] as String?,
       subscription: json['subscription'] != null ? Subscription.fromJson(json['subscription'] as Map<String, dynamic>) : null,
-      defaultFeatures: (json['defaultFeatures'] as List<dynamic>?)?.map((item) => item as String).toList() ?? const [],
-      enabledFeatures: (json['enabledFeatures'] as List<dynamic>?)?.map((item) => item as String).toList() ?? const [],
+      allowedModules: (json['allowedModules'] as List<dynamic>?)?.map((item) => item as String).toList() ?? const [],
+      extraModules: (json['extraModules'] as List<dynamic>?)?.map((item) => item as String).toList() ?? const [],
       activeGuestCount: json['activeGuestCount'] as int? ?? 0,
       integration: IntegrationHealth.fromJson(json['integration'] as Map<String, dynamic>),
       unreadSupportMessages: json['unreadSupportMessages'] as int? ?? 0,
@@ -222,6 +228,11 @@ class ClientsRepository {
     required String paymentStatus,
     String? notes,
     required String plan,
+    // Plan Preset — quando omitido, o backend sincroniza com `plan`
+    // (mesmo valor). Só precisa ser diferente pra uma atribuição sob
+    // medida (ex: um preset "premium_plus" que ainda não virou plano
+    // comercial oficial no financeiro).
+    String? presetId,
   }) async {
     final response = await _client.patch(
       Uri.parse('$apiBaseUrl/api/platform-admin/hotels/$hotelId/subscription'),
@@ -236,6 +247,7 @@ class ClientsRepository {
         'paymentStatus': paymentStatus,
         'notes': notes,
         'plan': plan,
+        if (presetId != null) 'presetId': presetId,
       }),
     );
     if (response.statusCode != 200) {
@@ -243,13 +255,14 @@ class ClientsRepository {
     }
   }
 
-  /// Substitui a lista INTEIRA de flags de cortesia (nunca as do plano —
-  /// ver `HotelOverview.enabledFeatures`). Só o time Konekto usa isso; não
-  /// existe equivalente no portal do hotel.
-  Future<void> updateEnabledFeatures({
+  /// Substitui a lista INTEIRA de módulos de cortesia (nunca os do preset —
+  /// ver `HotelOverview.extraModules`). Só o time Konekto usa isso; não
+  /// existe equivalente no portal do hotel. Renomeado de
+  /// `updateEnabledFeatures`.
+  Future<void> updateExtraModules({
     required String hotelId,
     required String token,
-    required List<String> enabledFeatures,
+    required List<String> extraModules,
   }) async {
     final response = await _client.patch(
       Uri.parse('$apiBaseUrl/api/platform-admin/hotels/$hotelId'),
@@ -257,10 +270,10 @@ class ClientsRepository {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode({'enabledFeatures': enabledFeatures}),
+      body: jsonEncode({'extraModules': extraModules}),
     );
     if (response.statusCode != 200) {
-      throw StateError('Falha ao salvar os recursos de cortesia (status ${response.statusCode}).');
+      throw StateError('Falha ao salvar os módulos de cortesia (status ${response.statusCode}).');
     }
   }
 }
