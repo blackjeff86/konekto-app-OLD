@@ -537,6 +537,16 @@ model Service {
   description               String
   type                      ServiceType
   category                  String
+  /// Módulo de Hospitalidade (Module Catalog, apps/konekto_api/lib/module-catalog.ts)
+  /// que este serviço pertence — controla se ele aparece pro hóspede
+  /// (módulo desligado = serviço some, mesmo com `enabled: true`). Nullable
+  /// de propósito: dado existente antes desta migração não pode ser
+  /// auto-atribuído com segurança (Spa/Passeios/Eventos eram todos
+  /// `type: activity`, indistinguíveis pelo `type`/`category`) — fica
+  /// `null` (sempre visível, nunca gateado) até alguém confirmar/atribuir
+  /// manualmente. Serviço criado depois desta migração é obrigado a vir
+  /// com `moduleId`.
+  moduleId                  String?
   bannerImageUrl            String?
   position                  Int                   @default(0)
   enabled                   Boolean               @default(true)
