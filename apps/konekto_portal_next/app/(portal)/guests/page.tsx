@@ -50,13 +50,10 @@ export default function GuestsPage() {
   return (
     <div className="flex flex-col gap-7">
       <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
-        <div className="max-w-xl">
-          <h1 className="text-[28px] font-extrabold tracking-tight text-cream">Hóspedes</h1>
-          <p className="mt-2 text-[13.5px] leading-relaxed text-slate">
-            Cada hóspede recebe um código individual pra entrar no app — sem senha, sem cadastro.
-            Vários hóspedes do mesmo quarto ficam agrupados na aba Quartos.
-          </p>
-        </div>
+        <p className="max-w-xl text-[13.5px] leading-relaxed text-slate">
+          Cada hóspede recebe um código individual pra entrar no app — sem senha, sem cadastro.
+          Vários hóspedes do mesmo quarto ficam agrupados na aba Quartos.
+        </p>
         <button
           type="button"
           onClick={handleOpenCreate}

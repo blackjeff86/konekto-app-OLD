@@ -44,17 +44,14 @@ export default function OrdersPage() {
 
   return (
     <div className="flex flex-col gap-7">
-      <div>
-        <h1 className="text-[28px] font-extrabold tracking-tight text-cream">Pedidos</h1>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1 text-[10px] font-bold tracking-wide text-gold-light uppercase">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" /> Ao vivo
-          </span>
-          <p className="text-[12.5px] text-slate">
-            Atualiza a cada 5 segundos — alerta sonoro quando chegar um pedido novo, mesmo em outra
-            aba do portal.
-          </p>
-        </div>
+      <div className="flex items-center gap-3">
+        <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1 text-[10px] font-bold tracking-wide text-gold-light uppercase">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" /> Ao vivo
+        </span>
+        <p className="text-[12.5px] text-slate">
+          Atualiza a cada 5 segundos — alerta sonoro quando chegar um pedido novo, mesmo em outra
+          aba do portal.
+        </p>
       </div>
 
       {errorMessage && (

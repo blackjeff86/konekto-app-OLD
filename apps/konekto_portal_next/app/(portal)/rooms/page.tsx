@@ -23,13 +23,10 @@ export default function RoomsPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
-        <div className="max-w-xl">
-          <h1 className="text-[28px] font-extrabold tracking-tight text-cream">Quartos</h1>
-          <p className="mt-2 text-[13.5px] leading-relaxed text-slate">
-            Toque num quarto vago pra registrar um hóspede e iniciar a estadia — ou num quarto
-            ocupado pra ver hóspedes, avisos e o valor em aberto.
-          </p>
-        </div>
+        <p className="max-w-xl text-[13.5px] leading-relaxed text-slate">
+          Toque num quarto vago pra registrar um hóspede e iniciar a estadia — ou num quarto
+          ocupado pra ver hóspedes, avisos e o valor em aberto.
+        </p>
         <div className="flex shrink-0 gap-5 rounded-xl border border-border bg-surface px-6 py-4">
           <span className="flex items-center gap-2 text-[10.5px] font-bold tracking-wide text-slate uppercase">
             <span className="h-2 w-2 rounded-full bg-gold" /> Legenda: ocupado

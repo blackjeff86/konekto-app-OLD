@@ -35,12 +35,9 @@ export default function SupportPage() {
 
   return (
     <div className="flex h-[70vh] flex-col gap-6">
-      <div>
-        <h1 className="text-[28px] font-extrabold tracking-tight text-cream">Suporte</h1>
-        <p className="mt-2 text-[13.5px] text-slate">
-          Fale direto com a equipe do Konekto — dúvidas, problemas ou pedidos de ajuda.
-        </p>
-      </div>
+      <p className="text-[13.5px] text-slate">
+        Fale direto com a equipe do Konekto — dúvidas, problemas ou pedidos de ajuda.
+      </p>
 
       {errorMessage && (
         <div className="rounded-[10px] border border-[#DC262680] bg-[#DC26261A] px-3 py-2.5 text-[12.5px] text-[#B3261E]">
