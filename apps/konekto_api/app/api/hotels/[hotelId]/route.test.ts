@@ -80,7 +80,7 @@ describe('PATCH /api/hotels/[hotelId]', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('rejects requests without a staff token', async () => {
-    const response = await PATCH(patchRequest('hotel_1', null, { infra: 'amara_bay' }), {
+    const response = await PATCH(patchRequest('hotel_1', null, { template: 'aura' }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
@@ -90,7 +90,7 @@ describe('PATCH /api/hotels/[hotelId]', () => {
   it('rejects a gerente from a different hotel', async () => {
     const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_2', role: 'gerente', email: 'a@b.com', name: 'A' })
 
-    const response = await PATCH(patchRequest('hotel_1', token, { infra: 'amara_bay' }), {
+    const response = await PATCH(patchRequest('hotel_1', token, { template: 'aura' }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
@@ -100,21 +100,11 @@ describe('PATCH /api/hotels/[hotelId]', () => {
   it('rejects a recepcao token (only gerente can patch hotel config)', async () => {
     const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'recepcao', email: 'a@b.com', name: 'A' })
 
-    const response = await PATCH(patchRequest('hotel_1', token, { infra: 'amara_bay' }), {
+    const response = await PATCH(patchRequest('hotel_1', token, { template: 'aura' }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
     expect(response.status).toBe(403)
-  })
-
-  it('rejects an invalid infra value', async () => {
-    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
-
-    const response = await PATCH(patchRequest('hotel_1', token, { infra: 'not_a_real_infra' }), {
-      params: Promise.resolve({ hotelId: 'hotel_1' }),
-    })
-
-    expect(response.status).toBe(400)
   })
 
   it('merges the patch into the existing config without touching untouched keys', async () => {
@@ -124,13 +114,13 @@ describe('PATCH /api/hotels/[hotelId]', () => {
       (async (args: { data: { config: unknown } }) => ({ id: 'hotel_1', config: args.data.config })) as never,
     )
 
-    const response = await PATCH(patchRequest('hotel_1', token, { infra: 'amara_bay' }), {
+    const response = await PATCH(patchRequest('hotel_1', token, { template: 'aura' }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
     expect(response.status).toBe(200)
     const body = await response.json()
-    expect(body.infra).toBe('amara_bay')
+    expect(body.template).toBe('aura')
     expect(body.hotelInfo).toEqual(baseConfig.hotelInfo)
   })
 
@@ -138,7 +128,7 @@ describe('PATCH /api/hotels/[hotelId]', () => {
     const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue(null)
 
-    const response = await PATCH(patchRequest('hotel_1', token, { infra: 'amara_bay' }), {
+    const response = await PATCH(patchRequest('hotel_1', token, { template: 'aura' }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 

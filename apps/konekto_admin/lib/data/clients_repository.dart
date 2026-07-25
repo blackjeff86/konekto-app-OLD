@@ -188,7 +188,6 @@ class ClientsRepository {
   Future<CreateHotelResult> createHotel({
     required String token,
     required String name,
-    required String infra,
     required String plan,
     required String gerenteName,
     required String gerenteEmail,
@@ -201,7 +200,6 @@ class ClientsRepository {
       },
       body: jsonEncode({
         'name': name,
-        'infra': infra,
         'plan': plan,
         'gerente': {'name': gerenteName, 'email': gerenteEmail},
       }),

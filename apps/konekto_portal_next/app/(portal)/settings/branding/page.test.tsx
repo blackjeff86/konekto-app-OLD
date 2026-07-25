@@ -24,7 +24,6 @@ function mockHooks({
     error: null,
     updateBranding,
     updatePromoImages: vi.fn(),
-    updateInfra: vi.fn(),
   } as unknown as ReturnType<typeof useHotelConfig>)
   vi.mocked(useWifiSettings).mockReturnValue({
     wifi: { networkName: '', password: '' },

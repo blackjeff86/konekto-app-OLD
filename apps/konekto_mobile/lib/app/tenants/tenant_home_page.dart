@@ -189,8 +189,9 @@ class _TenantHomePageState extends State<TenantHomePage> {
 
 /// Orquestra a Home do hóspede: monta os parâmetros/callbacks comuns
 /// (abrir avisos/pedidos/info do hotel) e delega o layout em si pro widget
-/// de template correto via `template_registry.dart` — o conteúdo visual de
-/// cada infra vive em `lib/templates/<template>/home_screen.dart`, não aqui.
+/// de template correto via `guest_template_registry.dart` — o conteúdo
+/// visual de cada template vive em `lib/templates/<template>/home_screen.dart`,
+/// não aqui.
 class TenantHomeBody extends StatelessWidget {
   final String tenantId;
   final String userName;

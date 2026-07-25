@@ -15,10 +15,10 @@ export const runtime = 'nodejs'
 // saúde de integração, mensagens de suporte não lidas). Só o time do
 // Konekto acessa isso (`requirePlatformAdmin`).
 //
-// `kind: 'client'` exclui os hotéis `template` (modelos de infraestrutura
-// visual como Verde Pousada/Amara Bay, que um cliente real poderá escolher
-// como base do app do hóspede dele) — esses nunca são clientes de verdade,
-// então nunca devem aparecer aqui nem contar pros KPIs de
+// `kind: 'client'` exclui qualquer hotel `template` (hoje não existe
+// nenhum — os 5 templates White Label não dependem de hotel no banco, ver
+// legacy-templates/README.md em konekto_mobile) — mantido como filtro de
+// segurança pra nunca contar um hotel não-cliente nos KPIs de
 // Dashboard/Financeiro (que reaproveitam esta mesma lista).
 export async function GET(request: NextRequest) {
   try {
@@ -35,7 +35,6 @@ export async function GET(request: NextRequest) {
 
 const createHotelSchema = z.object({
   name: z.string().trim().min(1),
-  infra: z.enum(['verde_pousada', 'amara_bay', 'casa_marechal', 'konekto_classico', 'konekto_noturno']),
   // Categoria White Label do hotel — default `essential` (o mais
   // restrito) quando omitido, nunca assume um plano pago sem intenção
   // explícita de quem está criando o hotel.
@@ -78,13 +77,12 @@ export async function POST(request: NextRequest) {
   const temporaryPassword = generateTemporaryPassword()
   const passwordHash = await bcrypt.hash(temporaryPassword, 10)
 
-  // `hotelInfo` sempre em branco/placeholder — nunca copiado do template
-  // escolhido. `infra` é o campo legado (White Label Fase 4/Task 15 remove
-  // depois). `template` é o campo ativo — todo hotel novo nasce em `aura`
-  // (disponível em todos os planos, inclusive Essential) até a equipe
-  // Konekto ou o próprio hotel trocarem, no konekto_admin ou no portal.
+  // `hotelInfo` sempre em branco/placeholder. `template` é o único campo
+  // que controla o visual do app do hóspede — todo hotel novo nasce em
+  // `aura` (disponível em todos os planos, inclusive Essential) até a
+  // equipe Konekto ou o próprio hotel trocarem, no konekto_admin ou no
+  // portal.
   const config = {
-    infra: parsed.data.infra,
     template: 'aura',
     hotelInfo: {
       name: parsed.data.name,

@@ -14,8 +14,6 @@ export interface HotelConfig {
     primary?: string
     secondary?: string
   }
-  /** Legado — substituído por `template` (White Label, ver Fase 4/Task 15). */
-  infra?: string
   /** Template White Label do app do hóspede (Aura/Bosque/Elite/Pulse/Horizon). */
   template?: string
   /** Derivados pelo backend a partir de `HotelSubscription.plan` — nunca

@@ -275,51 +275,6 @@ InputDecoration _createHotelFieldDecoration(String label) {
   );
 }
 
-class _InfraChoice {
-  final String id;
-  final String name;
-  final String tagline;
-  final String description;
-
-  const _InfraChoice({required this.id, required this.name, required this.tagline, required this.description});
-}
-
-// Mesmos textos de apps/konekto_portal/lib/features/settings/appearance_section.dart
-// (_kInfraOptions) — o `infra` continua editável depois por essa mesma tela,
-// então aqui só a escolha simples, sem preview ao vivo.
-const _kCreateHotelInfraOptions = [
-  _InfraChoice(
-    id: 'verde_pousada',
-    name: 'Verde Pousada',
-    tagline: 'POUSADA',
-    description: 'Editorial sereno — verde sálvia, sem serifa.',
-  ),
-  _InfraChoice(
-    id: 'amara_bay',
-    name: 'Amara Bay',
-    tagline: 'RESORT',
-    description: 'Boutique quente — terracota e tipografia serifada.',
-  ),
-  _InfraChoice(
-    id: 'casa_marechal',
-    name: 'Casa Marechal',
-    tagline: 'HERANÇA',
-    description: 'Luxo clássico — esmeralda e dourado, serifada e estruturada.',
-  ),
-  _InfraChoice(
-    id: 'konekto_classico',
-    name: 'Konekto Clássico',
-    tagline: 'CLÁSSICO',
-    description: 'Cream, tinta e dourado quente — a identidade Konekto de antes do rebrand.',
-  ),
-  _InfraChoice(
-    id: 'konekto_noturno',
-    name: 'Konekto Noturno',
-    tagline: 'NOTURNO',
-    description: 'A única infra escura — azul-marinho profundo e dourado.',
-  ),
-];
-
 /// Diálogo de onboarding de um cliente real — cria o Hotel e já o primeiro
 /// Staff (gerente) junto, atomicamente, no backend. Sem isso o hotel nasceria
 /// sem ninguém com acesso ao portal.
@@ -343,7 +298,6 @@ class _CreateHotelDialogState extends State<_CreateHotelDialog> {
   final _nameController = TextEditingController();
   final _gerenteNameController = TextEditingController();
   final _gerenteEmailController = TextEditingController();
-  String _selectedInfra = 'verde_pousada';
   String _selectedPlan = 'essential';
 
   bool _isSaving = false;
@@ -389,7 +343,6 @@ class _CreateHotelDialogState extends State<_CreateHotelDialog> {
       final result = await widget.repository.createHotel(
         token: token,
         name: name,
-        infra: _selectedInfra,
         plan: _selectedPlan,
         gerenteName: gerenteName,
         gerenteEmail: gerenteEmail,
@@ -433,17 +386,6 @@ class _CreateHotelDialogState extends State<_CreateHotelDialog> {
                 decoration: _createHotelFieldDecoration('Nome do hotel'),
               ),
               const SizedBox(height: 16),
-              Text('Estilo visual do app do hóspede', style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
-              const SizedBox(height: 8),
-              for (final option in _kCreateHotelInfraOptions) ...[
-                _InfraChoiceCard(
-                  option: option,
-                  selected: _selectedInfra == option.id,
-                  onTap: () => setState(() => _selectedInfra = option.id),
-                ),
-                const SizedBox(height: 10),
-              ],
-              const SizedBox(height: 6),
               Text('Plano comercial', style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
               const SizedBox(height: 8),
               Row(
@@ -495,56 +437,6 @@ class _CreateHotelDialogState extends State<_CreateHotelDialog> {
               : Text('Criar hotel', style: KonektoBrand.body(fontSize: 13.5, fontWeight: FontWeight.w700, color: KonektoBrand.ink)),
         ),
       ],
-    );
-  }
-}
-
-class _InfraChoiceCard extends StatelessWidget {
-  final _InfraChoice option;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _InfraChoiceCard({required this.option, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: selected ? KonektoBrand.gold.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.02),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? KonektoBrand.gold : KonektoBrand.borderStrong, width: selected ? 1.6 : 1),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-              size: 20,
-              color: selected ? KonektoBrand.gold : KonektoBrand.slate,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(option.name, style: KonektoBrand.body(fontSize: 13.5, fontWeight: FontWeight.w700, color: KonektoBrand.cream)),
-                      const SizedBox(width: 8),
-                      Text(option.tagline, style: KonektoBrand.eyebrow(fontSize: 10)),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(option.description, style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -72,7 +72,6 @@ describe('GET /api/platform-admin/hotels', () => {
 describe('POST /api/platform-admin/hotels', () => {
   const validBody = {
     name: 'Konekto Hotel',
-    infra: 'verde_pousada',
     gerente: { name: 'Maria Gerente', email: 'maria@konektohotel.com' },
   }
 
@@ -94,13 +93,6 @@ describe('POST /api/platform-admin/hotels', () => {
   it('rejects an empty hotel name', async () => {
     const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
     const response = await POST(postRequest(token, { ...validBody, name: '' }))
-    expect(response.status).toBe(400)
-    expect(prisma.$transaction).not.toHaveBeenCalled()
-  })
-
-  it('rejects an invalid infra value', async () => {
-    const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
-    const response = await POST(postRequest(token, { ...validBody, infra: 'not_a_real_infra' }))
     expect(response.status).toBe(400)
     expect(prisma.$transaction).not.toHaveBeenCalled()
   })
@@ -140,14 +132,12 @@ describe('POST /api/platform-admin/hotels', () => {
     expect(typeof body.temporaryPassword).toBe('string')
     expect(body.temporaryPassword.length).toBeGreaterThan(0)
 
-    // O Hotel nunca reaproveita um ID de template — sempre um novo, gerado
-    // no servidor — e o `config` não copia nada do template escolhido além
-    // do próprio `infra`.
+    // O Hotel nunca reaproveita um ID já existente — sempre um novo, gerado
+    // no servidor — e todo hotel nasce com `template: aura` por padrão.
     expect(tx.hotel.create).toHaveBeenCalledWith({
       data: {
         id: body.hotelId,
         config: {
-          infra: 'verde_pousada',
           template: 'aura',
           hotelInfo: {
             name: 'Konekto Hotel',

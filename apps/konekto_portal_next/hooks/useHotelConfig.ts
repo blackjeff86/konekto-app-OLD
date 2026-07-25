@@ -1,15 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth/AuthProvider'
-import {
-  getHotelConfig,
-  updateBranding,
-  updateInfra,
-  updatePromoImages,
-  updateTemplate,
-  type BrandingInput,
-} from '@/lib/api/hotelConfig'
+import { getHotelConfig, updateBranding, updatePromoImages, updateTemplate, type BrandingInput } from '@/lib/api/hotelConfig'
 
-/** Marca/Aparência do hotel (nome, logo, endereço, carrossel, infra) — Fase 5. */
+/** Marca/Aparência do hotel (nome, logo, endereço, carrossel, template) — Fase 5. */
 export function useHotelConfig() {
   const { session, token } = useAuth()
   const queryClient = useQueryClient()
@@ -35,11 +28,6 @@ export function useHotelConfig() {
     onSuccess: invalidate,
   })
 
-  const updateInfraMutation = useMutation({
-    mutationFn: (infra: string) => updateInfra(hotelId!, token!, infra),
-    onSuccess: invalidate,
-  })
-
   const updateTemplateMutation = useMutation({
     mutationFn: (template: string) => updateTemplate(hotelId!, token!, template),
     onSuccess: invalidate,
@@ -51,7 +39,6 @@ export function useHotelConfig() {
     error: query.error,
     updateBranding: updateBrandingMutation.mutateAsync,
     updatePromoImages: updatePromoImagesMutation.mutateAsync,
-    updateInfra: updateInfraMutation.mutateAsync,
     updateTemplate: updateTemplateMutation.mutateAsync,
   }
 }

@@ -14,7 +14,6 @@ function mockHooks(overrides: Partial<ReturnType<typeof useHotelConfig>> = {}) {
     error: null,
     updateBranding: vi.fn(),
     updatePromoImages: vi.fn(),
-    updateInfra: vi.fn(),
     updateTemplate: vi.fn(),
     ...overrides,
   } as unknown as ReturnType<typeof useHotelConfig>)

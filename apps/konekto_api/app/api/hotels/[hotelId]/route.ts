@@ -51,12 +51,6 @@ const patchHotelSchema = z.object({
     })
     .optional(),
   colorPalette: z.object({ primary: z.string().min(1).optional(), secondary: z.string().min(1).optional() }).optional(),
-  // Infraestrutura visual do app do hóspede — controla cores/tipografia/
-  // layout fixos das telas do hóspede. Hotéis sem essa chave (dados antigos)
-  // caem no fallback 'verde_pousada' no lado Flutter (guestInfraFromString).
-  // Legado — substituído por `template` (ver White Label, Fase 4/Task 15
-  // remove este campo depois que todo hotel tiver migrado).
-  infra: z.enum(['amara_bay', 'verde_pousada', 'casa_marechal', 'konekto_classico', 'konekto_noturno']).optional(),
   // Template White Label do app do hóspede — validado abaixo contra os
   // templates permitidos pelo plano do hotel (ver lib/feature-flags.ts),
   // não só pela lista de valores aceitos aqui. `enabledFeatures` (as flags
@@ -114,7 +108,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     ...currentConfig,
     hotelInfo: { ...currentConfig.hotelInfo, ...parsed.data.hotelInfo },
     colorPalette: { ...currentConfig.colorPalette, ...parsed.data.colorPalette },
-    infra: parsed.data.infra ?? currentConfig.infra,
     template: parsed.data.template ?? currentConfig.template,
   }
 
