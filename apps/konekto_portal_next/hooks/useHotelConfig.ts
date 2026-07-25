@@ -5,6 +5,7 @@ import {
   updateBranding,
   updateInfra,
   updatePromoImages,
+  updateTemplate,
   type BrandingInput,
 } from '@/lib/api/hotelConfig'
 
@@ -39,6 +40,11 @@ export function useHotelConfig() {
     onSuccess: invalidate,
   })
 
+  const updateTemplateMutation = useMutation({
+    mutationFn: (template: string) => updateTemplate(hotelId!, token!, template),
+    onSuccess: invalidate,
+  })
+
   return {
     config: query.data ?? null,
     isLoading: query.isLoading,
@@ -46,5 +52,6 @@ export function useHotelConfig() {
     updateBranding: updateBrandingMutation.mutateAsync,
     updatePromoImages: updatePromoImagesMutation.mutateAsync,
     updateInfra: updateInfraMutation.mutateAsync,
+    updateTemplate: updateTemplateMutation.mutateAsync,
   }
 }

@@ -105,13 +105,28 @@ export function updateWifiSettings(
   })
 }
 
-/** Infraestrutura visual do app do hóspede (amara_bay | verde_pousada). */
+/** Infraestrutura visual do app do hóspede — legado, ver `updateTemplate`. */
 export function updateInfra(hotelId: string, token: string, infra: string): Promise<void> {
   return apiRequest<void>(`/api/hotels/${hotelId}`, {
     method: 'PATCH',
     token,
     body: { infra },
     errorMessage: 'Falha ao salvar aparência.',
+  })
+}
+
+/**
+ * Template White Label do app do hóspede (Aura/Bosque/Elite/Pulse/Horizon).
+ * O backend valida de novo se o template está liberado pro plano do hotel
+ * (403 `template_not_allowed_for_plan` se não estiver) — a restrição por
+ * `allowedTemplates` na UI é só conveniência, não a única barreira.
+ */
+export function updateTemplate(hotelId: string, token: string, template: string): Promise<void> {
+  return apiRequest<void>(`/api/hotels/${hotelId}`, {
+    method: 'PATCH',
+    token,
+    body: { template },
+    errorMessage: 'Falha ao salvar template.',
   })
 }
 
