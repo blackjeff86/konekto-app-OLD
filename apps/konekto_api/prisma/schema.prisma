@@ -10,25 +10,46 @@ datasource db {
   provider = "postgresql"
 }
 
+enum HotelKind {
+  /// Instalação de demonstração/modelo de infraestrutura visual (ex: Verde
+  /// Pousada, Amara Bay) — não é um cliente pagante, é um dos "infra"
+  /// prontos que um cliente real poderá escolher como base pro app do
+  /// hóspede dele. Nunca aparece em Clientes/Dashboard/Financeiro no
+  /// konekto_admin.
+  template
+  /// Hotel/pousada cliente de verdade, pagante.
+  client
+}
+
 /// Um registro por hotel. `config` é o antigo tenant_config.json inteiro
 /// (hotelInfo, colorPalette, typography, buttonStyles, navigationItems,
 /// servicesList, homePage, promoImages...). Sem duplicar o nome do hotel
 /// numa coluna separada — é lido de dentro do jsonb quando necessário
 /// (ex: no endpoint de diretório).
 model Hotel {
-  id           String         @id // "hotel_1", "hotel_2"
-  config       Json
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  content      HotelContent[]
-  staff        Staff[]
-  services     Service[]
-  staffInvites StaffInvite[]
-  guests       Guest[]
-  orders       Order[]
-  stays        Stay[]
-  rooms        Room[]
-  coupons      Coupon[]
+  id              String                   @id // "hotel_1", "hotel_2"
+  config          Json
+  /// `@default(client)` — qualquer hotel novo é presumido cliente real;
+  /// só os templates de demonstração (hotel_1/hotel_2 hoje) são marcados
+  /// `template` explicitamente via seed.
+  kind            HotelKind                @default(client)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  content         HotelContent[]
+  staff           Staff[]
+  services        Service[]
+  staffInvites    StaffInvite[]
+  guests          Guest[]
+  orders          Order[]
+  stays           Stay[]
+  rooms           Room[]
+  coupons         Coupon[]
+  partners        Partner[]
+  paymentAccount  HotelPaymentAccount?
+  stayPayments    StayPayment[]
+  integration     HotelIntegration?
+  subscription    HotelSubscription?
+  supportMessages PlatformSupportMessage[]
 
   @@map("hotels")
 }
@@ -122,27 +143,36 @@ enum StayStatus {
 /// o `accessCode` de todos os `Guest` da estadia de uma vez — feito em
 /// `PATCH /api/hotels/:hotelId/stays/:stayId`.
 model Stay {
-  id           String       @id @default(cuid())
+  id           String        @id @default(cuid())
   hotelId      String
   roomId       String
   checkInDate  DateTime
   checkOutDate DateTime
-  status       StayStatus   @default(active)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  hotel        Hotel        @relation(fields: [hotelId], references: [id])
-  room         Room         @relation(fields: [roomId], references: [id])
+  status       StayStatus    @default(active)
+  /// Identificador dessa reserva no PMS externo do hotel (quando a estadia
+  /// veio da API de integração, não de cadastro manual no portal) — usado
+  /// pra upsert idempotente: reenviar o mesmo `externalId` atualiza em vez
+  /// de duplicar. `null` pra estadias criadas manualmente no portal.
+  externalId   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  hotel        Hotel         @relation(fields: [hotelId], references: [id])
+  room         Room          @relation(fields: [roomId], references: [id])
   guests       Guest[]
   notices      StayNotice[]
+  messages     StayMessage[]
+  payments     StayPayment[]
 
+  @@unique([hotelId, externalId])
   @@index([hotelId])
   @@index([roomId])
   @@map("stays")
 }
 
-/// Aviso da recepção pra todos os hóspedes de uma estadia — só leitura
-/// (o hóspede visualiza, não responde). Um chat de verdade fica pra uma
-/// fase futura separada.
+/// Aviso histórico da recepção pra todos os hóspedes de uma estadia — só
+/// leitura, dado legado (não recebe registros novos). Substituído por
+/// `StayMessage`, que permite resposta do hóspede; as duas tabelas são
+/// mescladas por data na tela de chat pra preservar o histórico antigo.
 model StayNotice {
   id        String   @id @default(cuid())
   stayId    String
@@ -152,6 +182,33 @@ model StayNotice {
 
   @@index([stayId])
   @@map("stay_notices")
+}
+
+enum MessageSender {
+  guest
+  staff
+}
+
+/// Chat de verdade entre hóspede e recepção, por estadia (não por hóspede
+/// individual — todo mundo hospedado no mesmo quarto compartilha a mesma
+/// conversa com a recepção). `guestId` identifica quem mandou quando
+/// `senderType = guest`; fica `null` quando `senderType = staff` (a
+/// recepção fala em nome do hotel, não de um funcionário específico).
+model StayMessage {
+  id          String        @id @default(cuid())
+  stayId      String
+  senderType  MessageSender
+  guestId     String?
+  body        String
+  createdAt   DateTime      @default(now())
+  readByStaff Boolean       @default(false)
+  readByGuest Boolean       @default(false)
+  stay        Stay          @relation(fields: [stayId], references: [id], onDelete: Cascade)
+  guest       Guest?        @relation(fields: [guestId], references: [id])
+
+  @@index([stayId])
+  @@index([guestId])
+  @@map("stay_messages")
 }
 
 enum GuestStatus {
@@ -182,7 +239,7 @@ enum DocumentType {
 /// `guestInfo` em HotelContent) — só sobrescreve quando o hotel quer dar
 /// uma senha individual pra esse hóspede.
 model Guest {
-  id                  String       @id @default(cuid())
+  id                  String        @id @default(cuid())
   hotelId             String
   stayId              String
   firstName           String
@@ -197,13 +254,21 @@ model Guest {
   address             String?
   country             String
   wifiPassword        String?
-  accessCode          String       @unique
-  status              GuestStatus  @default(active)
-  createdAt           DateTime     @default(now())
-  hotel               Hotel        @relation(fields: [hotelId], references: [id])
-  stay                Stay         @relation(fields: [stayId], references: [id])
+  accessCode          String        @unique
+  status              GuestStatus   @default(active)
+  /// Identificador desse hóspede no PMS externo — mesma lógica de
+  /// `Stay.externalId`, pra upsert idempotente vindo da API de integração.
+  /// `accessCode` nunca vem de fora: é sempre gerado pelo Konekto, mesmo
+  /// pra hóspedes sincronizados de um PMS.
+  externalId          String?
+  createdAt           DateTime      @default(now())
+  hotel               Hotel         @relation(fields: [hotelId], references: [id])
+  stay                Stay          @relation(fields: [stayId], references: [id])
   orders              Order[]
+  messages            StayMessage[]
+  stayPayments        StayPayment[]
 
+  @@unique([hotelId, externalId])
   @@index([hotelId])
   @@index([stayId])
   @@map("guests")
@@ -221,37 +286,164 @@ enum OrderStatus {
 /// é genérico desde a Fase 4. `itemName`/`price` são um snapshot no
 /// momento do pedido: sobrevivem a uma edição ou remoção do item depois.
 model Order {
-  id            String      @id @default(cuid())
-  hotelId       String
-  guestId       String
-  serviceId     String
-  serviceItemId String
-  itemName      String
-  quantity      Int         @default(1)
-  price         Float?
-  status        OrderStatus @default(pending)
-  note          String?
+  id                String               @id @default(cuid())
+  hotelId           String
+  guestId           String
+  serviceId         String
+  serviceItemId     String
+  itemName          String
+  quantity          Int                  @default(1)
+  price             Float?
+  status            OrderStatus          @default(pending)
+  note              String?
   /// Data/hora escolhida pelo hóspede — só preenchido pra itens que passam
   /// pelo fluxo de agendamento (restaurantes, spa, eventos, passeios).
   /// `null` pra pedidos de Serviço de Quarto, que não têm horário marcado.
-  scheduledFor  DateTime?
+  scheduledFor      DateTime?
   /// Cupom selecionado pelo hóspede (opcional) — quando presente, `price`
   /// já vem com o desconto aplicado (preço final por unidade); `discountAmount`
   /// é só o valor total abatido nesse pedido, guardado pra exibição/auditoria
   /// (nenhum outro cálculo de receita no app precisa saber sobre cupom,
   /// porque `price * quantity` já é o valor final cobrado).
-  couponId      String?
-  discountAmount Float?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  hotel         Hotel       @relation(fields: [hotelId], references: [id])
-  guest         Guest       @relation(fields: [guestId], references: [id])
-  coupon        Coupon?     @relation(fields: [couponId], references: [id])
+  couponId          String?
+  discountAmount    Float?
+  /// Só preenchido numa reserva de mesa de restaurante que referencia um
+  /// `RestaurantTableType` configurado — usado pra checar capacidade por
+  /// tipo de mesa no mesmo horário exato, mesmo racional de
+  /// `serviceItemId`+`scheduledFor` já usado pros itens de atividade.
+  tableTypeId       String?
+  /// Preenchido quando a RECEPÇÃO lança um consumo em nome do hóspede (ex:
+  /// item de frigobar notado faltando na conferência do quarto) — `null`
+  /// quando o próprio hóspede que criou o pedido. Sem `@relation` pro
+  /// `Staff` de propósito, mesmo padrão de `PlatformSupportMessage.staffId`:
+  /// só precisa do id pra auditoria, o time do hotel é pequeno.
+  recordedByStaffId String?
+  /// `false` sempre que o status muda por uma ação que o hóspede ainda não
+  /// viu: a recepção avança o status (`PATCH` de staff) ou lança um consumo
+  /// em nome dele (`recordedByStaffId` preenchido). Nasce `true` quando o
+  /// próprio hóspede cria o pedido (ele já sabe que acabou de pedir) e volta
+  /// a `true` quando ele abre "Meus Pedidos" — mesmo racional de
+  /// `StayMessage.readByGuest`, só que por pedido em vez de por mensagem.
+  statusSeenByGuest Boolean              @default(true)
+  /// Snapshot de `ServiceItem.paymentMode` no momento do pedido — mesmo
+  /// racional de `itemName`/`price` (sobrevive a uma edição do item
+  /// depois). `partner` exclui esse pedido de `computeStayBill`: o Konekto
+  /// não cobra nada por ele, é só agendamento.
+  paymentMode       PaymentMode          @default(hotel)
+  /// Snapshot do nome do parceiro (não uma relação) — mesmo racional de
+  /// `itemName`: sobrevive a uma edição/remoção do parceiro depois.
+  partnerName       String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  hotel             Hotel                @relation(fields: [hotelId], references: [id])
+  guest             Guest                @relation(fields: [guestId], references: [id])
+  coupon            Coupon?              @relation(fields: [couponId], references: [id])
+  tableType         RestaurantTableType? @relation(fields: [tableTypeId], references: [id])
 
   @@index([hotelId])
   @@index([guestId])
   @@index([couponId])
+  /// Suporta o `groupBy`/`count` do endpoint de disponibilidade e a
+  /// checagem de capacidade em `POST /api/orders` — ambos filtram por
+  /// `serviceItemId` + faixa de `scheduledFor`, e o segundo roda dentro de
+  /// uma transação com advisory lock (sem índice, viraria scan sequencial
+  /// bem na janela em que o lock está segurado).
+  @@index([serviceItemId, scheduledFor])
+  /// Mesmo racional acima, pra checagem de capacidade por tipo de mesa.
+  @@index([tableTypeId, scheduledFor])
   @@map("orders")
+}
+
+enum PaymentAccountStatus {
+  pending
+  verified
+  rejected
+}
+
+/// Conta de recebedor do hotel no Pagar.me (marketplace/split) — o hotel
+/// cria a conta pelo onboarding do próprio Pagar.me (KYC completo é
+/// responsabilidade deles, já testado e compliant) e só cola o
+/// `pagarmeRecipientId` resultante no portal. Guardamos aqui só a
+/// referência e um espelho do status, nunca dado bancário/KYC bruto —
+/// o Pagar.me é o sistema de registro pra isso.
+model HotelPaymentAccount {
+  hotelId            String               @id
+  pagarmeRecipientId String
+  status             PaymentAccountStatus @default(pending)
+  /// Espelho bruto do `status` devolvido pelo Pagar.me (ex: "active",
+  /// "registration", "refused") — só pra diagnóstico/exibição, o campo
+  /// `status` acima é a versão simplificada que o resto do sistema usa.
+  pagarmeStatus      String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  hotel              Hotel                @relation(fields: [hotelId], references: [id])
+
+  @@map("hotel_payment_accounts")
+}
+
+enum StayPaymentStatus {
+  pending
+  paid
+  failed
+}
+
+/// Pagamento da conta consolidada de uma estadia — o hóspede paga o saldo
+/// acumulado dos próprios pedidos de uma vez (não é por pedido). O saldo
+/// devedor nunca é armazenado: é sempre recalculado como a soma dos
+/// `Order.price * quantity` (status != cancelled) menos a soma dos
+/// `StayPayment.amount` com `status: paid` — permite pagar de novo depois
+/// de novos pedidos sem precisar marcar pedido individual como pago.
+model StayPayment {
+  id                String            @id @default(cuid())
+  hotelId           String
+  stayId            String
+  guestId           String
+  amount            Float
+  platformFeeAmount Float
+  hotelAmount       Float
+  pagarmeOrderId    String?
+  pagarmeChargeId   String?
+  status            StayPaymentStatus @default(pending)
+  failureReason     String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  hotel             Hotel             @relation(fields: [hotelId], references: [id])
+  stay              Stay              @relation(fields: [stayId], references: [id])
+  guest             Guest             @relation(fields: [guestId], references: [id])
+
+  @@index([stayId])
+  @@index([hotelId])
+  @@map("stay_payments")
+}
+
+/// Credencial de integração de um hotel com o PMS/sistema de hotelaria
+/// externo que ele já usa — permite que esse sistema (ou uma camada
+/// intermediária tipo Zapier/Make/n8n) empurre reservas, hóspedes e
+/// cardápio pro Konekto via API, e que o Konekto empurre pedidos de volta
+/// pro sistema do hotel via webhook assinado. Um registro por hotel (v1
+/// assume um único sistema externo por hotel).
+///
+/// `apiKeyHash`/`webhookSecret` nunca ficam em texto puro além do momento
+/// de geração (devolvido uma única vez pro portal) — só o hash é
+/// persistido, mesmo padrão de senha. `apiKeyPrefix` é só os primeiros
+/// caracteres da chave, sem valor de segredo, usado pra exibição no portal
+/// ("essa é a chave que começa com kk_live_a1b2...").
+model HotelIntegration {
+  hotelId           String    @id
+  apiKeyHash        String    @unique
+  apiKeyPrefix      String
+  webhookUrl        String?
+  webhookSecret     String
+  enabled           Boolean   @default(true)
+  lastInboundSyncAt DateTime?
+  lastOutboundAt    DateTime?
+  lastOutboundOk    Boolean?
+  lastOutboundError String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  hotel             Hotel     @relation(fields: [hotelId], references: [id])
+
+  @@map("hotel_integrations")
 }
 
 enum CouponDiscountType {
@@ -265,33 +457,33 @@ enum CouponDiscountType {
 /// Aplica-se hoje ao hotel inteiro (qualquer item comprável), não a um
 /// serviço específico — mantém o modelo simples pro primeiro lançamento.
 model Coupon {
-  id             String             @id @default(cuid())
-  hotelId        String
-  title          String
-  description    String
+  id            String             @id @default(cuid())
+  hotelId       String
+  title         String
+  description   String
   /// Código interno, mostrado pro staff pra referência/auditoria — o
   /// hóspede nunca digita isso, só seleciona o cupom na lista.
-  code           String
-  discountType   CouponDiscountType
+  code          String
+  discountType  CouponDiscountType
   /// Percentual (0-100) ou valor fixo em reais, dependendo de `discountType`.
-  discountValue  Float
+  discountValue Float
   /// Pedido precisa valer pelo menos isso (preço × quantidade, antes do
   /// desconto) pra poder usar o cupom. `null` = sem mínimo.
-  minOrderValue  Float?
-  imageUrl       String?
-  validFrom      DateTime?
-  validUntil     DateTime?
+  minOrderValue Float?
+  imageUrl      String?
+  validFrom     DateTime?
+  validUntil    DateTime?
   /// Limite total de usos (somando todos os hóspedes). `null` = ilimitado.
-  usageLimit     Int?
+  usageLimit    Int?
   /// Quantas vezes O MESMO hóspede pode usar esse cupom — 1 por padrão
   /// (comportamento típico de cupom promocional).
-  perGuestLimit  Int                @default(1)
-  enabled        Boolean            @default(true)
-  position       Int                @default(0)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  hotel          Hotel              @relation(fields: [hotelId], references: [id])
-  orders         Order[]
+  perGuestLimit Int                @default(1)
+  enabled       Boolean            @default(true)
+  position      Int                @default(0)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  hotel         Hotel              @relation(fields: [hotelId], references: [id])
+  orders        Order[]
 
   @@unique([hotelId, code])
   @@index([hotelId])
@@ -336,23 +528,48 @@ enum ServiceType {
 /// por trás. Diferente de `type`, `category` pode ser editada depois
 /// (é só organização visual, não muda nada no app).
 model Service {
-  id             String        @id @default(cuid())
-  hotelId        String
-  name           String
-  slug           String
-  icon           String // nome do ícone Material (ex: "room_service", "spa", "restaurant")
-  description    String
-  type           ServiceType
-  category       String
-  bannerImageUrl String?
-  position       Int           @default(0)
-  enabled        Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  hotel          Hotel         @relation(fields: [hotelId], references: [id])
-  items          ServiceItem[]
+  id                        String                @id @default(cuid())
+  hotelId                   String
+  name                      String
+  slug                      String
+  icon                      String // nome do ícone Material (ex: "room_service", "spa", "restaurant")
+  description               String
+  type                      ServiceType
+  category                  String
+  bannerImageUrl            String?
+  position                  Int                   @default(0)
+  enabled                   Boolean               @default(true)
+  // Traduções de `name`/`description` pra inglês e espanhol — formato
+  // `{ en?: {name?, description?}, es?: {name?, description?} }`. `null`
+  // ou chave ausente = ainda não traduzido, o app do hóspede cai no
+  // português. `translationsAutoGenerated: true` significa que o texto
+  // aqui veio da tradução automática (IA) e pode ser sobrescrito na
+  // próxima vez que `name`/`description` mudar; vira `false` assim que a
+  // equipe do hotel edita manualmente uma tradução no portal, pra não
+  // perder a edição numa retradução automática futura.
+  translations              Json?
+  translationsAutoGenerated Boolean               @default(true)
+  /// Identificador dessa categoria/serviço no PMS/cardápio externo — upsert
+  /// idempotente vindo da API de integração, mesma lógica de `Stay.externalId`.
+  externalId                String?
+  /// Horário de funcionamento do SERVIÇO inteiro — não confundir com a
+  /// janela por item (`ServiceItem`, só usada por `activity`). Usado por
+  /// `room_service` (bloqueia pedido fora do horário) e `restaurant`
+  /// (bloqueia reserva fora do horário); não se aplica a `activity`, que já
+  /// tem seu próprio controle fino por item. `[]`/`null` = sem restrição
+  /// (comportamento padrão). Suporta janela que atravessa meia-noite (ex:
+  /// 19h-01h) quando `operatingEndMinute <= operatingStartMinute`.
+  operatingDaysOfWeek       Int[]                 @default([])
+  operatingStartMinute      Int?
+  operatingEndMinute        Int?
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime              @updatedAt
+  hotel                     Hotel                 @relation(fields: [hotelId], references: [id])
+  items                     ServiceItem[]
+  tableTypes                RestaurantTableType[]
 
   @@unique([hotelId, slug])
+  @@unique([hotelId, externalId])
   @@index([hotelId])
   @@map("services")
 }
@@ -368,21 +585,189 @@ model Service {
 /// `restaurant`, pra reaproveitar o modelo `Order` existente sem precisar
 /// de uma tabela nova só pra reservas de mesa.
 model ServiceItem {
-  id          String   @id @default(cuid())
-  serviceId   String
+  id                        String      @id @default(cuid())
+  serviceId                 String
+  name                      String
+  description               String
+  price                     Float?
+  imageUrl                  String?
+  location                  String? // usado por eventos/passeios
+  category                  String? // agrupamento opcional (usado por room service: Entradas/Pratos/etc.)
+  extraInfo                 String? // rótulo livre (tempo de preparo, duração, etc.)
+  // Traduções de `name`/`description`/`location`/`category`/`extraInfo` —
+  // mesmo formato e regra de `translationsAutoGenerated` do `Service`.
+  translations              Json?
+  translationsAutoGenerated Boolean     @default(true)
+  position                  Int         @default(0)
+  hidden                    Boolean     @default(false)
+  /// Identificador desse item no cardápio/PMS externo — upsert idempotente
+  /// vindo da API de integração. Escopado por `serviceId` (não por hotel,
+  /// já que `ServiceItem` não guarda `hotelId` diretamente) — cada
+  /// categoria/serviço já é única por hotel, então isso ainda garante
+  /// unicidade efetiva por hotel.
+  externalId                String?
+  /// `null` = agendamento não configurado pra este item (comportamento
+  /// legado: hóspede escolhe qualquer dia/hora livremente). Quando setado,
+  /// `capacityPerSlot`/`availableDaysOfWeek`/`availabilityStartMinute`/
+  /// `availabilityEndMinute` passam a ser obrigatórios juntos (validado na
+  /// API, não no schema).
+  durationMinutes           Int?
+  capacityPerSlot           Int?
+  /// ISO weekday (1=segunda...7=domingo) — mesmo valor de `DateTime.weekday`
+  /// no Dart, evita conversão nas duas pontas.
+  availableDaysOfWeek       Int[]       @default([])
+  /// Minutos desde meia-noite (ex: 14h = 840) — evita parsing de "HH:mm".
+  availabilityStartMinute   Int?
+  availabilityEndMinute     Int?
+  /// Item de frigobar/minibar — só faz sentido dentro de um `Service` do
+  /// tipo `room_service`. Quando `true`, o pedido desse item nasce direto
+  /// `Order.status: completed` (não existe "preparo" pra consumo já feito) e
+  /// o app do hóspede mostra "Informar consumo" em vez do fluxo normal de
+  /// pedido — tanto o próprio hóspede quanto a recepção (em nome dele)
+  /// podem lançar.
+  isMinibarItem             Boolean     @default(false)
+  /// Empresa parceira que presta esse serviço (ex: estúdio de massagem
+  /// terceirizado) — `null` = o próprio hotel presta. Relação de verdade
+  /// (não só um id solto): o formulário do item precisa listar/resolver
+  /// parceiros, é uso de catálogo, não só auditoria.
+  partnerId                 String?
+  /// Só relevante quando `partnerId` está preenchido — decide se o valor
+  /// desse item entra na conta do quarto cobrada pelo Konekto (`hotel`) ou
+  /// se o hóspede paga o parceiro diretamente, sem nenhuma cobrança pelo
+  /// Konekto (`partner`, "só agendamento"). Sem parceiro, sempre `hotel`.
+  paymentMode               PaymentMode @default(hotel)
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt
+  service                   Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  partner                   Partner?    @relation(fields: [partnerId], references: [id])
+
+  @@unique([serviceId, externalId])
+  @@index([serviceId])
+  @@index([partnerId])
+  @@map("service_items")
+}
+
+enum PaymentMode {
+  hotel
+  partner
+}
+
+/// Empresa parceira que presta algum serviço do hotel (ex: um estúdio de
+/// massagem terceirizado) — cadastro simples em Configurações, sem login
+/// próprio nem conta de recebimento no Pagar.me. Vinculada item a item do
+/// catálogo via `ServiceItem.partnerId`.
+model Partner {
+  id          String        @id @default(cuid())
+  hotelId     String
   name        String
-  description String
-  price       Float?
-  imageUrl    String?
-  location    String? // usado por eventos/passeios
-  category    String? // agrupamento opcional (usado por room service: Entradas/Pratos/etc.)
-  extraInfo   String? // rótulo livre (tempo de preparo, duração, etc.)
-  position    Int      @default(0)
-  hidden      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  contactName String?
+  phone       String?
+  email       String?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  hotel       Hotel         @relation(fields: [hotelId], references: [id])
+  items       ServiceItem[]
+
+  @@index([hotelId])
+  @@map("partners")
+}
+
+/// Um "tipo" de mesa de um restaurante (ex: "10 mesas de 4 lugares", "8
+/// mesas de 2 lugares") — não uma mesa física individual, já que o hóspede
+/// reserva por tamanho de mesa, não por mesa específica. `quantity` é
+/// quantas mesas desse tamanho o restaurante tem no total; a disponibilidade
+/// real num horário é calculada subtraindo as reservas ativas daquele
+/// instante (ver `GET .../services/[serviceId]/table-availability`).
+model RestaurantTableType {
+  id        String  @id @default(cuid())
+  serviceId String
+  /// Rótulo livre opcional (ex: "Mesa externa", "Área VIP") — se `null`, a
+  /// UI usa "Mesa de N lugares" como padrão.
+  label     String?
+  seats     Int
+  /// `0` = temporariamente indisponível, sem precisar apagar o tipo.
+  quantity  Int
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  orders    Order[]
 
   @@index([serviceId])
-  @@map("service_items")
+  @@map("restaurant_table_types")
+}
+
+/// Conta da própria equipe do Konekto (não confundir com `Staff`, que é
+/// sempre escopado a um hotel) — acesso ao portal administrativo interno
+/// (`konekto_admin`), com visão cross-hotel de todos os clientes. Sem
+/// endpoint de auto-cadastro: contas são criadas via seed/script, já que
+/// é um punhado de pessoas do próprio time.
+model PlatformAdmin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("platform_admins")
+}
+
+enum SubscriptionStatus {
+  active
+  trial
+  suspended
+  cancelled
+}
+
+enum SubscriptionPaymentStatus {
+  em_dia
+  atrasado
+  isento
+}
+
+/// Plano/assinatura do hotel com o Konekto — "status do pagamento" nesta
+/// v1 é um campo setado manualmente pelo admin (sem fatura/boleto real
+/// ainda, isso é fase 2, via Pagar.me). `planName` é texto livre (não
+/// enum) pra não precisar de migration toda vez que a Konekto criar ou
+/// renomear um plano comercial.
+model HotelSubscription {
+  hotelId       String                    @id
+  planName      String
+  /// Mensalidade em reais — usada pra somar o MRR na tela Financeiro do
+  /// konekto_admin. `null` = ainda não precificado (ex: hotel em trial sem
+  /// valor definido).
+  monthlyAmount Float?
+  status        SubscriptionStatus        @default(trial)
+  paymentStatus SubscriptionPaymentStatus @default(em_dia)
+  notes         String?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  hotel         Hotel                     @relation(fields: [hotelId], references: [id])
+
+  @@map("hotel_subscriptions")
+}
+
+enum SupportMessageSender {
+  hotel
+  platform
+}
+
+/// Suporte hotel <-> Konekto — diferente de `StayMessage` (que é
+/// guest<->staff, preso a uma `Stay`). Aqui a conversa é por HOTEL inteiro,
+/// não por hóspede/estadia individual.
+model PlatformSupportMessage {
+  id             String               @id @default(cuid())
+  hotelId        String
+  senderType     SupportMessageSender
+  /// Qual staff do hotel mandou, só quando `senderType: hotel`. Sem FK
+  /// pro `PlatformAdmin` que respondeu — o time interno é pequeno o
+  /// bastante pra isso não precisar ser rastreado por mensagem ainda.
+  staffId        String?
+  body           String
+  readByPlatform Boolean              @default(false)
+  readByHotel    Boolean              @default(false)
+  createdAt      DateTime             @default(now())
+  hotel          Hotel                @relation(fields: [hotelId], references: [id])
+
+  @@index([hotelId])
+  @@map("platform_support_messages")
 }

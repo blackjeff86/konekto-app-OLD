@@ -1,3 +1,11 @@
+// ATENÇÃO: este script roda contra o `DATABASE_URL` configurado no `.env`
+// local — hoje só existe UM banco (não há dev/prod separados), então rodar
+// `npm run db:seed` sempre atinge o banco de verdade. `seedHotel()` faz um
+// upsert que SUBSTITUI o `config` inteiro de `hotel_1`/`hotel_2` pelos
+// arquivos em `prisma/seed-data/`; a única trava contra apagar um cliente
+// real é o `kind: 'client'` já gravado no banco (ver `seedHotel`) — nunca
+// rode isso sem ter certeza de que nenhum desses dois IDs foi reaproveitado
+// por um hotel de verdade sem essa marcação.
 import 'dotenv/config'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -281,6 +289,13 @@ async function seedServicesForHotel(hotelId: string, hotelDir: string): Promise<
   }
 }
 
+// hotel_1/hotel_2 são os modelos de infraestrutura visual (Verde Pousada,
+// Amara Bay) que um cliente real vai poder escolher como base do app do
+// hóspede dele — não são clientes de verdade, então ficam marcados
+// `kind: template` e nunca aparecem em Clientes/Dashboard/Financeiro no
+// konekto_admin (`GET /api/platform-admin/hotels` filtra por `kind: client`).
+const TEMPLATE_HOTEL_IDS = new Set(['hotel_1', 'hotel_2'])
+
 async function seedHotel(hotelId: string): Promise<void> {
   const hotelDir = path.join(SEED_DATA_ROOT, hotelId)
   const tenantConfig = readJsonIfExists(path.join(hotelDir, 'tenant_config.json'))
@@ -289,12 +304,26 @@ async function seedHotel(hotelId: string): Promise<void> {
     return
   }
 
+  // Trava de segurança: se esse ID já foi reaproveitado por um cliente de
+  // verdade (kind: client — hoje só é possível marcar isso manualmente, já
+  // que ainda não existe um fluxo de "criar hotel" separado dos templates),
+  // o seed NUNCA pode sobrescrever o config dele. Sem essa checagem, rodar
+  // o seed de novo apaga silenciosamente nome/logo/cores reais desse
+  // cliente de volta pros valores de fixture do template — foi exatamente
+  // isso que aconteceu (duas vezes) antes dessa trava existir.
+  const existing = await prisma.hotel.findUnique({ where: { id: hotelId }, select: { kind: true } })
+  if (existing?.kind === 'client') {
+    console.log(`  ATENÇÃO: pulando ${hotelId} — kind já é "client" (hotel real), o seed nunca sobrescreve isso.`)
+    return
+  }
+
+  const kind = TEMPLATE_HOTEL_IDS.has(hotelId) ? 'template' : 'client'
   await prisma.hotel.upsert({
     where: { id: hotelId },
-    update: { config: tenantConfig as unknown as Prisma.InputJsonValue },
-    create: { id: hotelId, config: tenantConfig as unknown as Prisma.InputJsonValue },
+    update: { config: tenantConfig as unknown as Prisma.InputJsonValue, kind },
+    create: { id: hotelId, config: tenantConfig as unknown as Prisma.InputJsonValue, kind },
   })
-  console.log(`  hotels/${hotelId} <- tenant_config.json`)
+  console.log(`  hotels/${hotelId} <- tenant_config.json (kind: ${kind})`)
 
   for (const [fileName, docName] of Object.entries(CONTENT_FILES)) {
     const content = readJsonIfExists(path.join(hotelDir, fileName))
@@ -337,6 +366,27 @@ async function seedTestStaff(): Promise<void> {
   console.log('  staff <- gerente.teste@konekto.app (senha: konekto123)')
 }
 
+// Conta da equipe do Konekto pro portal admin interno (`konekto_admin`) —
+// sem endpoint de auto-cadastro, então a primeira conta só existe se essas
+// duas env vars estiverem configuradas; sem elas, pula graciosamente (mesmo
+// padrão de chave ausente já usado no projeto pra outras integrações).
+async function seedPlatformAdmin(): Promise<void> {
+  const email = process.env.PLATFORM_ADMIN_EMAIL
+  const initialPassword = process.env.PLATFORM_ADMIN_INITIAL_PASSWORD
+  if (!email || !initialPassword) {
+    console.log('  platform_admins <- pulado (PLATFORM_ADMIN_EMAIL/PLATFORM_ADMIN_INITIAL_PASSWORD ausentes)')
+    return
+  }
+
+  const passwordHash = await bcrypt.hash(initialPassword, 10)
+  await prisma.platformAdmin.upsert({
+    where: { email },
+    update: {},
+    create: { email, passwordHash, name: 'Konekto Admin' },
+  })
+  console.log(`  platform_admins <- ${email}`)
+}
+
 async function main(): Promise<void> {
   console.log('Semeando Postgres (Neon)...')
   await seedGlobal()
@@ -345,6 +395,7 @@ async function main(): Promise<void> {
     await seedHotel(hotelId)
   }
   await seedTestStaff()
+  await seedPlatformAdmin()
   console.log('Concluído.')
 }
 

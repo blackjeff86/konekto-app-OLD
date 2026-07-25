@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { signGuestToken } from '@/lib/guest-auth'
+import { expireStay } from '@/lib/stay-expiration'
 
 export const runtime = 'nodejs'
 
@@ -25,7 +26,16 @@ export async function POST(request: NextRequest) {
   if (!guest) {
     return NextResponse.json({ error: 'guest_not_found' }, { status: 404 })
   }
-  if (guest.status === 'revoked' || guest.stay.status === 'closed') {
+
+  // Check-out já passado mas a Stay ainda `active` (staff nunca clicou em
+  // "Fechar conta", sem cron neste projeto) — fecha na hora em vez de
+  // deixar logar com uma estadia vencida.
+  const isOverdue = guest.stay.status === 'active' && guest.stay.checkOutDate.getTime() < Date.now()
+  if (isOverdue) {
+    await expireStay(guest.stayId)
+  }
+
+  if (guest.status === 'revoked' || guest.stay.status === 'closed' || isOverdue) {
     return NextResponse.json({ error: 'access_revoked' }, { status: 403 })
   }
 

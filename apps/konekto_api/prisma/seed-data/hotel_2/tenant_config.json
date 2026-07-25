@@ -1,8 +1,10 @@
 {
   "id": "hotel_2",
+  "infra": "amara_bay",
   "hotelInfo": {
-    "name": "Hotel 2",
-    "logoUrl": "assets/app_assets/images/hotel_logo2.png",
+    "name": "Amara Bay",
+    "logoUrl": "",
+    "address": "Avenida da Baía, 45 — Centro Histórico",
     "promoImages": {
       "carouselEnabled": true,
       "images": [

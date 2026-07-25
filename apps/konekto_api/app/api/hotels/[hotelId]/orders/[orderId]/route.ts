@@ -36,6 +36,11 @@ export async function PATCH(
     return NextResponse.json({ error: 'order_not_found' }, { status: 404 })
   }
 
-  const updated = await prisma.order.update({ where: { id: orderId }, data: { status: parsed.data.status } })
+  // A recepção mudou o status — o hóspede ainda não viu essa mudança, então
+  // volta a contar no sino de notificações até ele abrir "Meus Pedidos".
+  const updated = await prisma.order.update({
+    where: { id: orderId },
+    data: { status: parsed.data.status, statusSeenByGuest: false },
+  })
   return NextResponse.json(updated)
 }

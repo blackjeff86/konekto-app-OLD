@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
 import { flattenStayRoomNumber } from '@/lib/stay-shape'
+import { sweepExpiredStays } from '@/lib/stay-expiration'
 
 export const runtime = 'nodejs'
 
@@ -27,6 +28,8 @@ export async function GET(
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }
 
+  await sweepExpiredStays(hotelId)
+
   const stay = await prisma.stay.findFirst({
     where: { id: stayId, hotelId },
     include: {
@@ -35,6 +38,10 @@ export async function GET(
         include: { orders: { orderBy: { createdAt: 'desc' }, include: { coupon: { select: { title: true } } } } },
       },
       notices: { orderBy: { createdAt: 'desc' } },
+      messages: {
+        orderBy: { createdAt: 'asc' },
+        include: { guest: { select: { firstName: true, lastName: true } } },
+      },
     },
   })
   if (!stay) {
@@ -98,10 +105,23 @@ export async function PATCH(
     return NextResponse.json(flattenStayRoomNumber(stay))
   }
 
-  if (parsed.data.roomId !== undefined) {
+  if (parsed.data.roomId !== undefined && parsed.data.roomId !== existing.roomId) {
+    if (existing.status !== 'active') {
+      return NextResponse.json({ error: 'stay_not_active' }, { status: 400 })
+    }
     const room = await prisma.room.findFirst({ where: { id: parsed.data.roomId, hotelId } })
     if (!room) {
       return NextResponse.json({ error: 'room_not_found' }, { status: 404 })
+    }
+    // Só uma estadia ativa por quarto — sem essa checagem, mover pra um
+    // quarto já ocupado deixaria as duas estadias apontando pro mesmo
+    // `roomId`, quebrando a suposição (`take: 1`) que o mapa de quartos
+    // faz de que existe no máximo uma estadia ativa por quarto.
+    const conflictingStay = await prisma.stay.findFirst({
+      where: { hotelId, roomId: parsed.data.roomId, status: 'active' },
+    })
+    if (conflictingStay) {
+      return NextResponse.json({ error: 'room_already_occupied' }, { status: 409 })
     }
   }
 

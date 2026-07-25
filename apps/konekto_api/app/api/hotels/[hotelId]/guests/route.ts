@@ -1,23 +1,12 @@
-import crypto from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
 import { flattenStayRoomNumber } from '@/lib/stay-shape'
+import { generateAccessCode } from '@/lib/guest-access-code'
+import { sweepExpiredStays } from '@/lib/stay-expiration'
 
 export const runtime = 'nodejs'
-
-// Prefixo derivado do próprio hotelId (ex: "hotel_1" -> "HOTEL1") — não
-// resolve unicidade sozinho (a coluna já é @unique), é só pra deixar
-// auditável a olho nu de qual hotel é cada código, evitando qualquer
-// confusão entre códigos de hotéis diferentes.
-function hotelTag(hotelId: string): string {
-  return hotelId.toUpperCase().replace(/[^A-Z0-9]/g, '')
-}
-
-function generateAccessCode(hotelId: string): string {
-  return `${hotelTag(hotelId)}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`
-}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = await params
@@ -32,6 +21,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (staff.hotelId !== hotelId) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }
+
+  await sweepExpiredStays(hotelId)
 
   const guests = await prisma.guest.findMany({
     where: { hotelId },

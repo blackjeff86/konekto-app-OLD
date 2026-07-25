@@ -20,6 +20,11 @@ const patchHotelSchema = z.object({
     .object({
       name: z.string().min(1).optional(),
       logoUrl: z.string().min(1).optional(),
+      // Endereço do hotel — usado só na tela "Mapa do local" do app do
+      // hóspede (info estática de quarto/wifi/endereço, não um mapa de
+      // verdade). Não confundir com Guest.address, que é o endereço do
+      // hóspede.
+      address: z.string().min(1).optional(),
       // Carrossel de imagens de destaque na home do hóspede — substitui o
       // objeto inteiro quando enviado (não dá pra adicionar/remover uma
       // imagem isolada via PATCH parcial, o portal sempre manda a lista

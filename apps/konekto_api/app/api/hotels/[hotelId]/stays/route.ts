@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
 import { flattenStayRoomNumber } from '@/lib/stay-shape'
+import { sweepExpiredStays } from '@/lib/stay-expiration'
 
 export const runtime = 'nodejs'
 
@@ -22,6 +23,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (staff.hotelId !== hotelId) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }
+
+  await sweepExpiredStays(hotelId)
 
   const stays = await prisma.stay.findMany({
     where: { hotelId },

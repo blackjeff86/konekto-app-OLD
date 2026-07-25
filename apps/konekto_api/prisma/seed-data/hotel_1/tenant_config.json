@@ -1,8 +1,10 @@
 {
   "id": "hotel_1",
+  "infra": "verde_pousada",
   "hotelInfo": {
-    "name": "Hotel 1",
-    "logoUrl": "assets/app_assets/images/hotel_logo.png",
+    "name": "Verde Pousada",
+    "logoUrl": "",
+    "address": "Rua das Palmeiras, 120 — Praia do Sul",
     "promoImages": {
       "carouselEnabled": true,
       "images": [

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import type { Prisma } from '@/app/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
 import { verifyStaffToken } from '@/lib/jwt'
+import { autoTranslateOrNull } from '@/lib/translate'
+import { validateOperatingHoursFields } from '@/lib/scheduling'
 
 export const runtime = 'nodejs'
 
@@ -32,15 +35,25 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return NextResponse.json(services)
 }
 
-const createServiceSchema = z.object({
-  name: z.string().min(1),
-  slug: z.string().min(1),
-  icon: z.string().min(1),
-  description: z.string(),
-  type: z.enum(['room_service', 'restaurant', 'activity']),
-  category: z.string().trim().min(1),
-  bannerImageUrl: z.string().min(1).optional(),
-})
+const createServiceSchema = z
+  .object({
+    name: z.string().min(1),
+    slug: z.string().min(1),
+    icon: z.string().min(1),
+    description: z.string(),
+    type: z.enum(['room_service', 'restaurant', 'activity']),
+    category: z.string().trim().min(1),
+    bannerImageUrl: z.string().min(1).optional(),
+    operatingDaysOfWeek: z.array(z.number().int().min(1).max(7)).optional(),
+    operatingStartMinute: z.number().int().min(0).max(1439).nullable().optional(),
+    operatingEndMinute: z.number().int().min(0).max(1439).nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const result = validateOperatingHoursFields(data)
+    if (!result.ok) {
+      ctx.addIssue({ code: 'custom', message: result.error })
+    }
+  })
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = await params
@@ -74,8 +87,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   })
   const nextPosition = (maxPosition._max.position ?? -1) + 1
 
+  const translations = await autoTranslateOrNull({ name: parsed.data.name, description: parsed.data.description })
+
   const service = await prisma.service.create({
-    data: { hotelId, position: nextPosition, ...parsed.data },
+    data: { hotelId, position: nextPosition, ...parsed.data, translations: (translations ?? undefined) as Prisma.InputJsonValue | undefined },
   })
   return NextResponse.json(service, { status: 201 })
 }
