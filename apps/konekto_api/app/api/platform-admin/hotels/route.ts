@@ -79,11 +79,13 @@ export async function POST(request: NextRequest) {
   const passwordHash = await bcrypt.hash(temporaryPassword, 10)
 
   // `hotelInfo` sempre em branco/placeholder — nunca copiado do template
-  // escolhido. `infra` é o único campo de `config` que de fato dirige
-  // estilo visual hoje (o resto do JSON, tipo `colorPalette`/`typography`/
-  // `navigationItems`, é código morto que nada no app do hóspede lê).
+  // escolhido. `infra` é o campo legado (White Label Fase 4/Task 15 remove
+  // depois). `template` é o campo ativo — todo hotel novo nasce em `aura`
+  // (disponível em todos os planos, inclusive Essential) até a equipe
+  // Konekto ou o próprio hotel trocarem, no konekto_admin ou no portal.
   const config = {
     infra: parsed.data.infra,
+    template: 'aura',
     hotelInfo: {
       name: parsed.data.name,
       logoUrl: null,

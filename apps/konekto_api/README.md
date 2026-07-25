@@ -10,9 +10,11 @@ Backend de API do Konekto — Next.js (App Router, só rotas de API) + Prisma + 
    - `JWT_SECRET` — uma string aleatória longa (`openssl rand -base64 48`).
 3. `npm install`
 4. `npx prisma migrate dev --name init` — cria as tabelas no Neon.
-5. `npm run db:seed` — popula `hotel_1`/`hotel_2` a partir de `prisma/seed-data/` e cria uma conta de staff de teste:
-   - E-mail: `gerente.teste@konekto.app`
-   - Senha: `konekto123`
+5. `npm run db:seed` — popula conteúdo global (`promotions.json`) e, se
+   `PLATFORM_ADMIN_EMAIL`/`PLATFORM_ADMIN_INITIAL_PASSWORD` estiverem no
+   `.env`, cria a primeira conta do `konekto_admin`. Hotéis reais nascem
+   pelo fluxo "Novo cliente" do `konekto_admin` (`POST
+   /api/platform-admin/hotels`), não por este seed.
 6. `npm run dev` — sobe em `http://localhost:3000`.
 
 ## Endpoints

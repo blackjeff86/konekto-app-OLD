@@ -148,6 +148,7 @@ describe('POST /api/platform-admin/hotels', () => {
         id: body.hotelId,
         config: {
           infra: 'verde_pousada',
+          template: 'aura',
           hotelInfo: {
             name: 'Konekto Hotel',
             logoUrl: null,
