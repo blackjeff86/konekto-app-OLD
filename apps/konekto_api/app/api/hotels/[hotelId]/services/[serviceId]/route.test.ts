@@ -4,19 +4,27 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     service: { findUnique: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    hotelSubscription: { findUnique: vi.fn() },
+    hotel: { findUnique: vi.fn() },
   },
 }))
 vi.mock('@/lib/translate', () => ({ autoTranslateOrNull: vi.fn().mockResolvedValue(null) }))
 
 import { prisma } from '@/lib/prisma'
 import { signStaffToken } from '@/lib/jwt'
-import { PATCH } from './route'
+import { GET, PATCH } from './route'
 
 function patchRequest(hotelId: string, serviceId: string, token: string, body: unknown): NextRequest {
   return new NextRequest(`http://localhost/api/hotels/${hotelId}/services/${serviceId}`, {
     method: 'PATCH',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
     body: JSON.stringify(body),
+  })
+}
+
+function getRequest(hotelId: string, serviceId: string, token?: string): NextRequest {
+  return new NextRequest(`http://localhost/api/hotels/${hotelId}/services/${serviceId}`, {
+    headers: token ? { authorization: `Bearer ${token}` } : {},
   })
 }
 
@@ -35,6 +43,37 @@ const existingWithoutOperatingHours = {
   operatingStartMinute: null,
   operatingEndMinute: null,
 }
+
+describe('GET .../services/[serviceId] — gating por módulo (Fase 12)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns 404 to a guest when the service module is not allowed by the hotel plan', async () => {
+    vi.mocked(prisma.service.findUnique).mockResolvedValue({ id: 'svc_1', enabled: true, moduleId: 'spa' } as never)
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ config: {} } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'essential', presetId: 'essential' } as never)
+
+    const response = await GET(getRequest('hotel_1', 'svc_1'), { params })
+
+    expect(response.status).toBe(404)
+  })
+
+  it('returns 200 to a guest when the service has no moduleId (legacy data, fail-open)', async () => {
+    vi.mocked(prisma.service.findUnique).mockResolvedValue({ id: 'svc_1', enabled: true, moduleId: null } as never)
+
+    const response = await GET(getRequest('hotel_1', 'svc_1'), { params })
+
+    expect(response.status).toBe(200)
+  })
+
+  it('a gerente of the same hotel can still see a module-gated service', async () => {
+    vi.mocked(prisma.service.findUnique).mockResolvedValue({ id: 'svc_1', enabled: true, moduleId: 'spa' } as never)
+    const token = await gerenteToken()
+
+    const response = await GET(getRequest('hotel_1', 'svc_1', token), { params })
+
+    expect(response.status).toBe(200)
+  })
+})
 
 describe('PATCH .../services/[serviceId] — validação de horário de funcionamento', () => {
   beforeEach(() => vi.clearAllMocks())

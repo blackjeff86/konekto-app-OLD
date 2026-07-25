@@ -6,6 +6,7 @@ import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
 import { verifyStaffToken } from '@/lib/jwt'
 import { autoTranslateOrNull } from '@/lib/translate'
 import { validateOperatingHoursFields } from '@/lib/scheduling'
+import { resolveHotelEnabledModuleIds } from '@/lib/service-module-gate'
 
 export const runtime = 'nodejs'
 
@@ -33,8 +34,15 @@ export async function GET(
   if (!service) {
     return NextResponse.json({ error: 'service_not_found' }, { status: 404 })
   }
-  if (!service.enabled && !(await isGerenteOfHotel(request, hotelId))) {
+  const isGerente = await isGerenteOfHotel(request, hotelId)
+  if (!service.enabled && !isGerente) {
     return NextResponse.json({ error: 'service_not_found' }, { status: 404 })
+  }
+  if (!isGerente && service.moduleId != null) {
+    const enabledModuleIds = await resolveHotelEnabledModuleIds(hotelId)
+    if (!enabledModuleIds.has(service.moduleId)) {
+      return NextResponse.json({ error: 'service_not_found' }, { status: 404 })
+    }
   }
   return NextResponse.json(service)
 }

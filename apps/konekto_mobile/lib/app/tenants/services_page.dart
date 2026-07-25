@@ -5,6 +5,8 @@ import 'package:konekto/data/tenant_repository.dart';
 import 'package:konekto/data/tenant_repository_provider.dart';
 import 'package:konekto/l10n/app_localizations.dart';
 import 'package:konekto/models/service.dart' as models;
+import 'package:konekto/modules/module_catalog_repository.dart';
+import 'package:konekto/modules/module_definition.dart';
 import 'package:konekto/theme/guest_app_theme.dart';
 import 'package:konekto/widgets/tenant_image.dart';
 
@@ -39,6 +41,13 @@ const Map<String, IconData> _iconMapping = {
 /// Lista de serviços do hotel — busca `GET /services` (dinâmico, definido
 /// pelo hotel no portal) em vez de ler um `servicesList` fixo do
 /// `tenant_config.json`. Cada card leva pra [ServiceItemsListPage].
+typedef _ServicesLoadResult = ({
+  String? bannerImageUrl,
+  List<models.Service> services,
+  Map<String, String?> moduleIdToGroupId,
+  List<ServiceGroup> serviceGroups,
+});
+
 class ServicesPage extends StatelessWidget {
   final Map<String, dynamic> tenantConfig;
   final GuestAppTheme theme;
@@ -46,11 +55,11 @@ class ServicesPage extends StatelessWidget {
   ServicesPage({super.key, required this.tenantConfig, required this.theme});
 
   final TenantRepository _repository = createTenantRepository();
+  final ModuleCatalogRepository _moduleCatalogRepository = ModuleCatalogRepository();
 
   String get _hotelId => tenantConfig['id'] ?? 'hotel_1';
 
-  Future<({String? bannerImageUrl, List<models.Service> services})>
-  _load() async {
+  Future<_ServicesLoadResult> _load() async {
     final pageConfig = await _repository.getServicesPageConfig(_hotelId);
     final rawServices = await _repository.getServices(_hotelId);
     final serviceStubs = rawServices
@@ -71,14 +80,31 @@ class ServicesPage extends StatelessWidget {
     final banner =
         (pageConfig['pageStyles'] as Map<String, dynamic>?)?['banner']
             as Map<String, dynamic>?;
-    return (bannerImageUrl: banner?['imageUrl'] as String?, services: services);
+
+    // Agrupamento (Fase 12) — catálogo é best-effort: se a busca falhar
+    // (sem rede, backend fora do ar), a tela cai pro comportamento de hoje
+    // (lista plana, sem grupo nenhum) em vez de quebrar.
+    var moduleIdToGroupId = <String, String?>{};
+    var serviceGroups = <ServiceGroup>[];
+    try {
+      final catalog = await _moduleCatalogRepository.getCatalog();
+      moduleIdToGroupId = {for (final module in catalog) module.id: module.groupId};
+      serviceGroups = await _moduleCatalogRepository.getServiceGroups();
+    } on StateError {
+      // catálogo indisponível — segue sem agrupar, nunca bloqueia a tela.
+    }
+
+    return (
+      bannerImageUrl: banner?['imageUrl'] as String?,
+      services: services,
+      moduleIdToGroupId: moduleIdToGroupId,
+      serviceGroups: serviceGroups,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<
-      ({String? bannerImageUrl, List<models.Service> services})
-    >(
+    return FutureBuilder<_ServicesLoadResult>(
       future: _load(),
       builder: (context, snapshot) {
         final l10n = AppLocalizations.of(context)!;
@@ -142,14 +168,12 @@ class ServicesPage extends StatelessWidget {
                         ),
                       )
                     else
-                      ListView.separated(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: services.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 12),
-                        itemBuilder: (context, index) => _ServiceCard(
-                          service: services[index],
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: buildGroupedServiceWidgets(
+                          services: services,
+                          moduleIdToGroupId: snapshot.data!.moduleIdToGroupId,
+                          serviceGroups: snapshot.data!.serviceGroups,
                           tenantConfig: tenantConfig,
                           theme: theme,
                         ),
@@ -164,6 +188,52 @@ class ServicesPage extends StatelessWidget {
       },
     );
   }
+}
+
+/// Monta a lista de widgets da tela de Serviços agrupada por
+/// `ServiceGroup` (Fase 12) — serviço sem módulo, ou cujo módulo não tem
+/// `groupId` (ex: `room_service`, que aparece solto, não dentro de
+/// "Gastronomia"), fica num bloco "sem grupo" no topo, sem cabeçalho —
+/// exatamente a lista plana de hoje. Grupos vazios (nenhum serviço
+/// pertence a eles) não aparecem. Função pública/top-level de propósito,
+/// pra testar a lógica de agrupamento sem montar a árvore de widgets
+/// inteira.
+List<Widget> buildGroupedServiceWidgets({
+  required List<models.Service> services,
+  required Map<String, String?> moduleIdToGroupId,
+  required List<ServiceGroup> serviceGroups,
+  required Map<String, dynamic> tenantConfig,
+  required GuestAppTheme theme,
+}) {
+  String? groupIdFor(models.Service service) {
+    final moduleId = service.moduleId;
+    if (moduleId == null) return null;
+    return moduleIdToGroupId[moduleId];
+  }
+
+  final ungrouped = services.where((service) => groupIdFor(service) == null).toList();
+  final sortedGroups = [...serviceGroups]..sort((a, b) => a.defaultOrder.compareTo(b.defaultOrder));
+
+  final widgets = <Widget>[];
+  void addCards(List<models.Service> group) {
+    for (var i = 0; i < group.length; i++) {
+      if (i > 0) widgets.add(const SizedBox(height: 12));
+      widgets.add(_ServiceCard(service: group[i], tenantConfig: tenantConfig, theme: theme));
+    }
+  }
+
+  if (ungrouped.isNotEmpty) {
+    addCards(ungrouped);
+  }
+  for (final group in sortedGroups) {
+    final groupServices = services.where((service) => groupIdFor(service) == group.id).toList();
+    if (groupServices.isEmpty) continue;
+    if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 24));
+    widgets.add(Text(group.name, style: theme.headline(fontSize: 15, fontWeight: FontWeight.w700)));
+    widgets.add(const SizedBox(height: 8));
+    addCards(groupServices);
+  }
+  return widgets;
 }
 
 /// Atalho pro frigobar do quarto — deliberadamente separado da lista de

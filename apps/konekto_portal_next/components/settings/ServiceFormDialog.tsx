@@ -12,6 +12,7 @@ import {
   type ServiceType,
 } from '@/types/service'
 import type { CreateServiceInput, OperatingHoursInput, UpdateServiceInput } from '@/lib/api/services'
+import type { ModuleDefinition } from '@/types/moduleCatalog'
 
 const NEW_CATEGORY_SENTINEL = '__new_category__'
 const SERVICE_TYPES: ServiceType[] = ['room_service', 'restaurant', 'activity']
@@ -39,6 +40,9 @@ function timeFromMinute(minute: number | null): string {
 interface ServiceFormDialogProps {
   existing: Service | null
   existingCategories: string[]
+  /** Módulos de Hospitalidade que o plano do hotel permite (Fase 12) —
+   *  só relevante ao criar (moduleId é fixado na criação, igual `type`). */
+  allowedHospitalidadeModules: ModuleDefinition[]
   onClose: () => void
   onSubmitCreate: (input: CreateServiceInput) => Promise<void>
   onSubmitUpdate: (input: UpdateServiceInput) => Promise<void>
@@ -48,6 +52,7 @@ interface ServiceFormDialogProps {
 export function ServiceFormDialog({
   existing,
   existingCategories,
+  allowedHospitalidadeModules,
   onClose,
   onSubmitCreate,
   onSubmitUpdate,
@@ -56,6 +61,7 @@ export function ServiceFormDialog({
   const [description, setDescription] = useState(existing?.description ?? '')
   const [icon, setIcon] = useState(existing?.icon ?? Object.keys(SERVICE_ICON_OPTIONS)[0])
   const [type, setType] = useState<ServiceType>(existing?.type ?? 'activity')
+  const [moduleId, setModuleId] = useState(allowedHospitalidadeModules[0]?.id ?? '')
   const categoryIsKnown = existing != null && existingCategories.includes(existing.category)
   const [selectedCategory, setSelectedCategory] = useState(
     existing != null
@@ -97,6 +103,10 @@ export function ServiceFormDialog({
       setErrorMessage('Informe a categoria do serviço.')
       return
     }
+    if (existing == null && !moduleId) {
+      setErrorMessage('Selecione o módulo deste serviço.')
+      return
+    }
 
     let operatingHours: OperatingHoursInput | undefined
     if (applicable && hoursEnabled) {
@@ -132,6 +142,7 @@ export function ServiceFormDialog({
           description: description.trim(),
           type,
           category,
+          moduleId,
           operatingHours,
         })
       } else {
@@ -201,6 +212,33 @@ export function ServiceFormDialog({
             </div>
             <p className="mt-1.5 text-[11.5px] text-slate">{serviceTypeDescription[type]}</p>
           </div>
+        )}
+
+        {existing == null && (
+          <label className="text-xs text-slate">
+            Módulo
+            {allowedHospitalidadeModules.length === 0 ? (
+              <p className="mt-1 text-[12.5px] text-cream">
+                Nenhum módulo de Hospitalidade liberado pro plano deste hotel ainda.
+              </p>
+            ) : (
+              <select
+                value={moduleId}
+                onChange={(event) => setModuleId(event.target.value)}
+                className="mt-1 block w-full rounded-[10px] border border-border-strong bg-transparent px-3 py-2 text-[13.5px] text-cream outline-none focus:border-gold"
+              >
+                {allowedHospitalidadeModules.map((module) => (
+                  <option key={module.id} value={module.id}>
+                    {module.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <p className="mt-1.5 text-[11.5px] text-slate">
+              Controla se este serviço pode ser desligado inteiro pela tela Módulos, sem editar cada
+              serviço um a um.
+            </p>
+          </label>
         )}
 
         <Field label="Nome do serviço" value={name} onChange={setName} />

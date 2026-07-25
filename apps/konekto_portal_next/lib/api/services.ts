@@ -65,6 +65,9 @@ export interface CreateServiceInput {
   description: string
   type: ServiceType
   category: string
+  /** Módulo de Hospitalidade — obrigatório (Fase 12), validado no backend
+   *  contra o que o plano do hotel de fato permite. */
+  moduleId: string
   operatingHours?: OperatingHoursInput
 }
 
@@ -79,6 +82,7 @@ export function createService(hotelId: string, token: string, input: CreateServi
       description: input.description,
       type: input.type,
       category: input.category,
+      moduleId: input.moduleId,
       ...(input.operatingHours ?? {}),
     },
     errorMessage: 'Falha ao criar serviço.',

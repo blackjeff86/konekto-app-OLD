@@ -99,3 +99,21 @@ List<ResolvedModule> resolvedModulesFromTenantConfig(Map<String, dynamic> tenant
   if (raw is! List) return const [];
   return raw.whereType<Map<String, dynamic>>().map(ResolvedModule.fromJson).toList();
 }
+
+/// Espelha `ServiceGroup` em apps/konekto_api/lib/module-catalog.ts —
+/// agrupamento da tela de Serviços (Fase 12).
+class ServiceGroup {
+  final String id;
+  final String name;
+  final int defaultOrder;
+
+  const ServiceGroup({required this.id, required this.name, required this.defaultOrder});
+
+  factory ServiceGroup.fromJson(Map<String, dynamic> json) {
+    return ServiceGroup(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      defaultOrder: json['defaultOrder'] as int? ?? 0,
+    );
+  }
+}

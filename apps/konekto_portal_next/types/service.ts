@@ -83,6 +83,9 @@ export interface Service {
   description: string
   type: ServiceType
   category: string
+  /** Módulo de Hospitalidade (Fase 12) — `null` só em serviço criado antes
+   *  dessa fase e ainda não revisado; sempre presente em serviço novo. */
+  moduleId: string | null
   bannerImageUrl: string | null
   position: number
   enabled: boolean

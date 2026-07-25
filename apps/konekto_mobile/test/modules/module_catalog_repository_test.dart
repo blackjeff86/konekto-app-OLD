@@ -74,4 +74,40 @@ void main() {
 
     expect(() => repository.getCatalog(), throwsA(isA<StateError>()));
   });
+
+  test('getServiceGroups parses serviceGroups from the same cached response', () async {
+    final client = _FakeHttpClient(
+      responseBody: jsonEncode({
+        'modules': [],
+        'serviceGroups': [
+          {'id': 'gastronomia', 'name': 'Gastronomia', 'defaultOrder': 0},
+          {'id': 'bem_estar', 'name': 'Bem-estar', 'defaultOrder': 1},
+        ],
+      }),
+    );
+    final repository = ModuleCatalogRepository(client: client);
+
+    final groups = await repository.getServiceGroups();
+
+    expect(groups, hasLength(2));
+    expect(groups.first.id, 'gastronomia');
+    expect(client.requestCount, 1);
+  });
+
+  test('getServiceGroups returns an empty list when the response omits serviceGroups', () async {
+    final client = _FakeHttpClient(responseBody: '{"modules":[]}');
+    final repository = ModuleCatalogRepository(client: client);
+
+    expect(await repository.getServiceGroups(), isEmpty);
+  });
+
+  test('getCatalog and getServiceGroups share the same cache — only one HTTP request total', () async {
+    final client = _FakeHttpClient();
+    final repository = ModuleCatalogRepository(client: client);
+
+    await repository.getCatalog();
+    await repository.getServiceGroups();
+
+    expect(client.requestCount, 1);
+  });
 }

@@ -6,16 +6,29 @@ import { Modal } from '@/components/ui/Modal'
 import { ServiceFormDialog } from '@/components/settings/ServiceFormDialog'
 import { ServicesPageBannerCard } from '@/components/settings/ServicesPageBannerCard'
 import { useServices } from '@/hooks/useServices'
+import { useHotelConfig } from '@/hooks/useHotelConfig'
+import { useModulesCatalog } from '@/hooks/useModulesCatalog'
 import { serviceIconFor } from '@/lib/serviceIcons'
 import type { Service } from '@/types/service'
 
 /** Portado de ServicesListPage (apps/konekto_portal/lib/features/services/services_list_page.dart). */
 export default function ServicesPage() {
   const { services, isLoading, error, createService, updateService, deleteService } = useServices()
+  const { config } = useHotelConfig()
+  const { modules } = useModulesCatalog()
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [deletingService, setDeletingService] = useState<Service | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+
+  // Módulos de Hospitalidade que o plano do hotel de fato permite (mesmo
+  // conjunto que o backend valida na criação — presente em enabledModules
+  // independente de estar ligado/desligado agora, já que criar um serviço
+  // não exige o módulo estar ativo, só permitido).
+  const allowedModuleIds = new Set((config?.enabledModules ?? []).map((module) => module.id))
+  const allowedHospitalidadeModules = modules.filter(
+    (module) => module.category === 'hospitalidade' && module.implemented && allowedModuleIds.has(module.id),
+  )
 
   const isDialogOpen = isCreating || editingService !== null
 
@@ -103,6 +116,7 @@ export default function ServicesPage() {
         <ServiceFormDialog
           existing={editingService}
           existingCategories={existingCategories}
+          allowedHospitalidadeModules={allowedHospitalidadeModules}
           onClose={() => {
             setIsCreating(false)
             setEditingService(null)

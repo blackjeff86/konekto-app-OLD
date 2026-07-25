@@ -138,6 +138,12 @@ class Service {
   final String? bannerImageUrl;
   final List<ServiceItem> items;
   final FieldTranslations translations;
+  /// Módulo de Hospitalidade (Fase 12) — `null` em serviço criado antes
+  /// dessa fase e ainda não revisado manualmente (sempre visível, nunca
+  /// agrupado). Usado só pra agrupar a tela de Serviços por
+  /// `ModuleDefinition.groupId`, nunca pra decidir se o serviço aparece
+  /// (isso já vem resolvido pelo backend na própria listagem).
+  final String? moduleId;
 
   /// Horário de funcionamento do SERVIÇO inteiro (não confundir com a
   /// janela por item, só usada por `activity`) — vazio/`null` = sem
@@ -156,6 +162,7 @@ class Service {
     this.bannerImageUrl,
     this.items = const [],
     this.translations = const {},
+    this.moduleId,
     this.operatingDaysOfWeek = const [],
     this.operatingStartMinute,
     this.operatingEndMinute,
@@ -229,6 +236,7 @@ class Service {
                 .map((raw) => ServiceItem.fromJson(raw as Map<String, dynamic>))
                 .toList(),
       translations: _parseTranslations(json['translations']),
+      moduleId: json['moduleId'] as String?,
       operatingDaysOfWeek:
           (json['operatingDaysOfWeek'] as List<dynamic>?)
               ?.map((value) => value as int)
