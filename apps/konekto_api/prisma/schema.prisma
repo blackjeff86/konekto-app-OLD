@@ -724,12 +724,12 @@ enum SubscriptionPaymentStatus {
   isento
 }
 
-/// Categoria de produto que controla template/feature flag do app do
-/// hóspede (ver lib/feature-flags.ts) — não confundir com `planName`
-/// abaixo, que é só o rótulo comercial livre exibido no financeiro.
-/// Plano mais alto sempre pode usar tudo que um plano mais baixo usa
-/// (essential ⊂ premium ⊂ enterprise) — ver `templatesOfPlan`/
-/// `defaultFeaturesByPlan`.
+/// Rótulo comercial/billing (financeiro, relatórios) — NÃO controla mais
+/// módulo/template diretamente. Quem controla isso é `presetId` (ver
+/// `HotelSubscription.presetId` e lib/plan-presets.ts). Mantido como enum
+/// fechado de propósito (financeiro precisa de valores estáveis pra
+/// relatório); `presetId` é livre e pode divergir deste enum pra planos sob
+/// medida.
 enum HotelPlan {
   essential
   premium
@@ -745,6 +745,12 @@ enum HotelPlan {
 model HotelSubscription {
   hotelId       String                    @id
   plan          HotelPlan                 @default(essential)
+  /// Plan Preset (ver lib/plan-presets.ts) — é este campo, não `plan`, que o
+  /// Module Engine de fato lê pra resolver módulos/templates permitidos.
+  /// String livre (não enum) de propósito: cria plano comercial novo (ex:
+  /// "Premium Plus") sem migration, só uma entrada nova em PLAN_PRESETS.
+  /// `plan` continua existindo só pra billing/relatório financeiro.
+  presetId      String                    @default("essential")
   planName      String
   /// Mensalidade em reais — usada pra somar o MRR na tela Financeiro do
   /// konekto_admin. `null` = ainda não precificado (ex: hotel em trial sem
