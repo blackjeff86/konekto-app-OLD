@@ -17,10 +17,14 @@ enum GuestFeatureFlag {
 }
 
 /// Resolve quais features Premium/Enterprise estão liberadas pro hotel do
-/// hóspede atual, a partir de `tenantConfig['enabledFeatures']` (lista de
-/// strings decidida no backend por `lib/feature-flags.ts`, incluindo
-/// eventuais liberações de cortesia feitas pela equipe Konekto — o app não
-/// sabe nem precisa saber a diferença entre "veio do plano" e "cortesia").
+/// hóspede atual, a partir de `tenantConfig['enabledModules']` — a lista já
+/// resolvida pelo Module Engine (backend), que soma preset do plano +
+/// cortesia da equipe Konekto − o que o hotel desligou (ver
+/// `apps/konekto_api/lib/module-engine.ts`). Antes da arquitetura de
+/// módulos isso lia `tenantConfig['enabledFeatures']` (campo renomeado pra
+/// `extraModules` — só os extras de cortesia, não o resolvido) — atualizado
+/// aqui pra não ficar lendo um campo morto e sempre resolver pra
+/// [GuestFeatures.none].
 ///
 /// Uma flag que não bate com nenhum [GuestFeatureFlag] conhecido (nome
 /// removido/ainda não implementado nesta versão do app) é ignorada em vez
@@ -33,9 +37,15 @@ class GuestFeatures {
   static const GuestFeatures none = GuestFeatures._({});
 
   factory GuestFeatures.fromTenantConfig(Map<String, dynamic> tenantConfig) {
-    final raw = tenantConfig['enabledFeatures'];
+    final raw = tenantConfig['enabledModules'];
     if (raw is! List) return GuestFeatures.none;
-    return GuestFeatures._(raw.whereType<String>().toSet());
+    final enabledIds = raw
+        .whereType<Map<String, dynamic>>()
+        .where((module) => module['enabled'] == true)
+        .map((module) => module['id'])
+        .whereType<String>()
+        .toSet();
+    return GuestFeatures._(enabledIds);
   }
 
   bool has(GuestFeatureFlag flag) => _enabledIds.contains(flag.id);

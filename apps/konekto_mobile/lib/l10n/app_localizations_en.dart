@@ -354,6 +354,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myAccountTile => 'My account';
 
   @override
+  String get profileLoyaltyTile => 'Loyalty program';
+
+  @override
+  String get profileWalletTile => 'Digital wallet';
+
+  @override
   String get stayBillTitle => 'My account';
 
   @override

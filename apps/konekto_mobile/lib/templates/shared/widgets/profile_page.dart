@@ -9,6 +9,11 @@ class ProfilePage extends StatelessWidget {
   final String roomNumber;
   final VoidCallback? onEndSession;
   final VoidCallback? onOpenStayBill;
+  /// null = módulo desligado/sem tela pro template atual (ver
+  /// `lib/modules/screens/loyalty_wallet_dispatch.dart`) — a linha some em
+  /// vez de aparecer desabilitada.
+  final VoidCallback? onOpenLoyalty;
+  final VoidCallback? onOpenWallet;
 
   const ProfilePage({
     super.key,
@@ -17,6 +22,8 @@ class ProfilePage extends StatelessWidget {
     required this.roomNumber,
     this.onEndSession,
     this.onOpenStayBill,
+    this.onOpenLoyalty,
+    this.onOpenWallet,
   });
 
   @override
@@ -104,6 +111,14 @@ class ProfilePage extends StatelessWidget {
                 ),
               ),
             ),
+            if (onOpenLoyalty != null) ...[
+              const SizedBox(height: 12),
+              _ProfileLinkRow(theme: theme, icon: Icons.stars_outlined, label: l10n.profileLoyaltyTile, onTap: onOpenLoyalty!),
+            ],
+            if (onOpenWallet != null) ...[
+              const SizedBox(height: 12),
+              _ProfileLinkRow(theme: theme, icon: Icons.account_balance_wallet_outlined, label: l10n.profileWalletTile, onTap: onOpenWallet!),
+            ],
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(16),
@@ -167,6 +182,44 @@ class ProfilePage extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(theme.tokens.cardRadius)),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileLinkRow extends StatelessWidget {
+  final GuestAppTheme theme;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ProfileLinkRow({required this.theme, required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(theme.tokens.cardRadius),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardBg,
+          borderRadius: BorderRadius.circular(theme.tokens.cardRadius),
+          boxShadow: theme.tokens.cardShadow,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: theme.accentSoft),
+              child: Icon(icon, color: theme.accent, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(child: Text(label, style: theme.body(fontWeight: FontWeight.w600))),
+            Icon(Icons.chevron_right_rounded, color: theme.mutedColor),
           ],
         ),
       ),

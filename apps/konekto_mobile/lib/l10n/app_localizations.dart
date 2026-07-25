@@ -724,6 +724,18 @@ abstract class AppLocalizations {
   /// **'Minha conta'**
   String get myAccountTile;
 
+  /// No description provided for @profileLoyaltyTile.
+  ///
+  /// In pt, this message translates to:
+  /// **'Programa de fidelidade'**
+  String get profileLoyaltyTile;
+
+  /// No description provided for @profileWalletTile.
+  ///
+  /// In pt, this message translates to:
+  /// **'Carteira digital'**
+  String get profileWalletTile;
+
   /// No description provided for @stayBillTitle.
   ///
   /// In pt, this message translates to:

@@ -123,6 +123,8 @@
   "casaConciergeCta": "View services",
 
   "myAccountTile": "My account",
+  "profileLoyaltyTile": "Loyalty program",
+  "profileWalletTile": "Digital wallet",
   "stayBillTitle": "My account",
   "stayBillBalanceDue": "Balance due",
   "stayBillOrders": "Orders on this bill",

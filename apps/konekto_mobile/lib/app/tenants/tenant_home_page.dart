@@ -14,7 +14,9 @@ import 'package:konekto/l10n/app_localizations.dart';
 import 'package:konekto/modules/module_catalog_repository.dart';
 import 'package:konekto/modules/module_definition.dart';
 import 'package:konekto/modules/module_engine.dart';
+import 'package:konekto/modules/screens/loyalty_wallet_dispatch.dart';
 import 'package:konekto/templates/guest_template_registry.dart';
+import 'package:konekto/templates/shared/guest_features.dart';
 import 'package:konekto/templates/shared/guest_template_content_params.dart';
 import 'package:konekto/templates/shared/widgets/profile_page.dart';
 import 'package:konekto/theme/guest_app_theme.dart';
@@ -137,15 +139,31 @@ class _TenantHomePageState extends State<TenantHomePage> {
         ),
       'services' => ServicesPage(tenantConfig: tenantConfig, theme: theme),
       'bookings' => BookingsPage(tenantConfig: tenantConfig, theme: theme, onExploreServices: () => _onItemTapped(1)),
-      'profile' => ProfilePage(
-          theme: theme,
-          guestName: widget.guestName,
-          roomNumber: widget.guestRoomNumber,
-          onEndSession: () => Navigator.of(context).popUntil((route) => route.isFirst),
-          onOpenStayBill: () => Navigator.push(context, MaterialPageRoute(builder: (context) => StayBillPage(theme: theme))),
-        ),
+      'profile' => _buildProfilePage(tenantConfig, theme),
       _ => Center(child: Text(l10n.screenNotFound)),
     };
+  }
+
+  /// Loyalty/Wallet (Fase 11) — cada tela ainda é desenhada pra combinar
+  /// com UM template (Elite/Pulse/Horizon); Aura/Bosque não têm tela
+  /// própria ainda, então `resolveLoyaltyScreen`/`resolveWalletScreen`
+  /// devolvem `null` e a linha correspondente simplesmente não aparece no
+  /// Perfil (ver `ProfilePage.onOpenLoyalty`/`onOpenWallet`).
+  Widget _buildProfilePage(Map<String, dynamic> tenantConfig, GuestAppTheme theme) {
+    final templateId = guestTemplateIdFromString(tenantConfig['template'] as String?) ?? GuestTemplateId.aura;
+    final features = GuestFeatures.fromTenantConfig(tenantConfig);
+    final loyaltyScreen = resolveLoyaltyScreen(templateId, features);
+    final walletScreen = resolveWalletScreen(templateId, features);
+
+    return ProfilePage(
+      theme: theme,
+      guestName: widget.guestName,
+      roomNumber: widget.guestRoomNumber,
+      onEndSession: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      onOpenStayBill: () => Navigator.push(context, MaterialPageRoute(builder: (context) => StayBillPage(theme: theme))),
+      onOpenLoyalty: loyaltyScreen == null ? null : () => Navigator.push(context, MaterialPageRoute(builder: (context) => loyaltyScreen)),
+      onOpenWallet: walletScreen == null ? null : () => Navigator.push(context, MaterialPageRoute(builder: (context) => walletScreen)),
+    );
   }
 
   @override
