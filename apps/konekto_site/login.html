@@ -164,14 +164,16 @@
   // gerado aqui via query string e valida contra a API. Evita manter duas
   // telas de login em paralelo (e desalinhar visualmente, como já aconteceu).
   //
-  // Ajuste esses dois valores pra cada ambiente (local vs produção).
+  // O login em si sempre autentica contra a API de produção (é lá que
+  // existe o cadastro real de staff/senha — não faz sentido um banco local
+  // separado só pra login). Detecta sozinho se este login.html está
+  // rodando local (localhost/127.0.0.1) ou em produção só pra decidir PRA
+  // ONDE mandar o token depois: local manda pro portal rodando em :3001
+  // (`npm run dev` em apps/konekto_portal_next, porta fixa); produção
+  // manda pro Vercel. Sem flag manual pra lembrar.
   const API_BASE_URL = 'https://konekto-api.vercel.app';
-  // ?dev=1 na URL deste login (ex: login.html?dev=1) manda o token pro
-  // portal rodando local (`npm run dev` em apps/konekto_portal_next, porta
-  // 3000) em vez do Vercel de produção — só pra facilitar teste local do
-  // portal contra a API real. Nunca usar isso em produção.
-  const isDev = new URLSearchParams(window.location.search).get('dev') === '1';
-  const PORTAL_URL = isDev ? 'http://localhost:3000' : 'https://konekto-portal.vercel.app';
+  const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const PORTAL_URL = isLocal ? 'http://localhost:3001' : 'https://konekto-portal.vercel.app';
 
   const form = document.getElementById('login-form');
   const errorEl = document.getElementById('error');
