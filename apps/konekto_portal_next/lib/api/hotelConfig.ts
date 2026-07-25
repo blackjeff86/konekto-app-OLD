@@ -120,6 +120,22 @@ export function updateTemplate(hotelId: string, token: string, template: string)
   })
 }
 
+/**
+ * Liga/desliga um módulo permitido pelo plano do hotel — merge parcial
+ * (só o módulo tocado), nunca substitui o mapa inteiro. O backend valida
+ * de novo que o módulo está dentro do que o plano/preset permite (403
+ * `module_not_allowed_for_plan` se não estiver) — a UI só esconde/tranca a
+ * opção por conveniência, não é a única barreira.
+ */
+export function updateModuleEnabled(hotelId: string, token: string, moduleId: string, enabled: boolean): Promise<void> {
+  return apiRequest<void>(`/api/hotels/${hotelId}`, {
+    method: 'PATCH',
+    token,
+    body: { modules: { [moduleId]: { enabled } } },
+    errorMessage: 'Falha ao salvar módulo.',
+  })
+}
+
 interface ServicesPageDoc {
   pageStyles?: { banner?: { imageUrl?: string } }
   [key: string]: unknown

@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth/AuthProvider'
 const SETTINGS_TABS = [
   { label: 'Marca', href: '/settings/branding' },
   { label: 'Aparência', href: '/settings/appearance' },
+  { label: 'Módulos', href: '/settings/modules' },
   { label: 'Serviços', href: '/settings/services' },
   { label: 'Quartos', href: '/settings/rooms' },
   { label: 'Cupons', href: '/settings/coupons' },

@@ -32,7 +32,7 @@ describe('SettingsLayout', () => {
 
     render(<SettingsLayout>conteúdo</SettingsLayout>)
 
-    for (const label of ['Marca', 'Aparência', 'Serviços', 'Quartos', 'Cupons', 'Parceiros', 'Pagamentos', 'Integrações', 'Equipe']) {
+    for (const label of ['Marca', 'Aparência', 'Módulos', 'Serviços', 'Quartos', 'Cupons', 'Parceiros', 'Pagamentos', 'Integrações', 'Equipe']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
     expect(screen.getByText('conteúdo')).toBeInTheDocument()

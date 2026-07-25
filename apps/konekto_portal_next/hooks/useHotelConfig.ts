@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth/AuthProvider'
-import { getHotelConfig, updateBranding, updatePromoImages, updateTemplate, type BrandingInput } from '@/lib/api/hotelConfig'
+import {
+  getHotelConfig,
+  updateBranding,
+  updateModuleEnabled,
+  updatePromoImages,
+  updateTemplate,
+  type BrandingInput,
+} from '@/lib/api/hotelConfig'
 
 /** Marca/Aparência do hotel (nome, logo, endereço, carrossel, template) — Fase 5. */
 export function useHotelConfig() {
@@ -33,6 +40,12 @@ export function useHotelConfig() {
     onSuccess: invalidate,
   })
 
+  const updateModuleEnabledMutation = useMutation({
+    mutationFn: ({ moduleId, enabled }: { moduleId: string; enabled: boolean }) =>
+      updateModuleEnabled(hotelId!, token!, moduleId, enabled),
+    onSuccess: invalidate,
+  })
+
   return {
     config: query.data ?? null,
     isLoading: query.isLoading,
@@ -40,5 +53,6 @@ export function useHotelConfig() {
     updateBranding: updateBrandingMutation.mutateAsync,
     updatePromoImages: updatePromoImagesMutation.mutateAsync,
     updateTemplate: updateTemplateMutation.mutateAsync,
+    updateModuleEnabled: updateModuleEnabledMutation.mutateAsync,
   }
 }
