@@ -8,6 +8,10 @@ class Subscription {
   final String status;
   final String paymentStatus;
   final String? notes;
+  // Categoria White Label (essential/premium/enterprise) — controla
+  // template/feature flag do app do hóspede, distinto de `planName` (texto
+  // livre exibido no financeiro). Ver apps/konekto_api/lib/feature-flags.ts.
+  final String plan;
 
   const Subscription({
     required this.planName,
@@ -15,6 +19,7 @@ class Subscription {
     required this.status,
     required this.paymentStatus,
     this.notes,
+    required this.plan,
   });
 
   factory Subscription.fromJson(Map<String, dynamic> json) {
@@ -24,6 +29,7 @@ class Subscription {
       status: json['status'] as String,
       paymentStatus: json['paymentStatus'] as String,
       notes: json['notes'] as String?,
+      plan: json['plan'] as String? ?? 'essential',
     );
   }
 }
@@ -82,6 +88,12 @@ class HotelOverview {
   final String name;
   final String? address;
   final Subscription? subscription;
+  // Flags que o plano já dá por padrão (somente leitura na UI de cortesia —
+  // não faz sentido "desligar" o que o plano já inclui).
+  final List<String> defaultFeatures;
+  // Só as extras de cortesia (`Hotel.config.enabledFeatures`), nunca as do
+  // plano — é exatamente o que `updateEnabledFeatures` espera de volta.
+  final List<String> enabledFeatures;
   final int activeGuestCount;
   final IntegrationHealth integration;
   final int unreadSupportMessages;
@@ -92,6 +104,8 @@ class HotelOverview {
     required this.name,
     required this.address,
     required this.subscription,
+    this.defaultFeatures = const [],
+    this.enabledFeatures = const [],
     required this.activeGuestCount,
     required this.integration,
     required this.unreadSupportMessages,
@@ -104,6 +118,8 @@ class HotelOverview {
       name: json['name'] as String,
       address: json['address'] as String?,
       subscription: json['subscription'] != null ? Subscription.fromJson(json['subscription'] as Map<String, dynamic>) : null,
+      defaultFeatures: (json['defaultFeatures'] as List<dynamic>?)?.map((item) => item as String).toList() ?? const [],
+      enabledFeatures: (json['enabledFeatures'] as List<dynamic>?)?.map((item) => item as String).toList() ?? const [],
       activeGuestCount: json['activeGuestCount'] as int? ?? 0,
       integration: IntegrationHealth.fromJson(json['integration'] as Map<String, dynamic>),
       unreadSupportMessages: json['unreadSupportMessages'] as int? ?? 0,
@@ -173,6 +189,7 @@ class ClientsRepository {
     required String token,
     required String name,
     required String infra,
+    required String plan,
     required String gerenteName,
     required String gerenteEmail,
   }) async {
@@ -185,6 +202,7 @@ class ClientsRepository {
       body: jsonEncode({
         'name': name,
         'infra': infra,
+        'plan': plan,
         'gerente': {'name': gerenteName, 'email': gerenteEmail},
       }),
     );
@@ -205,6 +223,7 @@ class ClientsRepository {
     required String status,
     required String paymentStatus,
     String? notes,
+    required String plan,
   }) async {
     final response = await _client.patch(
       Uri.parse('$apiBaseUrl/api/platform-admin/hotels/$hotelId/subscription'),
@@ -218,10 +237,32 @@ class ClientsRepository {
         'status': status,
         'paymentStatus': paymentStatus,
         'notes': notes,
+        'plan': plan,
       }),
     );
     if (response.statusCode != 200) {
       throw StateError('Falha ao salvar o plano (status ${response.statusCode}).');
+    }
+  }
+
+  /// Substitui a lista INTEIRA de flags de cortesia (nunca as do plano —
+  /// ver `HotelOverview.enabledFeatures`). Só o time Konekto usa isso; não
+  /// existe equivalente no portal do hotel.
+  Future<void> updateEnabledFeatures({
+    required String hotelId,
+    required String token,
+    required List<String> enabledFeatures,
+  }) async {
+    final response = await _client.patch(
+      Uri.parse('$apiBaseUrl/api/platform-admin/hotels/$hotelId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'enabledFeatures': enabledFeatures}),
+    );
+    if (response.statusCode != 200) {
+      throw StateError('Falha ao salvar os recursos de cortesia (status ${response.statusCode}).');
     }
   }
 }

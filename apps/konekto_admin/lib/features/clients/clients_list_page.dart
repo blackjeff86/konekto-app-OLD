@@ -306,6 +306,18 @@ const _kCreateHotelInfraOptions = [
     tagline: 'HERANÇA',
     description: 'Luxo clássico — esmeralda e dourado, serifada e estruturada.',
   ),
+  _InfraChoice(
+    id: 'konekto_classico',
+    name: 'Konekto Clássico',
+    tagline: 'CLÁSSICO',
+    description: 'Cream, tinta e dourado quente — a identidade Konekto de antes do rebrand.',
+  ),
+  _InfraChoice(
+    id: 'konekto_noturno',
+    name: 'Konekto Noturno',
+    tagline: 'NOTURNO',
+    description: 'A única infra escura — azul-marinho profundo e dourado.',
+  ),
 ];
 
 /// Diálogo de onboarding de um cliente real — cria o Hotel e já o primeiro
@@ -321,11 +333,18 @@ class _CreateHotelDialog extends StatefulWidget {
   State<_CreateHotelDialog> createState() => _CreateHotelDialogState();
 }
 
+const _kPlanOptions = [
+  ('essential', 'Essential'),
+  ('premium', 'Premium'),
+  ('enterprise', 'Enterprise'),
+];
+
 class _CreateHotelDialogState extends State<_CreateHotelDialog> {
   final _nameController = TextEditingController();
   final _gerenteNameController = TextEditingController();
   final _gerenteEmailController = TextEditingController();
   String _selectedInfra = 'verde_pousada';
+  String _selectedPlan = 'essential';
 
   bool _isSaving = false;
   String? _errorMessage;
@@ -371,6 +390,7 @@ class _CreateHotelDialogState extends State<_CreateHotelDialog> {
         token: token,
         name: name,
         infra: _selectedInfra,
+        plan: _selectedPlan,
         gerenteName: gerenteName,
         gerenteEmail: gerenteEmail,
       );
@@ -423,6 +443,23 @@ class _CreateHotelDialogState extends State<_CreateHotelDialog> {
                 ),
                 const SizedBox(height: 10),
               ],
+              const SizedBox(height: 6),
+              Text('Plano comercial', style: KonektoBrand.body(fontSize: 12, color: KonektoBrand.slate)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  for (final (id, label) in _kPlanOptions) ...[
+                    Expanded(
+                      child: _PlanChoiceChip(
+                        label: label,
+                        selected: _selectedPlan == id,
+                        onTap: () => setState(() => _selectedPlan = id),
+                      ),
+                    ),
+                    if (id != _kPlanOptions.last.$1) const SizedBox(width: 8),
+                  ],
+                ],
+              ),
               const SizedBox(height: 6),
               TextField(
                 controller: _gerenteNameController,
@@ -506,6 +543,35 @@ class _InfraChoiceCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanChoiceChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _PlanChoiceChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? KonektoBrand.gold.withValues(alpha: 0.14) : Colors.white.withValues(alpha: 0.02),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: selected ? KonektoBrand.gold : KonektoBrand.borderStrong, width: selected ? 1.6 : 1),
+        ),
+        child: Text(
+          label,
+          style: KonektoBrand.body(fontSize: 12.5, fontWeight: FontWeight.w700, color: selected ? KonektoBrand.gold : KonektoBrand.slate),
         ),
       ),
     );
