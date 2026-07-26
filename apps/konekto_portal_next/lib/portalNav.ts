@@ -58,7 +58,7 @@ export const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
   {
     icon: '🎧',
     title: 'Suporte',
-    description: 'Fale direto com a equipe do Konekto.',
+    description: 'Fale direto com a equipe da Sevvn.',
     href: '/support',
     matchPrefix: '/support',
     badgeKey: 'unreadSupportCount',

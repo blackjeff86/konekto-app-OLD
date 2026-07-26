@@ -6,7 +6,7 @@ export type FieldTranslations = Record<string, Record<string, string>>
 export type ServiceItemPaymentMode = 'hotel' | 'partner'
 
 export const serviceItemPaymentModeLabel: Record<ServiceItemPaymentMode, string> = {
-  hotel: 'Hotel cobra pelo Konekto',
+  hotel: 'Hotel cobra pelo Sevvn',
   partner: 'Hóspede paga direto ao parceiro',
 }
 

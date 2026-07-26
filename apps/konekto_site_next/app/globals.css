@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+/*
+ * Paleta de marca — mesma fonte de verdade usada em konekto_portal_next/
+ * app/globals.css e no konekto_site (HTML) original: #FF2E88 / #16181D /
+ * #F7F5F3 / #FAFAF9. Nomes de token descrevem papel semântico (bg/surface/
+ * ink/primary), não a cor literal.
+ */
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-alt: #fafaf9;
+  --color-card: #f7f5f3;
+  --color-border: #e7e4df;
+  --color-border-strong: #d8d4cc;
+  --color-ink: #16181d;
+  --color-muted: #5b5f68;
+  --color-muted-soft: #85899a;
+  --color-primary: #ff2e88;
+  --color-primary-soft: #fff0f7;
+  --color-primary-text: #d81e70;
+  --color-on-primary: #ffffff;
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-alt: var(--color-surface-alt);
+  --color-card: var(--color-card);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-muted-soft: var(--color-muted-soft);
+  --color-primary: var(--color-primary);
+  --color-primary-soft: var(--color-primary-soft);
+  --color-primary-text: var(--color-primary-text);
+  --color-on-primary: var(--color-on-primary);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+
+.eyebrow {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}

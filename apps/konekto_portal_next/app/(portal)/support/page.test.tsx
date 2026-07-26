@@ -38,7 +38,7 @@ describe('SupportPage', () => {
     expect(screen.getByText('Oi, preciso de ajuda')).toBeInTheDocument()
     expect(screen.getByText('Claro, em que posso ajudar?')).toBeInTheDocument()
     expect(screen.getByText('Você')).toBeInTheDocument()
-    expect(screen.getByText('Konekto')).toBeInTheDocument()
+    expect(screen.getByText('Sevvn')).toBeInTheDocument()
   })
 
   it('sends a message and clears the input', async () => {

@@ -15,8 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Konekto Portal",
-  description: "Painel de gestão do hotel Konekto",
+  title: "Sevvn Portal",
+  description: "Painel de gestão do hotel Sevvn",
 };
 
 export default function RootLayout({

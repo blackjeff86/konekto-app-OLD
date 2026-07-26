@@ -27,7 +27,7 @@ export function PortalSidebar({ badgeCounts }: { badgeCounts: PortalBadgeCounts 
       <div className="mb-10 flex items-center gap-2.5 px-2">
         <KonektoMark size={26} />
         <div className="min-w-0">
-          <p className="text-base font-extrabold tracking-tight text-cream">Konekto</p>
+          <p className="text-base font-extrabold tracking-tight text-cream">Sevvn</p>
           <p className="text-[10px] font-bold tracking-[0.2em] text-slate-soft uppercase">Portal do hotel</p>
         </div>
       </div>

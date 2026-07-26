@@ -73,7 +73,7 @@ export default function IntegrationsPage() {
         <h1 className="text-lg font-bold text-cream">Integração com o PMS</h1>
         <p className="mt-1 text-[12.5px] text-slate">
           Conecte o sistema que o hotel já usa (ou um middleware como Zapier/Make/n8n) pra que
-          reservas, hóspedes e cardápio sincronizem automaticamente pro Konekto, e os pedidos feitos
+          reservas, hóspedes e cardápio sincronizem automaticamente pro Sevvn, e os pedidos feitos
           pelo hóspede no app voltem pro sistema do hotel.
         </p>
       </div>
@@ -148,7 +148,7 @@ export default function IntegrationsPage() {
           <p className="text-[13px] text-cream">
             {status?.configured
               ? 'A chave atual deixa de funcionar imediatamente — quem já usa precisa trocar pela nova.'
-              : 'Essa chave é o que o PMS (ou o middleware que o hotel usar) precisa pra enviar dados pro Konekto.'}
+              : 'Essa chave é o que o PMS (ou o middleware que o hotel usar) precisa pra enviar dados pro Sevvn.'}
           </p>
         </Modal>
       )}

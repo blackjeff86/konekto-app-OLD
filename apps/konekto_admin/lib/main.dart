@@ -13,7 +13,7 @@ class KonektoAdminApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final authRepository = AuthRepository();
     return MaterialApp(
-      title: 'Konekto Admin',
+      title: 'Sevvn Admin',
       debugShowCheckedModeBanner: false,
       home: AdminGate(authRepository: authRepository),
     );

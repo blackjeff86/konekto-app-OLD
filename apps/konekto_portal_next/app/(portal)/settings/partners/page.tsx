@@ -63,7 +63,7 @@ export default function PartnersPage() {
       <p className="text-[12.5px] text-slate">
         Empresas que prestam algum serviço do hotel (ex: um estúdio de massagem terceirizado).
         Vincule um parceiro a um item em Serviços pra decidir se o pagamento é cobrado pelo
-        Konekto ou direto com o parceiro.
+        Sevvn ou direto com o parceiro.
       </p>
 
       {errorMessage && (

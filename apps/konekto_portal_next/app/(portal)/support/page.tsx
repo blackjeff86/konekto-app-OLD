@@ -36,7 +36,7 @@ export default function SupportPage() {
   return (
     <div className="flex h-[70vh] flex-col gap-6">
       <p className="text-[13.5px] text-slate">
-        Fale direto com a equipe do Konekto — dúvidas, problemas ou pedidos de ajuda.
+        Fale direto com a equipe da Sevvn — dúvidas, problemas ou pedidos de ajuda.
       </p>
 
       {errorMessage && (
@@ -98,7 +98,7 @@ function MessageBubble({ message }: { message: SupportMessage }) {
         }`}
       >
         <p className="text-[10px] font-bold tracking-wide text-gold-light uppercase">
-          {isFromPlatform ? 'Konekto' : 'Você'}
+          {isFromPlatform ? 'Sevvn' : 'Você'}
         </p>
         <p className="mt-1 text-[13.5px] text-cream">{message.body}</p>
       </div>
