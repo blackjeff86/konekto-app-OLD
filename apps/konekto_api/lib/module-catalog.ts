@@ -23,6 +23,15 @@ export type ModuleCategory = 'core' | 'hospitalidade' | 'financeiro' | 'experien
 
 export type ModulePlacement = 'home' | 'bottomNav' | 'servicesMenu' | 'settings'
 
+/// Modelo operacional do módulo no ecossistema Sevvn.
+/// - `standalone`: o módulo funciona 100% dentro da Sevvn sem depender de
+///   sistema externo.
+/// - `hybrid`: o módulo funciona sozinho, mas também pode consumir/sincronizar
+///   dados de PMS, POS, ERP ou middleware quando o hotel desejar.
+/// - `integration_required`: o módulo só faz sentido com uma integração
+///   externa ativa.
+export type ModuleOperationMode = 'standalone' | 'hybrid' | 'integration_required'
+
 export interface ModuleDefinition {
   id: string
   name: string
@@ -39,6 +48,7 @@ export interface ModuleDefinition {
   screenId?: string
   defaultOrder: number
   dependencies: string[]
+  operationMode: ModuleOperationMode
   /** false = catálogo existe, mas não tem Widget/Screen registrados ainda
    *  (não aparece como opção de verdade em nenhuma UI de hotel/admin). */
   implemented: boolean
@@ -65,48 +75,48 @@ export const SERVICE_GROUPS: ServiceGroup[] = [
 
 export const MODULE_CATALOG: ModuleDefinition[] = [
   // ── core — sempre permitido em qualquer plano; hotel pode desligar individualmente ──
-  { id: 'home', name: 'Home', description: 'Tela inicial do app do hóspede.', category: 'core', icon: 'home', placement: ['bottomNav'], screenId: 'home', defaultOrder: 0, dependencies: [], implemented: true },
-  { id: 'hotel_info', name: 'Informações da hospedagem', description: 'Wi-Fi, número do quarto, dados da estadia.', category: 'core', icon: 'info', placement: ['home'], screenId: 'hotel_info', defaultOrder: 1, dependencies: [], implemented: true },
-  { id: 'services', name: 'Serviços', description: 'Agregador dos módulos de Hospitalidade habilitados.', category: 'core', icon: 'grid_view', placement: ['bottomNav', 'home'], screenId: 'services', defaultOrder: 2, dependencies: [], implemented: true },
-  { id: 'bookings', name: 'Reservas', description: 'Pedidos e reservas do hóspede.', category: 'core', icon: 'event_note', placement: ['bottomNav'], screenId: 'bookings', defaultOrder: 3, dependencies: [], implemented: true },
+  { id: 'home', name: 'Home', description: 'Tela inicial do app do hóspede.', category: 'core', icon: 'home', placement: ['bottomNav'], screenId: 'home', defaultOrder: 0, dependencies: [], operationMode: 'hybrid', implemented: true },
+  { id: 'hotel_info', name: 'Informações da hospedagem', description: 'Wi-Fi, número do quarto, dados da estadia.', category: 'core', icon: 'info', placement: ['home'], screenId: 'hotel_info', defaultOrder: 1, dependencies: [], operationMode: 'hybrid', implemented: true },
+  { id: 'services', name: 'Serviços', description: 'Agregador dos módulos de Hospitalidade habilitados.', category: 'core', icon: 'grid_view', placement: ['bottomNav', 'home'], screenId: 'services', defaultOrder: 2, dependencies: [], operationMode: 'hybrid', implemented: true },
+  { id: 'bookings', name: 'Reservas', description: 'Pedidos e reservas do hóspede.', category: 'core', icon: 'event_note', placement: ['bottomNav'], screenId: 'bookings', defaultOrder: 3, dependencies: [], operationMode: 'hybrid', implemented: true },
   // Sem 'bottomNav': hoje não existe aba própria de Mensagens — é acessado
   // pelo sino de notificação na Home (NoticesPage), não uma aba na nav.
-  { id: 'messages', name: 'Mensagens', description: 'Chat com a recepção do hotel.', category: 'core', icon: 'chat_bubble_outline', placement: ['home'], screenId: 'messages', defaultOrder: 4, dependencies: [], implemented: true },
-  { id: 'profile', name: 'Perfil', description: 'Dados do hóspede e conta da estadia.', category: 'core', icon: 'person_outline', placement: ['bottomNav'], screenId: 'profile', defaultOrder: 5, dependencies: [], implemented: true },
-  { id: 'basic_notifications', name: 'Notificações Básicas', description: 'Avisos da recepção e status de pedidos.', category: 'core', icon: 'notifications_none', placement: ['home'], screenId: 'notices', defaultOrder: 6, dependencies: [], implemented: true },
+  { id: 'messages', name: 'Mensagens', description: 'Chat com a recepção do hotel.', category: 'core', icon: 'chat_bubble_outline', placement: ['home'], screenId: 'messages', defaultOrder: 4, dependencies: [], operationMode: 'hybrid', implemented: true },
+  { id: 'profile', name: 'Perfil', description: 'Dados do hóspede e conta da estadia.', category: 'core', icon: 'person_outline', placement: ['bottomNav'], screenId: 'profile', defaultOrder: 5, dependencies: [], operationMode: 'hybrid', implemented: true },
+  { id: 'basic_notifications', name: 'Notificações Básicas', description: 'Avisos da recepção e status de pedidos.', category: 'core', icon: 'notifications_none', placement: ['home'], screenId: 'notices', defaultOrder: 6, dependencies: [], operationMode: 'hybrid', implemented: true, configSchemaId: 'basic_notifications' },
 
   // ── hospitalidade — mapeiam pro catálogo `Service` (gating real na Fase 12) ──
-  { id: 'room_service', name: 'Room Service', description: 'Pedidos de quarto.', category: 'hospitalidade', groupId: 'gastronomia', icon: 'room_service', placement: ['servicesMenu'], screenId: 'service_room_service', defaultOrder: 0, dependencies: ['services'], implemented: true, configSchemaId: 'room_service' },
-  { id: 'restaurant', name: 'Restaurantes', description: 'Cardápio e reservas de mesa dos restaurantes do hotel.', category: 'hospitalidade', groupId: 'gastronomia', icon: 'restaurant', placement: ['servicesMenu'], screenId: 'service_restaurant', defaultOrder: 1, dependencies: ['services'], implemented: true, configSchemaId: 'restaurant' },
-  { id: 'spa', name: 'Spa', description: 'Tratamentos e agendamento de spa.', category: 'hospitalidade', groupId: 'bem_estar', icon: 'spa', placement: ['servicesMenu'], screenId: 'service_spa', defaultOrder: 2, dependencies: ['services'], implemented: true, configSchemaId: 'generic_service' },
-  { id: 'tours', name: 'Passeios', description: 'Passeios e atividades oferecidas pelo hotel.', category: 'hospitalidade', groupId: 'experiencias', icon: 'directions_walk', placement: ['servicesMenu'], screenId: 'service_tours', defaultOrder: 3, dependencies: ['services'], implemented: true, configSchemaId: 'generic_service' },
-  { id: 'events', name: 'Eventos', description: 'Eventos e programação do hotel.', category: 'hospitalidade', groupId: 'experiencias', icon: 'event', placement: ['servicesMenu'], screenId: 'service_events', defaultOrder: 4, dependencies: ['services'], implemented: false, configSchemaId: 'generic_service' },
-  { id: 'concierge', name: 'Concierge', description: 'Atendimento personalizado de concierge.', category: 'hospitalidade', groupId: 'experiencias', icon: 'support_agent', placement: ['servicesMenu'], screenId: 'service_concierge', defaultOrder: 5, dependencies: ['services'], implemented: false },
-  { id: 'laundry', name: 'Lavanderia', description: 'Serviço de lavanderia.', category: 'hospitalidade', groupId: 'gastronomia', icon: 'local_laundry_service', placement: ['servicesMenu'], screenId: 'service_laundry', defaultOrder: 6, dependencies: ['services'], implemented: false, configSchemaId: 'generic_service' },
-  { id: 'kids_club', name: 'Kids Club', description: 'Atividades infantis.', category: 'hospitalidade', groupId: 'bem_estar', icon: 'child_care', placement: ['servicesMenu'], screenId: 'service_kids_club', defaultOrder: 7, dependencies: ['services'], implemented: false, configSchemaId: 'generic_service' },
-  { id: 'pools', name: 'Piscinas', description: 'Horários e reserva de espreguiçadeiras.', category: 'hospitalidade', groupId: 'bem_estar', icon: 'pool', placement: ['servicesMenu'], screenId: 'service_pools', defaultOrder: 8, dependencies: ['services'], implemented: false, configSchemaId: 'generic_service' },
-  { id: 'gym', name: 'Academia', description: 'Horários e informações da academia.', category: 'hospitalidade', groupId: 'bem_estar', icon: 'fitness_center', placement: ['servicesMenu'], screenId: 'service_gym', defaultOrder: 9, dependencies: ['services'], implemented: false, configSchemaId: 'generic_service' },
-  { id: 'transport', name: 'Transporte', description: 'Transfer e transporte do hotel.', category: 'hospitalidade', groupId: 'mobilidade', icon: 'directions_car', placement: ['servicesMenu'], screenId: 'service_transport', defaultOrder: 10, dependencies: ['services'], implemented: false, configSchemaId: 'generic_service' },
-  { id: 'parking', name: 'Estacionamento', description: 'Informações e reserva de vaga de estacionamento.', category: 'hospitalidade', groupId: 'mobilidade', icon: 'local_parking', placement: ['servicesMenu'], screenId: 'service_parking', defaultOrder: 11, dependencies: ['services'], implemented: false, configSchemaId: 'generic_service' },
+  { id: 'room_service', name: 'Room Service', description: 'Pedidos de quarto.', category: 'hospitalidade', groupId: 'gastronomia', icon: 'room_service', placement: ['servicesMenu'], screenId: 'service_room_service', defaultOrder: 0, dependencies: ['services'], operationMode: 'hybrid', implemented: true, configSchemaId: 'room_service' },
+  { id: 'restaurant', name: 'Restaurantes', description: 'Cardápio e reservas de mesa dos restaurantes do hotel.', category: 'hospitalidade', groupId: 'gastronomia', icon: 'restaurant', placement: ['servicesMenu'], screenId: 'service_restaurant', defaultOrder: 1, dependencies: ['services'], operationMode: 'hybrid', implemented: true, configSchemaId: 'restaurant' },
+  { id: 'spa', name: 'Spa', description: 'Tratamentos e agendamento de spa.', category: 'hospitalidade', groupId: 'bem_estar', icon: 'spa', placement: ['servicesMenu'], screenId: 'service_spa', defaultOrder: 2, dependencies: ['services'], operationMode: 'hybrid', implemented: true, configSchemaId: 'generic_service' },
+  { id: 'tours', name: 'Passeios', description: 'Passeios e atividades oferecidas pelo hotel.', category: 'hospitalidade', groupId: 'experiencias', icon: 'directions_walk', placement: ['servicesMenu'], screenId: 'service_tours', defaultOrder: 3, dependencies: ['services'], operationMode: 'hybrid', implemented: true, configSchemaId: 'generic_service' },
+  { id: 'events', name: 'Eventos', description: 'Eventos e programação do hotel.', category: 'hospitalidade', groupId: 'experiencias', icon: 'event', placement: ['servicesMenu'], screenId: 'service_events', defaultOrder: 4, dependencies: ['services'], operationMode: 'hybrid', implemented: false, configSchemaId: 'generic_service' },
+  { id: 'concierge', name: 'Concierge', description: 'Atendimento personalizado de concierge.', category: 'hospitalidade', groupId: 'experiencias', icon: 'support_agent', placement: ['servicesMenu'], screenId: 'service_concierge', defaultOrder: 5, dependencies: ['services'], operationMode: 'hybrid', implemented: true, configSchemaId: 'concierge' },
+  { id: 'laundry', name: 'Lavanderia', description: 'Serviço de lavanderia.', category: 'hospitalidade', groupId: 'gastronomia', icon: 'local_laundry_service', placement: ['servicesMenu'], screenId: 'service_laundry', defaultOrder: 6, dependencies: ['services'], operationMode: 'hybrid', implemented: false, configSchemaId: 'generic_service' },
+  { id: 'kids_club', name: 'Kids Club', description: 'Atividades infantis.', category: 'hospitalidade', groupId: 'bem_estar', icon: 'child_care', placement: ['servicesMenu'], screenId: 'service_kids_club', defaultOrder: 7, dependencies: ['services'], operationMode: 'standalone', implemented: false, configSchemaId: 'generic_service' },
+  { id: 'pools', name: 'Piscinas', description: 'Horários e reserva de espreguiçadeiras.', category: 'hospitalidade', groupId: 'bem_estar', icon: 'pool', placement: ['servicesMenu'], screenId: 'service_pools', defaultOrder: 8, dependencies: ['services'], operationMode: 'hybrid', implemented: false, configSchemaId: 'generic_service' },
+  { id: 'gym', name: 'Academia', description: 'Horários e informações da academia.', category: 'hospitalidade', groupId: 'bem_estar', icon: 'fitness_center', placement: ['servicesMenu'], screenId: 'service_gym', defaultOrder: 9, dependencies: ['services'], operationMode: 'standalone', implemented: false, configSchemaId: 'generic_service' },
+  { id: 'transport', name: 'Transporte', description: 'Transfer e transporte do hotel.', category: 'hospitalidade', groupId: 'mobilidade', icon: 'directions_car', placement: ['servicesMenu'], screenId: 'service_transport', defaultOrder: 10, dependencies: ['services'], operationMode: 'hybrid', implemented: false, configSchemaId: 'generic_service' },
+  { id: 'parking', name: 'Estacionamento', description: 'Informações e reserva de vaga de estacionamento.', category: 'hospitalidade', groupId: 'mobilidade', icon: 'local_parking', placement: ['servicesMenu'], screenId: 'service_parking', defaultOrder: 11, dependencies: ['services'], operationMode: 'hybrid', implemented: false, configSchemaId: 'generic_service' },
 
   // ── financeiro ──
-  { id: 'digital_wallet', name: 'Carteira Digital', description: 'Saldo e extrato de consumo do hóspede.', category: 'financeiro', icon: 'account_balance_wallet', placement: ['home', 'bottomNav'], screenId: 'wallet', defaultOrder: 0, dependencies: [], implemented: true, configSchemaId: 'digital_wallet' },
-  { id: 'payments', name: 'Pagamentos', description: 'Pagamento de consumo direto pelo app.', category: 'financeiro', icon: 'payment', placement: ['home'], screenId: 'payments', defaultOrder: 1, dependencies: ['digital_wallet'], implemented: false },
-  { id: 'statements', name: 'Extratos', description: 'Extrato detalhado de consumo por período.', category: 'financeiro', icon: 'receipt_long', placement: ['home'], screenId: 'statements', defaultOrder: 2, dependencies: ['digital_wallet'], implemented: false },
+  { id: 'digital_wallet', name: 'Carteira Digital', description: 'Saldo e extrato de consumo do hóspede.', category: 'financeiro', icon: 'account_balance_wallet', placement: ['home', 'bottomNav'], screenId: 'wallet', defaultOrder: 0, dependencies: [], operationMode: 'hybrid', implemented: true, configSchemaId: 'digital_wallet' },
+  { id: 'payments', name: 'Pagamentos', description: 'Pagamento de consumo direto pelo app.', category: 'financeiro', icon: 'payment', placement: ['home'], screenId: 'payments', defaultOrder: 1, dependencies: ['digital_wallet'], operationMode: 'hybrid', implemented: false },
+  { id: 'statements', name: 'Extratos', description: 'Extrato detalhado de consumo por período.', category: 'financeiro', icon: 'receipt_long', placement: ['home'], screenId: 'statements', defaultOrder: 2, dependencies: ['digital_wallet'], operationMode: 'hybrid', implemented: false },
 
   // ── experiência ──
-  { id: 'promotions', name: 'Promoções', description: 'Cupons e promoções aplicáveis a pedidos.', category: 'experiencia', icon: 'local_offer', placement: ['home'], screenId: 'promotions', defaultOrder: 0, dependencies: [], implemented: true, configSchemaId: 'promotions' },
-  { id: 'loyalty', name: 'Programa de Fidelidade', description: 'Pontos e benefícios de fidelidade.', category: 'experiencia', icon: 'stars', placement: ['home', 'bottomNav'], screenId: 'loyalty', defaultOrder: 1, dependencies: [], implemented: true, configSchemaId: 'loyalty' },
-  { id: 'interactive_map', name: 'Mapa Interativo', description: 'Mapa do hotel e instalações.', category: 'experiencia', icon: 'map', placement: ['home'], screenId: 'interactive_map', defaultOrder: 2, dependencies: [], implemented: false },
-  { id: 'service_reviews', name: 'Avaliações', description: 'Avaliação de serviços pelo hóspede.', category: 'experiencia', icon: 'star_rate', placement: ['home'], screenId: 'reviews', defaultOrder: 3, dependencies: [], implemented: false },
-  { id: 'digital_checkin', name: 'Check-in Digital', description: 'Check-in antecipado pelo app.', category: 'experiencia', icon: 'login', placement: ['home'], screenId: 'digital_checkin', defaultOrder: 4, dependencies: [], implemented: false },
-  { id: 'digital_checkout', name: 'Check-out Digital', description: 'Check-out pelo app.', category: 'experiencia', icon: 'logout', placement: ['home'], screenId: 'digital_checkout', defaultOrder: 5, dependencies: [], implemented: false },
-  { id: 'smart_notifications', name: 'Notificações Inteligentes', description: 'Notificações contextuais (ex: horário de check-out, promoções ativas).', category: 'experiencia', icon: 'notifications_active', placement: ['settings'], defaultOrder: 6, dependencies: ['basic_notifications'], implemented: false },
+  { id: 'promotions', name: 'Promoções', description: 'Cupons e promoções aplicáveis a pedidos.', category: 'experiencia', icon: 'local_offer', placement: ['home'], screenId: 'promotions', defaultOrder: 0, dependencies: [], operationMode: 'standalone', implemented: true, configSchemaId: 'promotions' },
+  { id: 'loyalty', name: 'Programa de Fidelidade', description: 'Pontos e benefícios de fidelidade.', category: 'experiencia', icon: 'stars', placement: ['home', 'bottomNav'], screenId: 'loyalty', defaultOrder: 1, dependencies: [], operationMode: 'hybrid', implemented: true, configSchemaId: 'loyalty' },
+  { id: 'interactive_map', name: 'Mapa Interativo', description: 'Mapa do hotel e instalações.', category: 'experiencia', icon: 'map', placement: ['home'], screenId: 'interactive_map', defaultOrder: 2, dependencies: [], operationMode: 'standalone', implemented: false },
+  { id: 'service_reviews', name: 'Avaliações', description: 'Avaliação de serviços pelo hóspede.', category: 'experiencia', icon: 'star_rate', placement: ['home'], screenId: 'reviews', defaultOrder: 3, dependencies: [], operationMode: 'standalone', implemented: false },
+  { id: 'digital_checkin', name: 'Check-in Digital', description: 'Check-in antecipado pelo app.', category: 'experiencia', icon: 'login', placement: ['home'], screenId: 'digital_checkin', defaultOrder: 4, dependencies: [], operationMode: 'hybrid', implemented: false },
+  { id: 'digital_checkout', name: 'Check-out Digital', description: 'Check-out pelo app.', category: 'experiencia', icon: 'logout', placement: ['home'], screenId: 'digital_checkout', defaultOrder: 5, dependencies: [], operationMode: 'hybrid', implemented: false },
+  { id: 'smart_notifications', name: 'Notificações Inteligentes', description: 'Notificações contextuais (ex: horário de check-out, promoções ativas).', category: 'experiencia', icon: 'notifications_active', placement: ['settings'], defaultOrder: 6, dependencies: ['basic_notifications'], operationMode: 'hybrid', implemented: false },
 
   // ── comunicação ──
-  { id: 'multilingual_chat', name: 'Chat Multilíngue', description: 'Tradução automática do chat com a recepção.', category: 'comunicacao', icon: 'translate', placement: ['settings'], defaultOrder: 0, dependencies: ['messages'], implemented: false },
-  { id: 'faq', name: 'FAQ', description: 'Perguntas frequentes do hotel.', category: 'comunicacao', icon: 'help_outline', placement: ['home'], screenId: 'faq', defaultOrder: 1, dependencies: [], implemented: false },
-  { id: 'help_center', name: 'Central de Ajuda', description: 'Central de ajuda e suporte do app.', category: 'comunicacao', icon: 'support', placement: ['settings'], screenId: 'help_center', defaultOrder: 2, dependencies: [], implemented: false },
+  { id: 'multilingual_chat', name: 'Chat Multilíngue', description: 'Tradução automática do chat com a recepção.', category: 'comunicacao', icon: 'translate', placement: ['settings'], defaultOrder: 0, dependencies: ['messages'], operationMode: 'hybrid', implemented: false },
+  { id: 'faq', name: 'FAQ', description: 'Perguntas frequentes do hotel.', category: 'comunicacao', icon: 'help_outline', placement: ['home'], screenId: 'faq', defaultOrder: 1, dependencies: [], operationMode: 'standalone', implemented: false },
+  { id: 'help_center', name: 'Central de Ajuda', description: 'Central de ajuda e suporte do app.', category: 'comunicacao', icon: 'support', placement: ['settings'], screenId: 'help_center', defaultOrder: 2, dependencies: [], operationMode: 'standalone', implemented: false },
 ]
 
 export function isModuleId(value: string): boolean {

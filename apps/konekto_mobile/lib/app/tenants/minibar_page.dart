@@ -19,10 +19,16 @@ class _MinibarEntry {
 /// de propósito (informar consumo é uma ação bem diferente de pedir algo
 /// pra preparar, misturar as duas confunde o hóspede).
 class MinibarPage extends StatefulWidget {
+  final String hotelId;
   final Map<String, dynamic> tenantConfig;
   final GuestAppTheme theme;
 
-  const MinibarPage({super.key, required this.tenantConfig, required this.theme});
+  const MinibarPage({
+    super.key,
+    required this.hotelId,
+    required this.tenantConfig,
+    required this.theme,
+  });
 
   @override
   State<MinibarPage> createState() => _MinibarPageState();
@@ -33,7 +39,7 @@ class _MinibarPageState extends State<MinibarPage> {
   late final Future<List<_MinibarEntry>> _entriesFuture;
 
   GuestAppTheme get theme => widget.theme;
-  String get _hotelId => widget.tenantConfig['id'] ?? 'hotel_1';
+  String get _hotelId => widget.hotelId;
 
   @override
   void initState() {

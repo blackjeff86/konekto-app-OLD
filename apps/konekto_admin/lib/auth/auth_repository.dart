@@ -24,7 +24,8 @@ class AuthState {
 /// Fonte única do fluxo de autenticação do admin da plataforma — diferente
 /// do portal do hotel, aqui o login é um formulário Dart de verdade dentro
 /// do próprio app (não existe uma tela de login compartilhável pra esse
-/// público, `konekto_site/login.html` é do staff de hotel).
+/// público; o login oficial compartilhado é o do staff de hotel em
+/// `konekto_site_next/app/login`).
 ///
 /// `restoreSession` roda uma vez na inicialização do app (ver [AdminGate])
 /// e sempre revalida o token contra a API antes de confiar nele.

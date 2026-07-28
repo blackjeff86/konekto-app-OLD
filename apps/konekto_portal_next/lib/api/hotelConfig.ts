@@ -1,9 +1,10 @@
 /** Portado de apps/konekto_portal/lib/data/hotel_config_repository.dart. */
 import { apiRequest } from './client'
-import type { HotelConfig, WifiSettings } from '@/types/hotelConfig'
+import type { HotelConfig, ModuleConfigurationInput, WifiSettings } from '@/types/hotelConfig'
 
-export function getHotelConfig(hotelId: string): Promise<HotelConfig> {
+export function getHotelConfig(hotelId: string, token: string): Promise<HotelConfig> {
   return apiRequest<HotelConfig>(`/api/hotels/${hotelId}`, {
+    token,
     errorMessage: 'Falha ao carregar configuração do hotel.',
   })
 }
@@ -133,6 +134,27 @@ export function updateModuleEnabled(hotelId: string, token: string, moduleId: st
     token,
     body: { modules: { [moduleId]: { enabled } } },
     errorMessage: 'Falha ao salvar módulo.',
+  })
+}
+
+export function updateModuleConfiguration(
+  hotelId: string,
+  token: string,
+  moduleId: string,
+  input: ModuleConfigurationInput,
+): Promise<void> {
+  return apiRequest<void>(`/api/hotels/${hotelId}`, {
+    method: 'PATCH',
+    token,
+    body: {
+      modules: {
+        [moduleId]: {
+          ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
+          ...(input.configuration ? { configuration: input.configuration } : {}),
+        },
+      },
+    },
+    errorMessage: 'Falha ao salvar configuração do módulo.',
   })
 }
 

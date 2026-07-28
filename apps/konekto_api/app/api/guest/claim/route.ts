@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { signGuestToken } from '@/lib/guest-auth'
 import { expireStay } from '@/lib/stay-expiration'
+import { enforceRateLimit } from '@/lib/rate-limit'
+import { withRequestLogging } from '@/lib/request-logging'
 
 export const runtime = 'nodejs'
 
@@ -14,60 +16,69 @@ interface HotelWifi {
 }
 
 export async function POST(request: NextRequest) {
-  const parsed = claimSchema.safeParse(await request.json().catch(() => null))
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'invalid_request' }, { status: 400 })
-  }
+  return withRequestLogging(request, { route: '/api/guest/claim', surface: 'guest-auth' }, async () => {
+    const rateLimited = enforceRateLimit(request, {
+      bucket: 'guest-claim',
+      max: 20,
+      windowMs: 10 * 60 * 1000,
+    })
+    if (rateLimited) return rateLimited
 
-  const guest = await prisma.guest.findUnique({
-    where: { accessCode: parsed.data.code.trim().toUpperCase() },
-    include: { stay: { include: { room: { select: { number: true } } } } },
-  })
-  if (!guest) {
-    return NextResponse.json({ error: 'guest_not_found' }, { status: 404 })
-  }
+    const parsed = claimSchema.safeParse(await request.json().catch(() => null))
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'invalid_request' }, { status: 400 })
+    }
 
-  // Check-out já passado mas a Stay ainda `active` (staff nunca clicou em
-  // "Fechar conta", sem cron neste projeto) — fecha na hora em vez de
-  // deixar logar com uma estadia vencida.
-  const isOverdue = guest.stay.status === 'active' && guest.stay.checkOutDate.getTime() < Date.now()
-  if (isOverdue) {
-    await expireStay(guest.stayId)
-  }
+    const guest = await prisma.guest.findUnique({
+      where: { accessCode: parsed.data.code.trim().toUpperCase() },
+      include: { stay: { include: { room: { select: { number: true } } } } },
+    })
+    if (!guest) {
+      return NextResponse.json({ error: 'guest_not_found' }, { status: 404 })
+    }
 
-  if (guest.status === 'revoked' || guest.stay.status === 'closed' || isOverdue) {
-    return NextResponse.json({ error: 'access_revoked' }, { status: 403 })
-  }
+    // Check-out já passado mas a Stay ainda `active` (staff nunca clicou em
+    // "Fechar conta", sem cron neste projeto) — fecha na hora em vez de
+    // deixar logar com uma estadia vencida.
+    const isOverdue = guest.stay.status === 'active' && guest.stay.checkOutDate.getTime() < Date.now()
+    if (isOverdue) {
+      await expireStay(guest.stayId)
+    }
 
-  const token = await signGuestToken({
-    sub: guest.id,
-    hotelId: guest.hotelId,
-    firstName: guest.firstName,
-    lastName: guest.lastName,
-    roomNumber: guest.stay.room.number,
-  })
+    if (guest.status === 'revoked' || guest.stay.status === 'closed' || isOverdue) {
+      return NextResponse.json({ error: 'access_revoked' }, { status: 403 })
+    }
 
-  // Nome da rede de wifi é sempre do hotel; a senha pode ser sobrescrita
-  // por hóspede (guest.wifiPassword), com fallback pra senha padrão do
-  // hotel quando não for definida.
-  const hotelGuestInfo = await prisma.hotelContent.findUnique({
-    where: { hotelId_docName: { hotelId: guest.hotelId, docName: 'guestInfo' } },
-  })
-  const hotelWifi = (hotelGuestInfo?.data as { wifi?: HotelWifi } | null)?.wifi
-  const wifiNetworkName = hotelWifi?.network_name ?? null
-  const wifiPassword = guest.wifiPassword ?? hotelWifi?.password ?? null
-
-  return NextResponse.json({
-    token,
-    guest: {
+    const token = await signGuestToken({
+      sub: guest.id,
+      hotelId: guest.hotelId,
       firstName: guest.firstName,
       lastName: guest.lastName,
       roomNumber: guest.stay.room.number,
-      hotelId: guest.hotelId,
-      checkInDate: guest.stay.checkInDate,
-      checkOutDate: guest.stay.checkOutDate,
-      wifiNetworkName,
-      wifiPassword,
-    },
+    })
+
+    // Nome da rede de wifi é sempre do hotel; a senha pode ser sobrescrita
+    // por hóspede (guest.wifiPassword), com fallback pra senha padrão do
+    // hotel quando não for definida.
+    const hotelGuestInfo = await prisma.hotelContent.findUnique({
+      where: { hotelId_docName: { hotelId: guest.hotelId, docName: 'guestInfo' } },
+    })
+    const hotelWifi = (hotelGuestInfo?.data as { wifi?: HotelWifi } | null)?.wifi
+    const wifiNetworkName = hotelWifi?.network_name ?? null
+    const wifiPassword = guest.wifiPassword ?? hotelWifi?.password ?? null
+
+    return NextResponse.json({
+      token,
+      guest: {
+        firstName: guest.firstName,
+        lastName: guest.lastName,
+        roomNumber: guest.stay.room.number,
+        hotelId: guest.hotelId,
+        checkInDate: guest.stay.checkInDate,
+        checkOutDate: guest.stay.checkOutDate,
+        wifiNetworkName,
+        wifiPassword,
+      },
+    })
   })
 }

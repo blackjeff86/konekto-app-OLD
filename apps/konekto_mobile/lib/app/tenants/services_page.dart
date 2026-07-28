@@ -49,57 +49,92 @@ typedef _ServicesLoadResult = ({
 });
 
 class ServicesPage extends StatelessWidget {
+  final String hotelId;
   final Map<String, dynamic> tenantConfig;
   final GuestAppTheme theme;
 
-  ServicesPage({super.key, required this.tenantConfig, required this.theme});
+  ServicesPage({
+    super.key,
+    required this.hotelId,
+    required this.tenantConfig,
+    required this.theme,
+  });
 
   final TenantRepository _repository = createTenantRepository();
   final ModuleCatalogRepository _moduleCatalogRepository = ModuleCatalogRepository();
 
-  String get _hotelId => tenantConfig['id'] ?? 'hotel_1';
-
   Future<_ServicesLoadResult> _load() async {
-    final pageConfig = await _repository.getServicesPageConfig(_hotelId);
-    final rawServices = await _repository.getServices(_hotelId);
-    final serviceStubs = rawServices
-        .map((raw) => models.Service.fromJson(raw as Map<String, dynamic>))
-        .toList();
-    // `getServices` (lista) não traz os itens de cada serviço — só o
-    // detalhe por id (`getService`) inclui `items`. Precisamos dos itens
-    // aqui pra saber se algum é frigobar (`hasMinibarItems` abaixo), então
-    // busca o detalhe completo de cada serviço em paralelo.
-    final services = await Future.wait(
-      serviceStubs.map(
-        (stub) async {
-          final raw = await _repository.getService(_hotelId, stub.id);
-          return models.Service.fromJson(raw);
-        },
-      ),
-    );
-    final banner =
-        (pageConfig['pageStyles'] as Map<String, dynamic>?)?['banner']
-            as Map<String, dynamic>?;
-
-    // Agrupamento (Fase 12) — catálogo é best-effort: se a busca falhar
-    // (sem rede, backend fora do ar), a tela cai pro comportamento de hoje
-    // (lista plana, sem grupo nenhum) em vez de quebrar.
-    var moduleIdToGroupId = <String, String?>{};
-    var serviceGroups = <ServiceGroup>[];
     try {
-      final catalog = await _moduleCatalogRepository.getCatalog();
-      moduleIdToGroupId = {for (final module in catalog) module.id: module.groupId};
-      serviceGroups = await _moduleCatalogRepository.getServiceGroups();
-    } on StateError {
-      // catálogo indisponível — segue sem agrupar, nunca bloqueia a tela.
-    }
+      Map<String, dynamic> pageConfig = const {};
+      try {
+        pageConfig = await _repository.getServicesPageConfig(hotelId);
+      } on Object {
+        // `servicesPage` é opcional. Se falhar, a tela segue sem banner.
+      }
 
-    return (
-      bannerImageUrl: banner?['imageUrl'] as String?,
-      services: services,
-      moduleIdToGroupId: moduleIdToGroupId,
-      serviceGroups: serviceGroups,
-    );
+      List<models.Service> serviceStubs = const [];
+      try {
+        final rawServices = await _repository.getServices(hotelId);
+        serviceStubs = rawServices
+            .whereType<Map<String, dynamic>>()
+            .map(models.Service.fromJson)
+            .toList();
+      } on Object {
+        // Se a listagem principal falhar ou vier malformada, mantém a tela
+        // abrindo vazia.
+        serviceStubs = const [];
+      }
+
+      final services = await Future.wait(
+        serviceStubs.map(
+          (stub) async {
+            try {
+              final raw = await _repository.getService(hotelId, stub.id);
+              return models.Service.fromJson(raw);
+            } on Object {
+              // Falha no detalhe não derruba a tela toda.
+              return stub;
+            }
+          },
+        ),
+      );
+
+      String? bannerImageUrl;
+      final rawPageStyles = pageConfig['pageStyles'];
+      if (rawPageStyles is Map) {
+        final rawBanner = rawPageStyles['banner'];
+        if (rawBanner is Map) {
+          final rawImageUrl = rawBanner['imageUrl'];
+          if (rawImageUrl is String && rawImageUrl.isNotEmpty) {
+            bannerImageUrl = rawImageUrl;
+          }
+        }
+      }
+
+      var moduleIdToGroupId = <String, String?>{};
+      var serviceGroups = <ServiceGroup>[];
+      try {
+        final catalog = await _moduleCatalogRepository.getCatalog();
+        moduleIdToGroupId = {for (final module in catalog) module.id: module.groupId};
+        serviceGroups = await _moduleCatalogRepository.getServiceGroups();
+      } on Object {
+        // Catálogo indisponível: segue sem agrupamento.
+      }
+
+      return (
+        bannerImageUrl: bannerImageUrl,
+        services: services,
+        moduleIdToGroupId: moduleIdToGroupId,
+        serviceGroups: serviceGroups,
+      );
+    } on Object {
+      return (
+        bannerImageUrl: null,
+        services: const <models.Service>[],
+        moduleIdToGroupId: const <String, String?>{},
+        serviceGroups: const <ServiceGroup>[],
+      );
+    }
   }
 
   @override
@@ -146,7 +181,7 @@ class ServicesPage extends StatelessWidget {
                     if (bannerImageUrl != null)
                       TenantImage(
                         imageUrl: bannerImageUrl,
-                        hotelId: _hotelId,
+                        hotelId: hotelId,
                         height: 150,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -156,7 +191,11 @@ class ServicesPage extends StatelessWidget {
                       ),
                     if (bannerImageUrl != null) const SizedBox(height: 24),
                     if (hasMinibarItems) ...[
-                      _MinibarCard(tenantConfig: tenantConfig, theme: theme),
+                      _MinibarCard(
+                        hotelId: hotelId,
+                        tenantConfig: tenantConfig,
+                        theme: theme,
+                      ),
                       const SizedBox(height: 16),
                     ],
                     if (services.isEmpty)
@@ -174,6 +213,7 @@ class ServicesPage extends StatelessWidget {
                           services: services,
                           moduleIdToGroupId: snapshot.data!.moduleIdToGroupId,
                           serviceGroups: snapshot.data!.serviceGroups,
+                          hotelId: hotelId,
                           tenantConfig: tenantConfig,
                           theme: theme,
                         ),
@@ -202,6 +242,7 @@ List<Widget> buildGroupedServiceWidgets({
   required List<models.Service> services,
   required Map<String, String?> moduleIdToGroupId,
   required List<ServiceGroup> serviceGroups,
+  required String hotelId,
   required Map<String, dynamic> tenantConfig,
   required GuestAppTheme theme,
 }) {
@@ -218,7 +259,14 @@ List<Widget> buildGroupedServiceWidgets({
   void addCards(List<models.Service> group) {
     for (var i = 0; i < group.length; i++) {
       if (i > 0) widgets.add(const SizedBox(height: 12));
-      widgets.add(_ServiceCard(service: group[i], tenantConfig: tenantConfig, theme: theme));
+      widgets.add(
+        _ServiceCard(
+          hotelId: hotelId,
+          service: group[i],
+          tenantConfig: tenantConfig,
+          theme: theme,
+        ),
+      );
     }
   }
 
@@ -242,10 +290,15 @@ List<Widget> buildGroupedServiceWidgets({
 /// visual levemente diferente (fundo tingido) pra reforçar que é uma coisa
 /// diferente de pedir um serviço.
 class _MinibarCard extends StatelessWidget {
+  final String hotelId;
   final Map<String, dynamic> tenantConfig;
   final GuestAppTheme theme;
 
-  const _MinibarCard({required this.tenantConfig, required this.theme});
+  const _MinibarCard({
+    required this.hotelId,
+    required this.tenantConfig,
+    required this.theme,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +308,11 @@ class _MinibarCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => MinibarPage(tenantConfig: tenantConfig, theme: theme),
+            builder: (context) => MinibarPage(
+              hotelId: hotelId,
+              tenantConfig: tenantConfig,
+              theme: theme,
+            ),
           ),
         );
       },
@@ -307,11 +364,13 @@ class _MinibarCard extends StatelessWidget {
 }
 
 class _ServiceCard extends StatelessWidget {
+  final String hotelId;
   final models.Service service;
   final Map<String, dynamic> tenantConfig;
   final GuestAppTheme theme;
 
   const _ServiceCard({
+    required this.hotelId,
     required this.service,
     required this.tenantConfig,
     required this.theme,
@@ -321,6 +380,9 @@ class _ServiceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final icon = _iconMapping[service.icon] ?? Icons.miscellaneous_services;
     final languageCode = Localizations.localeOf(context).languageCode;
+    final previewImageUrl =
+        service.bannerImageUrl ??
+        (service.items.isNotEmpty ? service.items.first.imageUrl : null);
 
     return GestureDetector(
       onTap: () {
@@ -328,6 +390,7 @@ class _ServiceCard extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => ServiceItemsListPage(
+              hotelId: hotelId,
               tenantConfig: tenantConfig,
               serviceId: service.id,
               theme: theme,
@@ -337,54 +400,73 @@ class _ServiceCard extends StatelessWidget {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
         decoration: BoxDecoration(
           color: theme.cardBg,
           borderRadius: BorderRadius.circular(theme.tokens.cardRadius),
           border: Border.all(color: theme.borderColor),
           boxShadow: theme.tokens.cardShadow,
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: ShapeDecoration(
-                color: theme.accentSoft,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    theme.tokens.iconTileRadius,
-                  ),
+            if (previewImageUrl != null)
+              TenantImage(
+                imageUrl: previewImageUrl,
+                hotelId: hotelId,
+                height: 164,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(theme.tokens.cardRadius),
                 ),
               ),
-              child: Icon(icon, size: 24.0, color: theme.accent),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    service.localizedName(languageCode),
-                    style: theme.headline(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: ShapeDecoration(
+                      color: theme.accentSoft,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          theme.tokens.iconTileRadius,
+                        ),
+                      ),
+                    ),
+                    child: Icon(icon, size: 24.0, color: theme.accent),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          service.localizedName(languageCode),
+                          style: theme.headline(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          service.localizedDescription(languageCode),
+                          style: theme.body(
+                            fontSize: 14,
+                            color: theme.mutedColor,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    service.localizedDescription(languageCode),
-                    style: theme.body(
-                      fontSize: 14,
-                      color: theme.mutedColor,
-                      height: 1.5,
-                    ),
-                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right_rounded, color: theme.mutedColor),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right_rounded, color: theme.mutedColor),
           ],
         ),
       ),

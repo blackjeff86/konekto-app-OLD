@@ -11,8 +11,8 @@ import { API_BASE_URL } from '@/lib/api/client'
  * IntegrationSection (apps/konekto_portal/lib/features/settings/
  * integration_section.dart). Diferente das outras seções, aqui não
  * editamos dado nenhum: geramos uma chave de API pra esse sistema (ou um
- * middleware tipo Zapier/Make/n8n) empurrar reservas/hóspedes/cardápio pro
- * Konekto, e configuramos um webhook pra onde o Konekto manda os pedidos
+ * middleware tipo Zapier/Make/n8n) empurrar reservas/hóspedes/cardápio pra
+ * Sevvn, e configuramos um webhook pra onde a Sevvn manda os pedidos
  * feitos pelo hóspede no app.
  */
 export default function IntegrationsPage() {

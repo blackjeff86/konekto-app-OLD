@@ -1,23 +1,23 @@
-import type { Plan } from "@/content/plans";
+import type { Plan } from "@/content/plans"
 
 type Props = {
-  plan: Plan;
-};
+  plan: Plan
+}
 
 export function PlanCard({ plan }: Props) {
   return (
     <div
-      className={`relative rounded-[18px] p-8 ${
-        plan.featured ? "border-2 border-primary" : "border border-border"
+      className={`relative rounded-[22px] p-8 ${
+        plan.featured ? "border-2 border-primary bg-white" : "border border-border bg-surface"
       }`}
     >
       {plan.featured ? (
         <span className="absolute -top-[13px] left-8 rounded-full bg-primary px-3 py-[5px] text-[11px] font-bold text-white">
-          Mais escolhido
+          Mais aderente para expansão
         </span>
       ) : null}
       <p className="text-[15px] font-bold text-ink">{plan.name}</p>
-      <p className="mt-[6px] text-[12.5px] text-muted">{plan.audience}</p>
+      <p className="mt-[6px] text-[12.5px] leading-[1.6] text-muted">{plan.audience}</p>
 
       <p className="mt-5 text-[34px] font-extrabold text-ink">
         {plan.price}
@@ -29,7 +29,12 @@ export function PlanCard({ plan }: Props) {
         <p className="mt-[6px] text-[11.5px] font-bold text-primary">{plan.founderNote}</p>
       ) : null}
 
-      <p className="mt-4 text-[13px] leading-[1.6] text-muted">{plan.tagline}</p>
+      <p className="mt-4 text-[13px] leading-[1.7] text-muted">{plan.tagline}</p>
+      <ul className="mt-5 space-y-2 text-[12.8px] leading-[1.65] text-ink">
+        {plan.highlights.map((highlight) => (
+          <li key={highlight}>• {highlight}</li>
+        ))}
+      </ul>
 
       <a
         href={plan.ctaHref}
@@ -40,5 +45,5 @@ export function PlanCard({ plan }: Props) {
         {plan.ctaLabel}
       </a>
     </div>
-  );
+  )
 }

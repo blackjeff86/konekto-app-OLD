@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requirePlatformAdmin, AuthGuardError } from '@/lib/auth-guard'
 import { buildHotelOverview } from '@/lib/platform-admin-hotel-shape'
 import { isModuleId } from '@/lib/module-catalog'
+import { recordPlatformAdminAudit } from '@/lib/platform-admin-audit'
 import type { Prisma } from '@/app/generated/prisma/client'
 
 export const runtime = 'nodejs'
@@ -60,8 +61,9 @@ interface HotelConfigShape {
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = await params
 
+  let admin
   try {
-    await requirePlatformAdmin(request)
+    admin = await requirePlatformAdmin(request)
   } catch (error) {
     if (error instanceof AuthGuardError) return error.response
     throw error
@@ -82,9 +84,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     extraModules: parsed.data.extraModules,
   }
 
-  const updated = await prisma.hotel.update({
-    where: { id: hotelId },
-    data: { config: updatedConfig as unknown as Prisma.InputJsonValue },
+  const updated = await prisma.$transaction(async (tx) => {
+    const nextHotel = await tx.hotel.update({
+      where: { id: hotelId },
+      data: { config: updatedConfig as unknown as Prisma.InputJsonValue },
+    })
+    await recordPlatformAdminAudit(tx, {
+      action: 'platform_admin.hotel.extra_modules_updated',
+      admin,
+      hotelId,
+      payload: {
+        extraModules: parsed.data.extraModules,
+      },
+      request,
+      targetId: hotelId,
+      targetType: 'hotel',
+    })
+    return nextHotel
   })
 
   return NextResponse.json(updated.config)

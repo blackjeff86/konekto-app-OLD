@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { requirePlatformAdmin, AuthGuardError } from '@/lib/auth-guard'
 import { buildHotelOverview } from '@/lib/platform-admin-hotel-shape'
 import { generateTemporaryPassword } from '@/lib/generate-temporary-password'
+import { recordPlatformAdminAudit } from '@/lib/platform-admin-audit'
 
 export const runtime = 'nodejs'
 
@@ -56,8 +57,9 @@ const createHotelSchema = z.object({
 // isso: trava `role` em `recepcao` e exige um gerente JÁ autenticado pra
 // gerar o convite, circular pra um hotel zerado).
 export async function POST(request: NextRequest) {
+  let admin
   try {
-    await requirePlatformAdmin(request)
+    admin = await requirePlatformAdmin(request)
   } catch (error) {
     if (error instanceof AuthGuardError) return error.response
     throw error
@@ -115,6 +117,20 @@ export async function POST(request: NextRequest) {
     })
     await tx.hotelSubscription.create({
       data: { hotelId, plan: parsed.data.plan, planName: planNameByPlan[parsed.data.plan], status: 'trial' },
+    })
+    await recordPlatformAdminAudit(tx, {
+      action: 'platform_admin.hotel.created',
+      admin,
+      hotelId,
+      payload: {
+        gerenteEmail: parsed.data.gerente.email,
+        gerenteName: parsed.data.gerente.name,
+        hotelName: parsed.data.name,
+        plan: parsed.data.plan,
+      },
+      request,
+      targetId: hotelId,
+      targetType: 'hotel',
     })
   })
 

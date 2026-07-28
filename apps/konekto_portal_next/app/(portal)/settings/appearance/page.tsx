@@ -5,8 +5,8 @@ import { useHotelConfig } from '@/hooks/useHotelConfig'
 import { IPhoneMockup } from '@/components/ui/IPhoneMockup'
 
 /**
- * Os 5 templates White Label (Fase 3/Task 7-11) — substituem os 5 antigos
- * (Amara Bay/Verde Pousada/Casa Marechal/Konekto Clássico/Konekto Noturno)
+ * Os 5 templates White Label (Fase 3/Task 7-11) — substituem os temas
+ * antigos da fase pré-white-label
  * como opção do portal. Fonte de verdade de cor/tipografia é
  * apps/konekto_mobile/lib/templates/<id>/theme.dart. A prévia usa o print
  * real da home de cada template exportado do Stitch

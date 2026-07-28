@@ -3,8 +3,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:konekto/data/tenant_repository.dart';
 
 /// Implementação original: lê os JSONs empacotados como assets locais do
-/// app. Mantida como está hoje (extração pura, sem mudança de comportamento)
-/// para servir de fallback enquanto a migração pra Firestore é validada.
+/// app. Mantida como fallback explícito de desenvolvimento/demo, não como
+/// caminho padrão de piloto/produção.
 class AssetTenantRepository implements TenantRepository {
   Future<Map<String, dynamic>> _loadJson(String path) async {
     final String jsonString = await rootBundle.loadString(path);
@@ -32,7 +32,7 @@ class AssetTenantRepository implements TenantRepository {
 
   // --- Serviços dinâmicos sintetizados a partir dos JSONs dos 5 catálogos
   // antigos (mesma conversão usada em apps/konekto_api/prisma/seed.ts, mas
-  // do lado do app pra manter o modo "sem API" funcionando). Não há
+  // do lado do app pra manter o fallback "sem API" funcionando). Não há
   // persistência real aqui — é só uma leitura, sem gerência pelo portal.
 
   double? _toPrice(dynamic value) => value is num ? value.toDouble() : null;

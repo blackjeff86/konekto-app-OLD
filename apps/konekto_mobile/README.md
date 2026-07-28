@@ -1,16 +1,46 @@
-# konekto
+# konekto_mobile
 
-A new Flutter project.
+App Flutter do hospede da Sevvn.
 
-## Getting Started
+## Runtime
 
-This project is a starting point for a Flutter application.
+O caminho oficial de piloto/producao agora e API-first por padrao.
 
-A few resources to get you started if this is your first Flutter project:
+- Padrao: `APP_RUNTIME_MODE=api`
+- Fallback explicito de demo/dev: `APP_RUNTIME_MODE=asset`
+- Alias legado ainda aceito temporariamente: `USE_API=true|false`
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Se nada for informado no build, o app usa:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- `API_BASE_URL=https://sevvn-api.vercel.app`
+- `APP_RUNTIME_MODE=api`
+
+## Exemplos
+
+Rodar contra a API oficial:
+
+```bash
+flutter run --dart-define=APP_RUNTIME_MODE=api --dart-define=API_BASE_URL=https://sevvn-api.vercel.app
+```
+
+Rodar contra API local:
+
+```bash
+flutter run --dart-define=APP_RUNTIME_MODE=api --dart-define=API_BASE_URL=http://localhost:3000
+```
+
+Rodar em modo asset local:
+
+```bash
+flutter run --dart-define=APP_RUNTIME_MODE=asset
+```
+
+## Observacao
+
+O modo `asset` existe para fallback controlado de desenvolvimento e demonstracao.
+Ele nao deve ser tratado como validacao suficiente de piloto, porque nao exercita:
+
+- claim real de hospede
+- isolamento multi-tenant real
+- regras de backend
+- persistencia operacional

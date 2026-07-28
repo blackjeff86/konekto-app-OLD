@@ -14,12 +14,13 @@ vi.mock('@/lib/stay-expiration', () => ({
 
 import { prisma } from '@/lib/prisma'
 import { expireStay } from '@/lib/stay-expiration'
+import { __resetRateLimitStore } from '@/lib/rate-limit'
 import { POST } from './route'
 
-function postRequest(body: unknown): NextRequest {
+function postRequest(body: unknown, ip = '203.0.113.10'): NextRequest {
   return new NextRequest('http://localhost/api/guest/claim', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
     body: JSON.stringify(body),
   })
 }
@@ -35,7 +36,10 @@ const baseGuest = {
 }
 
 describe('POST /api/guest/claim', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    __resetRateLimitStore()
+  })
 
   it('returns 404 when the access code does not match any guest', async () => {
     vi.mocked(prisma.guest.findUnique).mockResolvedValue(null)
@@ -48,7 +52,7 @@ describe('POST /api/guest/claim', () => {
   it('rejects a guest that was manually revoked', async () => {
     vi.mocked(prisma.guest.findUnique).mockResolvedValue({ ...baseGuest, status: 'revoked' } as never)
 
-    const response = await POST(postRequest({ code: 'HOTEL1-ABC123' }))
+    const response = await POST(postRequest({ code: 'SV-ABC123' }))
 
     expect(response.status).toBe(403)
     expect(expireStay).not.toHaveBeenCalled()
@@ -61,7 +65,7 @@ describe('POST /api/guest/claim', () => {
       stay: { ...baseGuest.stay, checkOutDate: new Date(Date.now() - 86400000) },
     } as never)
 
-    const response = await POST(postRequest({ code: 'HOTEL1-ABC123' }))
+    const response = await POST(postRequest({ code: 'SV-ABC123' }))
 
     expect(response.status).toBe(403)
     const body = await response.json()
@@ -73,11 +77,23 @@ describe('POST /api/guest/claim', () => {
     vi.mocked(prisma.guest.findUnique).mockResolvedValue({ ...baseGuest, status: 'active' } as never)
     vi.mocked(prisma.hotelContent.findUnique).mockResolvedValue(null)
 
-    const response = await POST(postRequest({ code: 'HOTEL1-ABC123' }))
+    const response = await POST(postRequest({ code: 'SV-ABC123' }))
 
     expect(response.status).toBe(200)
     const body = await response.json()
     expect(body.token).toBeTruthy()
     expect(expireStay).not.toHaveBeenCalled()
+  })
+
+  it('returns 429 after repeated attempts from the same IP', async () => {
+    vi.mocked(prisma.guest.findUnique).mockResolvedValue(null)
+
+    for (let i = 0; i < 20; i++) {
+      const response = await POST(postRequest({ code: `UNKNOWN-${i}` }))
+      expect(response.status).toBe(404)
+    }
+
+    const blocked = await POST(postRequest({ code: 'UNKNOWN-OVERFLOW' }))
+    expect(blocked.status).toBe(429)
   })
 })

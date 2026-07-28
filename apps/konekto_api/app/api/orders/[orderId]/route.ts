@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { Order } from '@/app/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 import { requireGuestAuth, AuthGuardError } from '@/lib/auth-guard'
+import { notifyRestaurantReservationCancelled, notifyRestaurantReservationRescheduled } from '@/lib/basic-notifications'
 import { canonicalizeSlotStart, isBookableInstant, isValidScheduledSlot, isWithinOperatingHours } from '@/lib/scheduling'
 
 export const runtime = 'nodejs'
@@ -58,6 +59,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   if (parsed.data.cancel) {
     const updated = await prisma.order.update({ where: { id: orderId }, data: { status: 'cancelled' as const } })
+    if (existing.scheduledFor && (existing.tableTypeId != null || existing.itemName === 'Reserva de mesa')) {
+      await notifyRestaurantReservationCancelled({
+        hotelId: existing.hotelId,
+        guestId: existing.guestId,
+        reservationId: existing.id,
+        scheduledFor: existing.scheduledFor,
+        reason: 'cancelled',
+      })
+    }
     return NextResponse.json(updated)
   }
 
@@ -114,6 +124,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (result.kind === 'full') {
         return NextResponse.json({ error: 'slot_full' }, { status: 409 })
       }
+      await notifyRestaurantReservationRescheduled({
+        hotelId: existing.hotelId,
+        guestId: existing.guestId,
+        reservationId: existing.id,
+        scheduledFor: canonicalScheduledFor,
+      })
       return NextResponse.json(result.order)
     }
 
@@ -168,6 +184,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (result.kind === 'full') {
         return NextResponse.json({ error: 'table_full' }, { status: 409 })
       }
+      await notifyRestaurantReservationRescheduled({
+        hotelId: existing.hotelId,
+        guestId: existing.guestId,
+        reservationId: existing.id,
+        scheduledFor: canonicalScheduledFor,
+      })
       return NextResponse.json(result.order)
     }
 
@@ -193,6 +215,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           scheduledFor: canonicalScheduledFor,
           ...(parsed.data.note !== undefined ? { note: parsed.data.note } : {}),
         },
+      })
+      await notifyRestaurantReservationRescheduled({
+        hotelId: existing.hotelId,
+        guestId: existing.guestId,
+        reservationId: existing.id,
+        scheduledFor: canonicalScheduledFor,
       })
       return NextResponse.json(updated)
     }

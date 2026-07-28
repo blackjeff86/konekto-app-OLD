@@ -1,21 +1,15 @@
-/**
- * Copy e preço dos planos comerciais — dado do briefing de reposicionamento,
- * não do backend (é texto de marketing).
- *
- * Desconto de Cliente Fundador é o mesmo percentual (~28%) em Essential e
- * Premium: 1.790/2.490 = 3.230/4.490 ≈ 71,9% do valor futuro.
- */
 export interface Plan {
-  id: string;
-  name: string;
-  audience: string;
-  price: string;
-  priceSuffix?: string;
-  founderNote?: string;
-  tagline: string;
-  ctaLabel: string;
-  ctaHref: string;
-  featured?: boolean;
+  id: string
+  name: string
+  audience: string
+  price: string
+  priceSuffix?: string
+  founderNote?: string
+  tagline: string
+  ctaLabel: string
+  ctaHref: string
+  featured?: boolean
+  highlights: string[]
 }
 
 export const PLANS: Plan[] = [
@@ -25,31 +19,48 @@ export const PLANS: Plan[] = [
     audience: "Pousadas, hotéis independentes e pequenos hotéis",
     price: "R$ 1.790",
     priceSuffix: "/mês",
-    founderNote: "Cliente Fundador · valor futuro de R$ 2.490/mês",
-    tagline: "Tudo o que seu hotel precisa para iniciar sua transformação digital.",
-    ctaLabel: "Começar",
-    ctaHref: "mailto:contato@konekto.app",
+    founderNote: "Condição especial de lançamento · valor futuro previsto de R$ 2.490/mês",
+    tagline: "Tudo o que sua operação precisa para começar uma experiência digital conectada.",
+    ctaLabel: "Quero conhecer",
+    ctaHref: "/contato#hotel-demo",
+    highlights: [
+      "Templates Aura e Bosque",
+      "Módulos essenciais da jornada",
+      "Base White Label da plataforma",
+      "Operação inicial conectada",
+    ],
   },
   {
     id: "premium",
     name: "Premium",
-    audience: "Mais personalização, automação e experiência",
-    price: "R$ 3.230",
+    audience: "Hotéis, hotéis boutique, resorts e operações com maior complexidade",
+    price: "R$ 4.490",
     priceSuffix: "/mês",
-    founderNote: "Cliente Fundador · valor futuro de R$ 4.490/mês",
-    tagline: "Mais personalização. Mais automação. Mais experiência para seus hóspedes.",
-    ctaLabel: "Começar",
-    ctaHref: "mailto:contato@konekto.app",
+    tagline: "Mais automação, personalização e recursos para ampliar toda a jornada do hóspede.",
+    ctaLabel: "Agendar demonstração",
+    ctaHref: "/contato#hotel-demo",
     featured: true,
+    highlights: [
+      "Todos os cinco templates",
+      "Expansão de módulos avançados",
+      "Mais integrações e personalização",
+      "Estrutura pronta para crescimento",
+    ],
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    audience: "Arquitetura personalizada para grandes operações",
+    audience: "Redes, resorts, grupos, grandes operações e multiunidade",
     price: "Sob consulta",
     tagline:
-      "Desenvolvimento dedicado, módulos exclusivos, integrações específicas, ambiente dedicado, SLA premium, gestor técnico, multiunidade e governança.",
+      "Arquitetura personalizada, integrações específicas, governança, SLA, multiunidade e desenvolvimento sob demanda.",
     ctaLabel: "Falar com o time",
-    ctaHref: "mailto:contato@konekto.app",
+    ctaHref: "/contato#enterprise",
+    highlights: [
+      "Arquitetura personalizada",
+      "Módulos exclusivos",
+      "Ambiente dedicado e SLA",
+      "Gestor técnico e multiunidade",
+    ],
   },
-];
+]

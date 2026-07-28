@@ -181,7 +181,7 @@ class _HomePageBodyState extends State<_HomePageBody> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('Konekto', textAlign: TextAlign.center, style: KonektoBrand.display(fontSize: 30)),
+                    Text('Sevvn', textAlign: TextAlign.center, style: KonektoBrand.display(fontSize: 30)),
                     const SizedBox(height: 4),
                     Text(
                       'Sua jornada começa aqui',
@@ -190,7 +190,7 @@ class _HomePageBodyState extends State<_HomePageBody> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Conecte-se ao seu hotel e descubra uma experiência personalizada',
+                      'Conecte-se ao seu hotel e descubra uma experiencia personalizada',
                       textAlign: TextAlign.center,
                       style: KonektoBrand.body(fontSize: 14),
                     ),

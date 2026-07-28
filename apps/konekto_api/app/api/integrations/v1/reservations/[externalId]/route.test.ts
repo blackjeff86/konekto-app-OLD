@@ -83,7 +83,7 @@ describe('PUT /api/integrations/v1/reservations/[externalId]', () => {
     vi.mocked(prisma.guest.upsert).mockResolvedValue({
       id: 'guest_1',
       externalId: 'guest-1',
-      accessCode: 'HOTEL1-ABCD1234',
+      accessCode: 'SV-ABCD12',
     } as never)
 
     const response = await PUT(putRequest('res-1', validPayload), { params: Promise.resolve({ externalId: 'res-1' }) })
@@ -95,7 +95,7 @@ describe('PUT /api/integrations/v1/reservations/[externalId]', () => {
       update: {},
     })
     const body = await response.json()
-    expect(body.guests[0].accessCode).toBe('HOTEL1-ABCD1234')
+    expect(body.guests[0].accessCode).toBe('SV-ABCD12')
   })
 
   it('returns 409 when the target room already has a different active stay', async () => {
@@ -126,7 +126,7 @@ describe('PUT /api/integrations/v1/reservations/[externalId]', () => {
     vi.mocked(prisma.guest.upsert).mockResolvedValue({
       id: 'guest_1',
       externalId: 'guest-1',
-      accessCode: 'HOTEL1-ABCD1234',
+      accessCode: 'SV-ABCD12',
     } as never)
 
     await PUT(putRequest('res-1', validPayload), { params: Promise.resolve({ externalId: 'res-1' }) })

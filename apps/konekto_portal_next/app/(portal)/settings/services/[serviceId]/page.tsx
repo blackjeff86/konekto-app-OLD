@@ -4,6 +4,7 @@ import { use, useState } from 'react'
 import Link from 'next/link'
 import { Modal } from '@/components/ui/Modal'
 import { ServiceItemFormDialog } from '@/components/settings/ServiceItemFormDialog'
+import { RestaurantOperationsPanel } from '@/components/settings/RestaurantOperationsPanel'
 import { TableTypeFormDialog } from '@/components/settings/TableTypeFormDialog'
 import { useService } from '@/hooks/useService'
 import type { RestaurantTableType, ServiceItem } from '@/types/service'
@@ -97,12 +98,15 @@ export default function ServiceItemsPage({ params }: { params: Promise<{ service
       )}
 
       {service.type === 'restaurant' && (
-        <TableTypesSection
-          tableTypes={service.tableTypes}
-          onAdd={() => setIsCreatingTableType(true)}
-          onEdit={setEditingTableType}
-          onRemove={setDeletingTableType}
-        />
+        <>
+          <TableTypesSection
+            tableTypes={service.tableTypes}
+            onAdd={() => setIsCreatingTableType(true)}
+            onEdit={setEditingTableType}
+            onRemove={setDeletingTableType}
+          />
+          <RestaurantOperationsPanel serviceId={service.id} tableTypes={service.tableTypes} />
+        </>
       )}
 
       <div className="rounded-2xl border border-border-strong bg-surface">

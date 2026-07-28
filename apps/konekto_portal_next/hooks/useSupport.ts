@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth/AuthProvider'
 import { listSupportMessages, markSupportMessagesRead, sendSupportMessage } from '@/lib/api/support'
 
-/** Conversa direta do hotel com a equipe do Konekto (Fase 4). */
+/** Conversa direta do hotel com a equipe da Sevvn (Fase 4). */
 export function useSupport() {
   const { session, token } = useAuth()
   const queryClient = useQueryClient()

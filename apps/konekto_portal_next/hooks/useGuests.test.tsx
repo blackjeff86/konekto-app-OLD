@@ -10,12 +10,13 @@ vi.mock('@/lib/api/guests', () => ({
   getGuest: vi.fn(),
   createGuest: vi.fn(),
   updateGuest: vi.fn(),
+  regenerateGuestAccessCode: vi.fn(),
   revokeGuest: vi.fn(),
   lookupGuestByDocument: vi.fn(),
 }))
 
 import { useAuth } from '@/lib/auth/AuthProvider'
-import { getGuest, listGuests, revokeGuest } from '@/lib/api/guests'
+import { getGuest, listGuests, regenerateGuestAccessCode, revokeGuest } from '@/lib/api/guests'
 
 function wrapper({ children }: { children: ReactNode }) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -62,5 +63,18 @@ describe('useGuest (detail)', () => {
 
     await waitFor(() => expect(result.current.guest).not.toBeNull())
     expect(getGuest).toHaveBeenCalledWith('h1', 'g1', 'tok')
+  })
+
+  it('regenerateAccessCode calls the API for the guest id', async () => {
+    vi.mocked(useAuth).mockReturnValue({ session, token: 'tok' } as ReturnType<typeof useAuth>)
+    vi.mocked(getGuest).mockResolvedValue({ id: 'g1', firstName: 'Ana' } as never)
+    vi.mocked(regenerateGuestAccessCode).mockResolvedValue({ id: 'g1', accessCode: 'SV-ABC123' } as never)
+
+    const { result } = renderHook(() => useGuest('g1'), { wrapper })
+
+    await waitFor(() => expect(result.current.guest).not.toBeNull())
+    await result.current.regenerateAccessCode()
+
+    expect(regenerateGuestAccessCode).toHaveBeenCalledWith('h1', 'g1', 'tok')
   })
 })

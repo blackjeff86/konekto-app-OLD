@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
+import { notifyRestaurantReservationCancelled, notifyRestaurantReservationConfirmed } from '@/lib/basic-notifications'
+import {
+  notifyRoomServiceOrderAccepted,
+  notifyRoomServiceOrderCancelled,
+  notifyRoomServiceOrderCompleted,
+} from '@/lib/basic-notifications'
 
 export const runtime = 'nodejs'
 
@@ -42,5 +48,57 @@ export async function PATCH(
     where: { id: orderId },
     data: { status: parsed.data.status, statusSeenByGuest: false },
   })
+
+  const isRoomServiceOrder = existing.scheduledFor == null && existing.itemName !== 'Reserva de mesa'
+  if (isRoomServiceOrder) {
+    if (parsed.data.status === 'in_progress') {
+      await notifyRoomServiceOrderAccepted({
+        hotelId,
+        guestId: existing.guestId,
+        orderId: existing.id,
+        itemName: existing.itemName,
+      })
+    }
+
+    if (parsed.data.status === 'completed') {
+      await notifyRoomServiceOrderCompleted({
+        hotelId,
+        guestId: existing.guestId,
+        orderId: existing.id,
+        itemName: existing.itemName,
+      })
+    }
+
+    if (parsed.data.status === 'cancelled') {
+      await notifyRoomServiceOrderCancelled({
+        hotelId,
+        guestId: existing.guestId,
+        orderId: existing.id,
+        itemName: existing.itemName,
+      })
+    }
+  }
+
+  if (existing.scheduledFor && (existing.tableTypeId != null || existing.itemName === 'Reserva de mesa')) {
+    if (parsed.data.status === 'in_progress') {
+      await notifyRestaurantReservationConfirmed({
+        hotelId,
+        guestId: existing.guestId,
+        reservationId: existing.id,
+        scheduledFor: existing.scheduledFor,
+      })
+    }
+
+    if (parsed.data.status === 'cancelled') {
+      await notifyRestaurantReservationCancelled({
+        hotelId,
+        guestId: existing.guestId,
+        reservationId: existing.id,
+        scheduledFor: existing.scheduledFor,
+        reason: 'cancelled',
+      })
+    }
+  }
+
   return NextResponse.json(updated)
 }

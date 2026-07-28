@@ -67,10 +67,15 @@ export async function listRooms(hotelId: string, token: string): Promise<Room[]>
 }
 
 export function createRoom(hotelId: string, token: string, input: RoomInput): Promise<Room> {
+  const body =
+    input.description == null
+      ? { number: input.number }
+      : { number: input.number, description: input.description }
+
   return apiRequest<RawRoom>(`/api/hotels/${hotelId}/rooms`, {
     method: 'POST',
     token,
-    body: input,
+    body,
     conflictMessage: 'Já existe um quarto com esse número.',
     errorMessage: 'Falha ao criar quarto.',
   }).then(mapRoom)

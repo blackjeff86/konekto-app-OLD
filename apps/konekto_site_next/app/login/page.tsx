@@ -20,8 +20,8 @@ export default function LoginPage() {
       </main>
       <footer className="p-6 text-center text-[0.76rem] text-muted-soft">
         Precisa de ajuda?{" "}
-        <a href="mailto:suporte@konekto.app" className="text-primary">
-          suporte@konekto.app
+        <a href="mailto:suporte@sevvn.app" className="text-primary">
+          suporte@sevvn.app
         </a>
       </footer>
     </div>

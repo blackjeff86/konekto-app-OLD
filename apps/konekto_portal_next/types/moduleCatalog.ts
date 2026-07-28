@@ -3,6 +3,7 @@
  *  app mantém cópia local da lista de módulos). */
 export type ModuleCategory = 'core' | 'hospitalidade' | 'financeiro' | 'experiencia' | 'comunicacao'
 export type ModulePlacement = 'home' | 'bottomNav' | 'servicesMenu' | 'settings'
+export type ModuleOperationMode = 'standalone' | 'hybrid' | 'integration_required'
 
 export interface ModuleDefinition {
   id: string
@@ -15,6 +16,7 @@ export interface ModuleDefinition {
   screenId?: string
   defaultOrder: number
   dependencies: string[]
+  operationMode: ModuleOperationMode
   implemented: boolean
   configSchemaId?: string
 }
@@ -44,4 +46,10 @@ export const MODULE_CATEGORY_LABELS: Record<ModuleCategory, string> = {
   financeiro: 'Financeiro',
   experiencia: 'Experiência',
   comunicacao: 'Comunicação',
+}
+
+export const MODULE_OPERATION_MODE_LABELS: Record<ModuleOperationMode, string> = {
+  standalone: 'Sevvn nativo',
+  hybrid: 'Híbrido',
+  integration_required: 'Integração obrigatória',
 }

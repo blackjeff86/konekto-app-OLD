@@ -6,6 +6,12 @@ import 'react-phone-number-input/style.css'
 import { SimpleAccessCodeDialog } from '@/components/ui/SimpleAccessCodeDialog'
 import { useGuestLookup, useGuests } from '@/hooks/useGuests'
 import { useStays } from '@/hooks/useStays'
+import {
+  documentInputMode,
+  documentLabel,
+  formatDocumentNumber,
+  normalizeDocumentNumber,
+} from '@/lib/documentFormat'
 import { documentTypeLabel, type DocumentType } from '@/types/guest'
 import type { Room } from '@/types/room'
 
@@ -38,7 +44,7 @@ export function OccupancyForm({ room }: { room: Room }) {
   const [createdAccessCode, setCreatedAccessCode] = useState<string | null>(null)
 
   async function handleSearch() {
-    const trimmed = documentNumber.trim()
+    const trimmed = normalizeDocumentNumber(documentType, documentNumber)
     if (!trimmed) {
       setErrorMessage('Digite o número do documento pra buscar.')
       return
@@ -79,7 +85,7 @@ export function OccupancyForm({ room }: { room: Room }) {
   async function handleSubmit() {
     const trimmedFirstName = firstName.trim()
     const trimmedLastName = lastName.trim()
-    const trimmedDocumentNumber = documentNumber.trim()
+    const trimmedDocumentNumber = normalizeDocumentNumber(documentType, documentNumber)
     const trimmedCountry = country.trim()
 
     if (!checkInDate || !checkOutDate) {
@@ -187,7 +193,11 @@ export function OccupancyForm({ room }: { room: Room }) {
           Documento
           <select
             value={documentType}
-            onChange={(event) => setDocumentType(event.target.value as DocumentType)}
+            onChange={(event) => {
+              const nextType = event.target.value as DocumentType
+              setDocumentType(nextType)
+              setDocumentNumber(formatDocumentNumber(nextType, documentNumber))
+            }}
             className="mt-1 block w-full rounded-[10px] border border-border-strong bg-surface px-3 py-2 text-[13.5px] text-cream outline-none focus:border-gold"
           >
             {(Object.keys(documentTypeLabel) as DocumentType[]).map((type) => (
@@ -198,11 +208,13 @@ export function OccupancyForm({ room }: { room: Room }) {
           </select>
         </label>
         <label className="flex-1 text-xs text-slate">
-          {documentType === 'cpf' ? 'CPF' : 'Número do documento'}
+          {documentLabel(documentType)}
           <input
             type="text"
             value={documentNumber}
-            onChange={(event) => setDocumentNumber(event.target.value)}
+            inputMode={documentInputMode(documentType)}
+            maxLength={documentType === 'cpf' ? 14 : documentType === 'other' ? 12 : 12}
+            onChange={(event) => setDocumentNumber(formatDocumentNumber(documentType, event.target.value))}
             onBlur={() => documentNumber.trim() && handleSearch()}
             className="mt-1 block w-full rounded-[10px] border border-border-strong bg-transparent px-3 py-2 text-[13.5px] text-cream outline-none focus:border-gold"
           />
@@ -235,7 +247,9 @@ export function OccupancyForm({ room }: { room: Room }) {
       <label className="text-xs text-slate">
         Telefone
         <PhoneInput
-          defaultCountry="BR"
+          country="BR"
+          international={false}
+          limitMaxLength
           value={phone}
           onChange={setPhone}
           className="mt-1 [&_input]:rounded-[10px] [&_input]:border [&_input]:border-border-strong [&_input]:bg-transparent [&_input]:px-3 [&_input]:py-2 [&_input]:text-[13.5px] [&_input]:text-cream [&_input]:outline-none"
@@ -256,7 +270,9 @@ export function OccupancyForm({ room }: { room: Room }) {
         <label className="text-xs text-slate">
           WhatsApp
           <PhoneInput
-            defaultCountry="BR"
+            country="BR"
+            international={false}
+            limitMaxLength
             value={whatsapp}
             onChange={setWhatsapp}
             className="mt-1 [&_input]:rounded-[10px] [&_input]:border [&_input]:border-border-strong [&_input]:bg-transparent [&_input]:px-3 [&_input]:py-2 [&_input]:text-[13.5px] [&_input]:text-cream [&_input]:outline-none"

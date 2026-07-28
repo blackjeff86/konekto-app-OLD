@@ -12,13 +12,15 @@ import { CopyableCodeBox } from '@/components/ui/CopyableCodeBox'
 export function SimpleAccessCodeDialog({
   accessCode,
   onClose,
+  title = 'Hóspede criado',
 }: {
   accessCode: string
   onClose: () => void
+  title?: string
 }) {
   return (
     <Modal
-      title="Hóspede criado"
+      title={title}
       onClose={onClose}
       footer={
         <button type="button" onClick={onClose} className="text-sm text-slate">

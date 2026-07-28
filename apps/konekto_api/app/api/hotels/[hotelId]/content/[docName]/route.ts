@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
+import { enforceRateLimit } from '@/lib/rate-limit'
+import { withRequestLogging } from '@/lib/request-logging'
 import type { Prisma } from '@/app/generated/prisma/client'
 
 export const runtime = 'nodejs'
@@ -18,28 +20,46 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ hotelId: string; docName: string }> },
 ) {
-  const { hotelId, docName } = await params
+  return withRequestLogging(request, { route: '/api/hotels/[hotelId]/content/[docName]', surface: 'hotel-content' }, async () => {
+    const { hotelId, docName } = await params
 
-  if (PRIVATE_DOC_NAMES.has(docName)) {
-    let staff
-    try {
-      staff = await requireStaffRole(request, ['gerente', 'recepcao'])
-    } catch (error) {
-      if (error instanceof AuthGuardError) return error.response
-      throw error
+    if (!PRIVATE_DOC_NAMES.has(docName)) {
+      const rateLimited = enforceRateLimit(request, {
+        bucket: 'public-hotel-content',
+        max: 120,
+        windowMs: 60 * 1000,
+      })
+      if (rateLimited) return rateLimited
     }
-    if (staff.hotelId !== hotelId) {
-      return NextResponse.json({ error: 'forbidden' }, { status: 403 })
-    }
-  }
 
-  const content = await prisma.hotelContent.findUnique({
-    where: { hotelId_docName: { hotelId, docName } },
+    if (PRIVATE_DOC_NAMES.has(docName)) {
+      let staff
+      try {
+        staff = await requireStaffRole(request, ['gerente', 'recepcao'])
+      } catch (error) {
+        if (error instanceof AuthGuardError) return error.response
+        throw error
+      }
+      if (staff.hotelId !== hotelId) {
+        return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+      }
+    }
+
+    const content = await prisma.hotelContent.findUnique({
+      where: { hotelId_docName: { hotelId, docName } },
+    })
+    if (!content) {
+      if (!PRIVATE_DOC_NAMES.has(docName)) {
+        // Catálogos públicos opcionais (ex: `servicesPage`) não devem
+        // quebrar o app do hóspede quando ainda não foram semeados para
+        // aquele hotel. Nesses casos, devolvemos um objeto vazio e a UI
+        // cai no fallback local sem erro.
+        return NextResponse.json({})
+      }
+      return NextResponse.json({ error: 'content_not_found' }, { status: 404 })
+    }
+    return NextResponse.json(content.data)
   })
-  if (!content) {
-    return NextResponse.json({ error: 'content_not_found' }, { status: 404 })
-  }
-  return NextResponse.json(content.data)
 }
 
 // Substitui o documento inteiro em vez de aceitar um patch parcial — cada
@@ -55,31 +75,33 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ hotelId: string; docName: string }> },
 ) {
-  const { hotelId, docName } = await params
+  return withRequestLogging(request, { route: '/api/hotels/[hotelId]/content/[docName]', surface: 'staff-content' }, async () => {
+    const { hotelId, docName } = await params
 
-  let staff
-  try {
-    staff = await requireStaffRole(request, ['gerente'])
-  } catch (error) {
-    if (error instanceof AuthGuardError) return error.response
-    throw error
-  }
-  if (staff.hotelId !== hotelId) {
-    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
-  }
+    let staff
+    try {
+      staff = await requireStaffRole(request, ['gerente'])
+    } catch (error) {
+      if (error instanceof AuthGuardError) return error.response
+      throw error
+    }
+    if (staff.hotelId !== hotelId) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+    }
 
-  const parsed = patchContentSchema.safeParse(await request.json().catch(() => null))
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'invalid_request' }, { status: 400 })
-  }
+    const parsed = patchContentSchema.safeParse(await request.json().catch(() => null))
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'invalid_request' }, { status: 400 })
+    }
 
-  // Upsert em vez de exigir que o doc já exista — o portal agora escreve
-  // aqui direto (ex: `guestInfo` pra configurar o wifi padrão do hotel),
-  // e nem todo hotel tem cada doc semeado de antemão.
-  const updated = await prisma.hotelContent.upsert({
-    where: { hotelId_docName: { hotelId, docName } },
-    create: { hotelId, docName, data: parsed.data.data as unknown as Prisma.InputJsonValue },
-    update: { data: parsed.data.data as unknown as Prisma.InputJsonValue },
+    // Upsert em vez de exigir que o doc já exista — o portal agora escreve
+    // aqui direto (ex: `guestInfo` pra configurar o wifi padrão do hotel),
+    // e nem todo hotel tem cada doc semeado de antemão.
+    const updated = await prisma.hotelContent.upsert({
+      where: { hotelId_docName: { hotelId, docName } },
+      create: { hotelId, docName, data: parsed.data.data as unknown as Prisma.InputJsonValue },
+      update: { data: parsed.data.data as unknown as Prisma.InputJsonValue },
+    })
+    return NextResponse.json(updated.data)
   })
-  return NextResponse.json(updated.data)
 }

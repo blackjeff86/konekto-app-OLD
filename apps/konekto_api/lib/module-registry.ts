@@ -47,6 +47,50 @@ const genericServiceConfigSchema = z.object({
   capabilities: z.record(z.string(), z.boolean()).optional(),
 })
 
+const restaurantConfigSchema = genericServiceConfigSchema.extend({
+  /// Como o hóspede interage com a reserva:
+  /// - `party_size_only`: informa só "mesa para quantas pessoas" e a Sevvn
+  ///   escolhe a melhor mesa/tipo disponível por trás.
+  /// - `table_type_selection`: o hóspede escolhe explicitamente o tipo de
+  ///   mesa dentre as disponíveis.
+  /// - `hybrid`: mostra lotação por pessoas e também permite seleção do tipo
+  ///   de mesa quando o hotel quiser expor esse nível de detalhe.
+  bookingMode: z.enum(['party_size_only', 'table_type_selection', 'hybrid']).optional(),
+  /// Mostrar ou não o cardápio dentro do app do hóspede.
+  showMenuInGuestApp: z.boolean().optional(),
+  /// Mostrar os preços dos pratos quando o cardápio estiver visível.
+  showMenuPrices: z.boolean().optional(),
+  /// Tamanho máximo de grupo que o hóspede pode informar na UI de reserva.
+  maxPartySize: z.number().int().min(1).max(40).optional(),
+  /// Fonte operacional do inventário de mesas.
+  tableInventorySource: z.enum(['sevvn', 'external', 'hybrid']).optional(),
+  /// Permite fila de espera quando não houver mesa disponível.
+  waitlistEnabled: z.boolean().optional(),
+  /// Quantas entradas de fila de espera o restaurante aceita por turno.
+  waitlistCapacity: z.number().int().min(0).max(500).optional(),
+  /// Em quantos minutos a reserva expira caso o hóspede não chegue/confirme.
+  reservationExpiryMinutes: z.number().int().min(1).max(240).optional(),
+})
+
+const roomServiceConfigSchema = genericServiceConfigSchema.extend({
+  /// Mostrar ou não a seção de frigobar/minibar no app do hóspede.
+  showMinibarInGuestApp: z.boolean().optional(),
+  /// Permite ao próprio hóspede informar consumo de frigobar pelo app.
+  allowGuestConsumptionReports: z.boolean().optional(),
+  /// Permite à recepção lançar consumo manualmente em nome do hóspede.
+  allowStaffConsumptionLaunch: z.boolean().optional(),
+  /// Fonte operacional do fulfillment de room service.
+  fulfillmentMode: z.enum(['sevvn', 'external', 'hybrid']).optional(),
+})
+
+const conciergeConfigSchema = genericServiceConfigSchema.extend({
+  requestCategories: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
+  responseSlaMinutes: z.number().int().min(1).max(1440).optional(),
+  showEstimatedResponseTime: z.boolean().optional(),
+  allowFileAttachments: z.boolean().optional(),
+  escalationMode: z.enum(['manual', 'automatic', 'hybrid']).optional(),
+})
+
 const homeCardConfigSchema = z.object({
   showOnHome: z.boolean().optional(),
   order: z.number().int().optional(),
@@ -54,14 +98,37 @@ const homeCardConfigSchema = z.object({
 
 export const MODULE_REGISTRY: Record<string, ModuleRegistryEntry> = {
   room_service: {
-    configSchema: genericServiceConfigSchema,
-    capabilities: GENERIC_SERVICE_CAPABILITIES,
-    actions: ['addToOrder'],
+    configSchema: roomServiceConfigSchema,
+    capabilities: [
+      ...GENERIC_SERVICE_CAPABILITIES,
+      { id: 'supportsMinibar', label: 'Suporta frigobar/minibar', default: true },
+      { id: 'allowsGuestConsumptionReport', label: 'Permite hóspede informar consumo', default: true },
+      { id: 'allowsStaffConsumptionLaunch', label: 'Permite recepção lançar consumo', default: true },
+    ],
+    actions: ['addToOrder', 'reportConsumption'],
   },
   restaurant: {
-    configSchema: genericServiceConfigSchema,
-    capabilities: [...GENERIC_SERVICE_CAPABILITIES, { id: 'allowsTableBooking', label: 'Permite reserva de mesa', default: true }],
+    configSchema: restaurantConfigSchema,
+    capabilities: [
+      ...GENERIC_SERVICE_CAPABILITIES,
+      { id: 'allowsTableBooking', label: 'Permite reserva de mesa', default: true },
+      { id: 'showsMenu', label: 'Exibe cardápio no app do hóspede', default: true },
+      { id: 'showsMenuPrices', label: 'Exibe preços dos pratos', default: true },
+      { id: 'collectsPartySize', label: 'Pergunta mesa para quantas pessoas', default: true },
+      { id: 'supportsWaitlist', label: 'Permite fila de espera', default: false },
+      { id: 'hasReservationExpiryWindow', label: 'Reserva expira após um limite de tempo', default: true },
+    ],
     actions: ['addToOrder', 'bookTable'],
+  },
+  concierge: {
+    configSchema: conciergeConfigSchema,
+    capabilities: [
+      ...GENERIC_SERVICE_CAPABILITIES,
+      { id: 'allowsDirectChat', label: 'Permite conversa direta com a equipe', default: true },
+      { id: 'showsRequestCategories', label: 'Exibe categorias de atendimento ao hóspede', default: true },
+      { id: 'showsResponseSla', label: 'Exibe tempo estimado de resposta', default: true },
+    ],
+    actions: ['sendMessage', 'createRequest'],
   },
   /// Fallback pros módulos de Hospitalidade sem regra própria ainda (Spa,
   /// Passeios, Eventos, Lavanderia, Kids Club, Piscinas, Academia,
@@ -88,6 +155,44 @@ export const MODULE_REGISTRY: Record<string, ModuleRegistryEntry> = {
     configSchema: homeCardConfigSchema,
     capabilities: [],
     actions: ['viewPromotion', 'redeemPromotion'],
+  },
+  basic_notifications: {
+    configSchema: homeCardConfigSchema.extend({
+      channels: z
+        .object({
+          inApp: z.boolean().optional(),
+          browser: z.boolean().optional(),
+          email: z.boolean().optional(),
+          whatsapp: z.boolean().optional(),
+        })
+        .optional(),
+      domainPolicies: z
+        .object({
+          roomServiceOrders: z
+            .object({
+              notifyOnAccepted: z.boolean().optional(),
+              notifyOnCompleted: z.boolean().optional(),
+              notifyOnCancelled: z.boolean().optional(),
+              notifyOnStaffConsumptionRecorded: z.boolean().optional(),
+            })
+            .optional(),
+          restaurantReservations: z
+            .object({
+              notifyOnConfirmed: z.boolean().optional(),
+              notifyOnCancelled: z.boolean().optional(),
+              notifyOnRescheduled: z.boolean().optional(),
+              notifyBeforeExpiry: z.boolean().optional(),
+              expiryWarningMinutes: z.number().int().min(1).max(240).optional(),
+            })
+            .optional(),
+        })
+        .optional(),
+    }),
+    capabilities: [
+      { id: 'supportsOperationalAlerts', label: 'Suporta alertas operacionais', default: true },
+      { id: 'supportsReservationLifecycleAlerts', label: 'Notifica ciclo de vida da reserva', default: true },
+    ],
+    actions: ['sendOperationalNotification'],
   },
 }
 

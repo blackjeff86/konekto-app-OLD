@@ -47,6 +47,7 @@ model Hotel {
   partners        Partner[]
   paymentAccount  HotelPaymentAccount?
   stayPayments    StayPayment[]
+  guestNotifications GuestNotification[]
   integration     HotelIntegration?
   subscription    HotelSubscription?
   supportMessages PlatformSupportMessage[]
@@ -268,11 +269,48 @@ model Guest {
   orders              Order[]
   messages            StayMessage[]
   stayPayments        StayPayment[]
+  notifications       GuestNotification[]
 
   @@unique([hotelId, externalId])
   @@index([hotelId])
   @@index([stayId])
   @@map("guests")
+}
+
+enum GuestNotificationChannel {
+  in_app
+  browser
+  email
+  whatsapp
+}
+
+enum GuestNotificationStatus {
+  unread
+  read
+}
+
+model GuestNotification {
+  id                String                  @id @default(cuid())
+  hotelId           String
+  guestId           String
+  moduleId          String
+  channel           GuestNotificationChannel @default(in_app)
+  title             String
+  body              String
+  relatedEntityType String?
+  relatedEntityId   String?
+  dedupeKey         String?
+  status            GuestNotificationStatus @default(unread)
+  readAt            DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  hotel             Hotel                   @relation(fields: [hotelId], references: [id])
+  guest             Guest                   @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@unique([guestId, dedupeKey])
+  @@index([hotelId])
+  @@index([guestId, status])
+  @@map("guest_notifications")
 }
 
 enum OrderStatus {
@@ -718,8 +756,33 @@ model PlatformAdmin {
   name         String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  auditLogs    PlatformAdminAuditLog[]
 
   @@map("platform_admins")
+}
+
+/// Auditoria append-only das mutações privilegiadas feitas pela equipe da
+/// plataforma (cross-tenant). Guarda o ator, o alvo e um payload pequeno
+/// e sanitizado da mudança, sem segredos transitórios como senha
+/// temporária.
+model PlatformAdminAuditLog {
+  id            String        @id @default(cuid())
+  adminId       String
+  action        String
+  targetType    String
+  targetId      String?
+  hotelId       String?
+  adminEmail    String
+  correlationId String?
+  clientIp      String?
+  payload       Json?
+  createdAt     DateTime      @default(now())
+  admin         PlatformAdmin @relation(fields: [adminId], references: [id], onDelete: Restrict)
+
+  @@index([adminId, createdAt])
+  @@index([hotelId, createdAt])
+  @@index([action, createdAt])
+  @@map("platform_admin_audit_logs")
 }
 
 enum SubscriptionStatus {

@@ -3,11 +3,11 @@ import 'package:konekto_admin/auth/admin_gate.dart';
 import 'package:konekto_admin/auth/auth_repository.dart';
 
 void main() {
-  runApp(const KonektoAdminApp());
+  runApp(const SevvnAdminApp());
 }
 
-class KonektoAdminApp extends StatelessWidget {
-  const KonektoAdminApp({super.key});
+class SevvnAdminApp extends StatelessWidget {
+  const SevvnAdminApp({super.key});
 
   @override
   Widget build(BuildContext context) {

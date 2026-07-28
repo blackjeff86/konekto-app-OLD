@@ -5,12 +5,23 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     hotel: { findUnique: vi.fn() },
     hotelSubscription: { upsert: vi.fn() },
+    platformAdminAuditLog: { create: vi.fn() },
+    $transaction: vi.fn(),
   },
 }))
 
 import { prisma } from '@/lib/prisma'
 import { signPlatformAdminToken } from '@/lib/platform-auth'
 import { PATCH } from './route'
+
+interface SubscriptionPatchTxMock {
+  hotelSubscription: {
+    upsert: ReturnType<typeof vi.fn>
+  }
+  platformAdminAuditLog: {
+    create: ReturnType<typeof vi.fn>
+  }
+}
 
 function patchRequest(token: string | null, body: unknown): NextRequest {
   return new NextRequest('http://localhost/api/platform-admin/hotels/hotel_1/subscription', {
@@ -52,35 +63,67 @@ describe('PATCH /api/platform-admin/hotels/[hotelId]/subscription', () => {
   it('upserts the subscription on success', async () => {
     const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1' } as never)
-    vi.mocked(prisma.hotelSubscription.upsert).mockResolvedValue({
-      hotelId: 'hotel_1',
-      planName: 'Pro',
-      monthlyAmount: null,
-      status: 'active',
-      paymentStatus: 'em_dia',
-      notes: null,
-    } as never)
+    const tx: SubscriptionPatchTxMock = {
+      hotelSubscription: {
+        upsert: vi.fn().mockResolvedValue({
+          hotelId: 'hotel_1',
+          planName: 'Pro',
+          monthlyAmount: null,
+          status: 'active',
+          paymentStatus: 'em_dia',
+          notes: null,
+        }),
+      },
+      platformAdminAuditLog: { create: vi.fn().mockResolvedValue({ id: 'audit_1' }) },
+    }
+    vi.mocked(prisma.$transaction).mockImplementation(
+      ((callback: (tx: SubscriptionPatchTxMock) => unknown) => callback(tx)) as never,
+    )
 
     const response = await PATCH(patchRequest(token, validBody), { params: Promise.resolve({ hotelId: 'hotel_1' }) })
 
     expect(response.status).toBe(200)
-    expect(prisma.hotelSubscription.upsert).toHaveBeenCalledWith({
+    expect(tx.hotelSubscription.upsert).toHaveBeenCalledWith({
       where: { hotelId: 'hotel_1' },
       create: { hotelId: 'hotel_1', planName: 'Pro', monthlyAmount: undefined, status: 'active', paymentStatus: 'em_dia', notes: undefined },
       update: { planName: 'Pro', monthlyAmount: undefined, status: 'active', paymentStatus: 'em_dia', notes: undefined },
+    })
+    expect(tx.platformAdminAuditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'platform_admin.hotel.subscription_updated',
+        adminEmail: 'a@konekto.app',
+        adminId: 'admin_1',
+        hotelId: 'hotel_1',
+        targetId: 'hotel_1',
+        targetType: 'hotel_subscription',
+        payload: {
+          monthlyAmount: null,
+          paymentStatus: 'em_dia',
+          plan: null,
+          planName: 'Pro',
+          presetId: null,
+          status: 'active',
+        },
+      }),
     })
   })
 
   it('accepts and forwards a monthlyAmount', async () => {
     const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1' } as never)
-    vi.mocked(prisma.hotelSubscription.upsert).mockResolvedValue({ hotelId: 'hotel_1' } as never)
+    const tx: SubscriptionPatchTxMock = {
+      hotelSubscription: { upsert: vi.fn().mockResolvedValue({ hotelId: 'hotel_1' }) },
+      platformAdminAuditLog: { create: vi.fn().mockResolvedValue({ id: 'audit_1' }) },
+    }
+    vi.mocked(prisma.$transaction).mockImplementation(
+      ((callback: (tx: SubscriptionPatchTxMock) => unknown) => callback(tx)) as never,
+    )
 
     await PATCH(patchRequest(token, { ...validBody, monthlyAmount: 499.9 }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
-    expect(prisma.hotelSubscription.upsert).toHaveBeenCalledWith(
+    expect(tx.hotelSubscription.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         create: expect.objectContaining({ monthlyAmount: 499.9 }),
         update: expect.objectContaining({ monthlyAmount: 499.9 }),
@@ -101,13 +144,19 @@ describe('PATCH /api/platform-admin/hotels/[hotelId]/subscription', () => {
   it('accepts and forwards the White Label plan', async () => {
     const token = await signPlatformAdminToken({ sub: 'admin_1', email: 'a@konekto.app', name: 'Admin' })
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1' } as never)
-    vi.mocked(prisma.hotelSubscription.upsert).mockResolvedValue({ hotelId: 'hotel_1' } as never)
+    const tx: SubscriptionPatchTxMock = {
+      hotelSubscription: { upsert: vi.fn().mockResolvedValue({ hotelId: 'hotel_1' }) },
+      platformAdminAuditLog: { create: vi.fn().mockResolvedValue({ id: 'audit_1' }) },
+    }
+    vi.mocked(prisma.$transaction).mockImplementation(
+      ((callback: (tx: SubscriptionPatchTxMock) => unknown) => callback(tx)) as never,
+    )
 
     await PATCH(patchRequest(token, { ...validBody, plan: 'premium' }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
     })
 
-    expect(prisma.hotelSubscription.upsert).toHaveBeenCalledWith(
+    expect(tx.hotelSubscription.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         create: expect.objectContaining({ plan: 'premium' }),
         update: expect.objectContaining({ plan: 'premium' }),

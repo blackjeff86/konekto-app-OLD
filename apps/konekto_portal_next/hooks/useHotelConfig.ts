@@ -3,11 +3,13 @@ import { useAuth } from '@/lib/auth/AuthProvider'
 import {
   getHotelConfig,
   updateBranding,
+  updateModuleConfiguration,
   updateModuleEnabled,
   updatePromoImages,
   updateTemplate,
   type BrandingInput,
 } from '@/lib/api/hotelConfig'
+import type { ModuleConfigurationInput } from '@/types/hotelConfig'
 
 /** Marca/Aparência do hotel (nome, logo, endereço, carrossel, template) — Fase 5. */
 export function useHotelConfig() {
@@ -18,8 +20,8 @@ export function useHotelConfig() {
 
   const query = useQuery({
     queryKey,
-    queryFn: () => getHotelConfig(hotelId!),
-    enabled: Boolean(hotelId),
+    queryFn: () => getHotelConfig(hotelId!, token!),
+    enabled: Boolean(hotelId && token),
   })
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey })
@@ -46,6 +48,12 @@ export function useHotelConfig() {
     onSuccess: invalidate,
   })
 
+  const updateModuleConfigurationMutation = useMutation({
+    mutationFn: ({ moduleId, input }: { moduleId: string; input: ModuleConfigurationInput }) =>
+      updateModuleConfiguration(hotelId!, token!, moduleId, input),
+    onSuccess: invalidate,
+  })
+
   return {
     config: query.data ?? null,
     isLoading: query.isLoading,
@@ -54,5 +62,6 @@ export function useHotelConfig() {
     updatePromoImages: updatePromoImagesMutation.mutateAsync,
     updateTemplate: updateTemplateMutation.mutateAsync,
     updateModuleEnabled: updateModuleEnabledMutation.mutateAsync,
+    updateModuleConfiguration: updateModuleConfigurationMutation.mutateAsync,
   }
 }

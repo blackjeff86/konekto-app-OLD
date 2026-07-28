@@ -15,6 +15,7 @@ vi.mock('@/lib/prisma', () => ({
 
 import { prisma } from '@/lib/prisma'
 import { signStaffToken } from '@/lib/jwt'
+import { __resetRateLimitStore } from '@/lib/rate-limit'
 import { GET, PATCH } from './route'
 
 const baseConfig = {
@@ -35,9 +36,12 @@ function patchRequest(hotelId: string, token: string | null, body: unknown): Nex
 }
 
 describe('GET /api/hotels/[hotelId]', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    __resetRateLimitStore()
+  })
 
-  it('returns the config blob plus plan, allowedTemplates and enabledModules', async () => {
+  it('returns a guest-safe config without internal plan/template metadata on public reads', async () => {
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
     vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'premium' } as never)
 
@@ -48,12 +52,31 @@ describe('GET /api/hotels/[hotelId]', () => {
     expect(response.status).toBe(200)
     const body = await response.json()
     expect(body).toMatchObject(baseConfig)
-    expect(body.plan).toBe('premium')
-    expect(body.allowedTemplates).toEqual(['aura', 'bosque', 'elite', 'pulse', 'horizon'])
+    expect(body.plan).toBeUndefined()
+    expect(body.allowedTemplates).toBeUndefined()
     expect(body.enabledModules.some((module: { id: string }) => module.id === 'digital_wallet')).toBe(true)
   })
 
-  it('falls back to the essential plan when the hotel has no subscription row', async () => {
+  it('returns plan and allowedTemplates when the caller is authenticated staff from the same hotel', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_1', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'premium' } as never)
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/hotels/hotel_1', {
+        headers: { authorization: `Bearer ${token}` },
+      }),
+      {
+        params: Promise.resolve({ hotelId: 'hotel_1' }),
+      },
+    )
+
+    const body = await response.json()
+    expect(body.plan).toBe('premium')
+    expect(body.allowedTemplates).toEqual(['aura', 'bosque', 'elite', 'pulse', 'horizon'])
+  })
+
+  it('still resolves enabledModules with the essential fallback when the hotel has no subscription row', async () => {
     vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
     vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue(null)
 
@@ -62,8 +85,41 @@ describe('GET /api/hotels/[hotelId]', () => {
     })
 
     const body = await response.json()
-    expect(body.plan).toBe('essential')
-    expect(body.allowedTemplates).toEqual(['aura', 'bosque'])
+    expect(body.enabledModules.some((module: { id: string }) => module.id === 'restaurant')).toBe(true)
+    expect(body.allowedTemplates).toBeUndefined()
+  })
+
+  it('returns 401 when an invalid staff token is explicitly provided', async () => {
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'premium' } as never)
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/hotels/hotel_1', {
+        headers: { authorization: 'Bearer invalid-token' },
+      }),
+      {
+        params: Promise.resolve({ hotelId: 'hotel_1' }),
+      },
+    )
+
+    expect(response.status).toBe(401)
+  })
+
+  it('returns 403 when a staff token from another hotel requests enriched config', async () => {
+    const token = await signStaffToken({ sub: 's1', hotelId: 'hotel_2', role: 'gerente', email: 'a@b.com', name: 'A' })
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'premium' } as never)
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/hotels/hotel_1', {
+        headers: { authorization: `Bearer ${token}` },
+      }),
+      {
+        params: Promise.resolve({ hotelId: 'hotel_1' }),
+      },
+    )
+
+    expect(response.status).toBe(403)
   })
 
   it('returns 404 when the hotel does not exist', async () => {
@@ -75,10 +131,37 @@ describe('GET /api/hotels/[hotelId]', () => {
 
     expect(response.status).toBe(404)
   })
+
+  it('returns 429 after repeated public reads from the same IP', async () => {
+    vi.mocked(prisma.hotel.findUnique).mockResolvedValue({ id: 'hotel_1', config: baseConfig } as never)
+    vi.mocked(prisma.hotelSubscription.findUnique).mockResolvedValue({ plan: 'premium' } as never)
+
+    for (let i = 0; i < 120; i++) {
+      const response = await GET(
+        new NextRequest('http://localhost/api/hotels/hotel_1', {
+          headers: { 'x-forwarded-for': '203.0.113.10' },
+        }),
+        { params: Promise.resolve({ hotelId: 'hotel_1' }) },
+      )
+      expect(response.status).toBe(200)
+    }
+
+    const blocked = await GET(
+      new NextRequest('http://localhost/api/hotels/hotel_1', {
+        headers: { 'x-forwarded-for': '203.0.113.10' },
+      }),
+      { params: Promise.resolve({ hotelId: 'hotel_1' }) },
+    )
+
+    expect(blocked.status).toBe(429)
+  })
 })
 
 describe('PATCH /api/hotels/[hotelId]', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    __resetRateLimitStore()
+  })
 
   it('rejects requests without a staff token', async () => {
     const response = await PATCH(patchRequest('hotel_1', null, { template: 'aura' }), {

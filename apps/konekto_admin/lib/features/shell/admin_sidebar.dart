@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:konekto_admin/auth/admin_session.dart';
 import 'package:konekto_admin/auth/auth_repository.dart';
 import 'package:konekto_admin/theme/konekto_brand.dart';
@@ -37,15 +38,15 @@ class AdminSidebar extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
             child: Row(
               children: [
-                const KonektoMark(size: 26),
+                SvgPicture.asset('assets/logo/mini_logo.svg', width: 26, height: 26 * 1913 / 1405),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Konekto', style: KonektoBrand.body(fontSize: 15, fontWeight: FontWeight.w800, color: KonektoBrand.cream)),
-                      Text('ADMIN INTERNO', style: KonektoBrand.eyebrow(fontSize: 9)),
+                      Text('Sevvn', style: KonektoBrand.body(fontSize: 15, fontWeight: FontWeight.w800, color: KonektoBrand.cream)),
+                      Text('ADMIN CONSOLE', style: KonektoBrand.eyebrow(fontSize: 9)),
                     ],
                   ),
                 ),

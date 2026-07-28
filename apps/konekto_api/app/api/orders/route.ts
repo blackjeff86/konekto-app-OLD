@@ -3,10 +3,24 @@ import { z } from 'zod'
 import type { Order, Prisma } from '@/app/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 import { requireGuestAuth, AuthGuardError } from '@/lib/auth-guard'
+import { notifyRoomServiceOrderCompleted } from '@/lib/basic-notifications'
+import { readHotelModuleConfiguration } from '@/lib/hotel-modules'
 import { dispatchOrderWebhook } from '@/lib/integration-webhook'
 import { canonicalizeSlotStart, isBookableInstant, isValidScheduledSlot, isWithinOperatingHours } from '@/lib/scheduling'
 
 export const runtime = 'nodejs'
+
+function readRoomServiceConfig(hotelConfig: unknown) {
+  const configuration = readHotelModuleConfiguration(hotelConfig, 'room_service')
+  return {
+    showMinibarInGuestApp:
+      typeof configuration.showMinibarInGuestApp === 'boolean' ? configuration.showMinibarInGuestApp : true,
+    allowGuestConsumptionReports:
+      typeof configuration.allowGuestConsumptionReports === 'boolean'
+        ? configuration.allowGuestConsumptionReports
+        : true,
+  }
+}
 
 const createOrderSchema = z.object({
   serviceId: z.string().min(1),
@@ -135,6 +149,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'service_closed' }, { status: 400 })
     }
 
+    if (item.service.type === 'room_service' && item.isMinibarItem) {
+      const hotel = await prisma.hotel.findUnique({
+        where: { id: guest.hotelId },
+        select: { config: true },
+      })
+      const roomServiceConfig = readRoomServiceConfig(hotel?.config)
+
+      if (!roomServiceConfig.showMinibarInGuestApp) {
+        return NextResponse.json({ error: 'item_not_found' }, { status: 404 })
+      }
+
+      if (parsed.data.consumptionReport && !roomServiceConfig.allowGuestConsumptionReports) {
+        return NextResponse.json({ error: 'guest_consumption_reports_disabled' }, { status: 403 })
+      }
+    }
+
     // Item com agendamento configurado (`durationMinutes` setado — ver
     // `lib/scheduling.ts`): `scheduledFor` é obrigatório e precisa bater
     // exatamente num horário válido, revalidado no servidor (nunca confia
@@ -210,6 +240,14 @@ export async function POST(request: NextRequest) {
     // checagem de capacidade (comportamento legado preservado).
     if (item.durationMinutes == null) {
       const order = await prisma.order.create({ data: orderData, include: { coupon: { select: { title: true } } } })
+      if (item.isMinibarItem && parsed.data.consumptionReport) {
+        await notifyRoomServiceOrderCompleted({
+          hotelId: guest.hotelId,
+          guestId: guest.sub,
+          orderId: order.id,
+          itemName: item.name,
+        })
+      }
       await dispatchOrderWebhook(order, guest.hotelId)
       return NextResponse.json(order, { status: 201 })
     }

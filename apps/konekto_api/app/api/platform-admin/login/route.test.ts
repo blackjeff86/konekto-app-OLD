@@ -10,18 +10,22 @@ vi.mock('@/lib/prisma', () => ({
 
 import { prisma } from '@/lib/prisma'
 import { verifyPlatformAdminToken } from '@/lib/platform-auth'
+import { __resetRateLimitStore } from '@/lib/rate-limit'
 import { POST } from './route'
 
-function postRequest(body: unknown): NextRequest {
+function postRequest(body: unknown, ip = '203.0.113.10'): NextRequest {
   return new NextRequest('http://localhost/api/platform-admin/login', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
     body: JSON.stringify(body),
   })
 }
 
 describe('POST /api/platform-admin/login', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    __resetRateLimitStore()
+  })
 
   it('rejects an invalid body', async () => {
     const response = await POST(postRequest({ email: 'not-an-email' }))
@@ -68,5 +72,17 @@ describe('POST /api/platform-admin/login', () => {
     expect(body.admin).toEqual({ id: 'admin_1', name: 'Admin', email: 'a@konekto.app' })
     const verified = await verifyPlatformAdminToken(body.token)
     expect(verified.sub).toBe('admin_1')
+  })
+
+  it('returns 429 after repeated attempts from the same IP', async () => {
+    vi.mocked(prisma.platformAdmin.findUnique).mockResolvedValue(null)
+
+    for (let i = 0; i < 5; i++) {
+      const response = await POST(postRequest({ email: 'a@konekto.app', password: 'wrong' }))
+      expect(response.status).toBe(401)
+    }
+
+    const blocked = await POST(postRequest({ email: 'a@konekto.app', password: 'wrong' }))
+    expect(blocked.status).toBe(429)
   })
 })

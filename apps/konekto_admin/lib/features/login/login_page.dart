@@ -9,8 +9,8 @@ import 'package:konekto_admin/theme/konekto_brand.dart';
 /// Paleta clara/rosa da marca — mesma usada em apps/konekto_site_next e
 /// apps/konekto_portal_next (#FF2E88/#16181D/#F7F5F3/#FAFAF9). Escopada só
 /// a esta tela: o resto do konekto_admin ainda está no tema escuro/dourado
-/// de KonektoBrand, então os tokens não são reaproveitados daqui pra não
-/// mudar nenhuma outra tela sem revisão visual.
+/// legado de `KonektoBrand`, então os tokens não são reaproveitados daqui
+/// pra não mudar nenhuma outra tela sem revisão visual.
 class _LoginPalette {
   _LoginPalette._();
 
@@ -26,12 +26,11 @@ class _LoginPalette {
   static const Color onPrimary = Color(0xFFFFFFFF);
 }
 
-/// Login real (não existe uma tela compartilhada pra esse público — o
-/// login.html do konekto_site é do staff de hotel). Mesmo tratamento
-/// visual do cartão de login em apps/konekto_site_next ("Área do
-/// hotel" -> "Bem-vindo(a) de volta" + campos com ícone), adaptado pro
-/// público interno (sem CTA de "vire cliente", sem link de recuperação de
-/// senha — só um punhado de contas, tratadas na mão pelo próprio time).
+/// Login real do time interno da plataforma. Mesmo tratamento visual do
+/// cartão de login em apps/konekto_site_next ("Área do hotel" ->
+/// "Bem-vindo(a) de volta" + campos com ícone), adaptado pro público
+/// interno (sem CTA de "vire cliente", sem link de recuperação de senha —
+/// só um punhado de contas, tratadas na mão pelo próprio time).
 class LoginPage extends StatefulWidget {
   final AuthRepository authRepository;
 
@@ -128,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Portal interno',
+                        'Sevvn Admin',
                         style: KonektoBrand.eyebrow(fontSize: 11, color: _LoginPalette.primary),
                       ),
                       const SizedBox(height: 12),
@@ -167,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
                         keyboardType: TextInputType.emailAddress,
                         onSubmitted: (_) => _submit(),
                         style: KonektoBrand.body(fontSize: 14, color: _LoginPalette.ink),
-                        decoration: _inputDecoration(hint: 'voce@konekto.app', icon: Icons.mail_outline),
+                        decoration: _inputDecoration(hint: 'voce@sevvn.app', icon: Icons.mail_outline),
                       ),
                       const SizedBox(height: 18),
                       Text(

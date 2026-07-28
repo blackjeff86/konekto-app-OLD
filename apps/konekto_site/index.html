@@ -3,563 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sevvn — Hospitalidade invisível</title>
-<meta name="description" content="Sevvn é a infraestrutura white-label por trás do app do seu hotel — o hóspede só vê a marca do seu hotel, nunca a nossa. Check-in por QR Code, pedidos, chat e mais.">
-<link rel="icon" href="assets/logo/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Redirecionando — Sevvn</title>
+<meta name="description" content="Redirecionando para o site oficial da Sevvn.">
+<meta http-equiv="refresh" content="0; url=https://sevvn-site.vercel.app">
 <style>
   :root {
-    --bg: #FAFAF9;
-    --surface: #FFFFFF;
-    --surface-alt: #F7F5F3;
-    --surface-sunken: #EFEAE6;
-    --border: rgba(22,24,29,0.1);
-    --border-strong: rgba(22,24,29,0.18);
-    --ink: #16181D;
-    --muted: #5B5F68;
-    --muted-soft: #85899A;
-    --primary: #FF2E88;
-    --primary-soft: rgba(255,46,136,0.07);
-    --primary-dim: rgba(255,46,136,0.32);
-    --on-primary: #FFFFFF;
-
-    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
-
-    --radius-sm: 0.25rem;
-    --radius: 0.5rem;
-    --radius-md: 0.75rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.5rem;
-
-    --ease: cubic-bezier(0.22, 1, 0.36, 1);
-    --space-edge: clamp(1.25rem, 5vw, 4rem);
-    --space-section: clamp(4rem, 3rem + 6vw, 8rem);
-    --container-max: 1320px;
-
     color-scheme: light;
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: rgba(22, 24, 29, 0.1);
+    --ink: #16181d;
+    --muted: #5b5f68;
+    --primary: #ff2e88;
+    --font: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
   }
-
-  *, *::before, *::after { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-  }
-
+  * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: var(--font-body);
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
     background: var(--bg);
     color: var(--ink);
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
+    font-family: var(--font);
+    padding: 24px;
   }
-
-  img, svg { max-width: 100%; display: block; }
-  h1, h2, h3, h4 { text-wrap: balance; margin: 0; color: var(--ink); }
-  a { color: inherit; }
-  button { font-family: inherit; cursor: pointer; }
-
-  .container { max-width: var(--container-max); margin: 0 auto; padding-inline: var(--space-edge); }
-
-  .eyebrow {
-    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--primary); display: inline-flex; align-items: center; gap: 0.5rem;
-  }
-  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
-
-  .brand-mark { width: 26px; height: 26px; flex: none; }
-  .brand { display: inline-flex; align-items: center; gap: 0.55rem; font-family: var(--font-body); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
-
-  /* ---------- Nav ---------- */
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(250,250,249,0.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav .container { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding-block: 1.15rem; }
-  .nav-links { display: flex; align-items: center; gap: 2.1rem; list-style: none; margin: 0; padding: 0; }
-  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.25s var(--ease); }
-  .nav-links a:hover, .nav-links a:focus-visible { color: var(--primary); }
-  .nav-right { display: flex; align-items: center; gap: 1.3rem; }
-  .nav-signin { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.25s var(--ease); }
-  .nav-signin:hover, .nav-signin:focus-visible { color: var(--primary); }
-  .nav-cta {
-    font-weight: 700; font-size: 0.85rem; color: var(--on-primary); background: var(--ink);
-    padding: 0.7rem 1.5rem; border: none; border-radius: var(--radius-lg); text-decoration: none;
-    transition: transform 0.25s var(--ease), background 0.25s var(--ease);
-  }
-  .nav-cta:hover, .nav-cta:focus-visible { transform: scale(0.97); background: var(--primary); }
-  @media (max-width: 820px) { .nav-links { display: none; } }
-
-  /* ---------- Buttons ---------- */
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-    font-weight: 700; font-size: 0.92rem; padding: 1rem 2rem; border-radius: var(--radius-lg);
-    text-decoration: none; border: 1.5px solid transparent; transition: transform 0.25s var(--ease), background 0.25s var(--ease), border-color 0.25s var(--ease);
-  }
-  .btn-primary { background: var(--ink); color: #fff; }
-  .btn-primary:hover, .btn-primary:focus-visible { background: var(--primary); transform: translateY(-2px); }
-  .btn-ghost { color: var(--ink); background: transparent; border-color: var(--border-strong); }
-  .btn-ghost:hover, .btn-ghost:focus-visible { border-color: var(--ink); background: var(--surface); }
-
-  /* ---------- Hero ---------- */
-  .hero { padding: clamp(3rem, 2rem + 5vw, 6rem) 0 var(--space-section); overflow: clip; }
-  .hero .container { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(2rem, 4vw, 4.5rem); align-items: center; }
-  .hero h1 {
-    font-family: var(--font-display); font-weight: 800; letter-spacing: -0.03em;
-    font-size: clamp(2.4rem, 1.7rem + 3vw, 3.6rem); line-height: 1.08;
-  }
-  .hero h1 em { font-style: normal; color: var(--primary); }
-  .hero p.lede { color: var(--muted); font-size: clamp(1rem, 0.94rem + 0.3vw, 1.15rem); max-width: 42ch; margin-top: 1.4rem; }
-  .hero-actions { display: flex; gap: 0.9rem; margin-top: 2.2rem; flex-wrap: wrap; }
-
-  /* ---------- Phone demo ---------- */
-  .phone-stage { position: relative; display: flex; justify-content: center; align-items: center; min-height: 560px; }
-  .phone-glow {
-    position: absolute; width: 280px; height: 280px; border-radius: 50%;
-    background: radial-gradient(circle, var(--primary-soft), transparent 70%);
-    filter: blur(10px); animation: pulse 5s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
-  .phone {
-    position: relative; width: 272px; padding: 1rem;
-    background: #fff; border-radius: 2.6rem; border: 1px solid var(--border);
-    box-shadow: 0 40px 70px -24px rgba(22,24,29,0.16), 0 0 0 1px rgba(22,24,29,0.03);
-    transform: rotate(3deg); transition: transform 0.8s var(--ease);
-  }
-  .phone:hover { transform: rotate(0deg); }
-  .phone-screen { border-radius: 2.1rem; padding: 1.5rem 1.3rem; display: flex; flex-direction: column; gap: 1rem; transition: background-color 0.6s var(--ease), opacity 0.4s ease; min-height: 480px; }
-  .phone-brand { font-family: var(--font-body); font-weight: 800; font-size: 1.1rem; text-align: center; transition: color 0.6s var(--ease); }
-  .phone-room {
-    height: 130px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--surface-sunken), var(--border-strong));
-    position: relative; overflow: hidden;
-  }
-  .phone-room span { position: absolute; bottom: 0.7rem; left: 0.7rem; background: #fff; font-size: 0.68rem; font-weight: 700; padding: 0.25rem 0.55rem; border-radius: var(--radius-sm); }
-  .phone-row { height: 46px; border-radius: var(--radius); background: var(--surface-alt); display: flex; align-items: center; padding-inline: 1rem; font-size: 0.76rem; font-weight: 600; color: var(--muted); }
-  .phone-rows { display: flex; flex-direction: column; gap: 0.6rem; }
-  .float-card {
-    position: absolute; left: -2.5rem; bottom: 4rem; width: 190px; padding: 1.3rem;
-    background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--border);
-    box-shadow: 0 24px 50px -20px rgba(22,24,29,0.14);
-  }
-  .float-card p.tag { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); margin: 0 0 0.5rem; }
-  .float-card p.claim { font-family: var(--font-body); font-size: 1.05rem; font-weight: 700; margin: 0 0 0.8rem; }
-  .dot-row { display: flex; gap: 0.4rem; }
-  .dot-row i { width: 16px; height: 16px; border-radius: 50%; display: block; }
-  @media (max-width: 980px) { .float-card { display: none; } }
-  @media (max-width: 720px) { .hero .container { grid-template-columns: 1fr; } .phone-stage { min-height: 420px; } }
-
-  /* ---------- Sections generic ---------- */
-  section { padding: var(--space-section) 0; }
-  .section-alt { background: var(--surface-alt); }
-  .section-head { max-width: 640px; }
-  .section-head h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.75rem); letter-spacing: -0.02em; }
-  .rule { height: 3px; width: 64px; background: var(--primary); margin-top: 1.3rem; border-radius: 2px; }
-
-  /* ---------- Invisibility split ---------- */
-  .invis { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: clamp(2rem, 4vw, 4.5rem); align-items: center; }
-  .invis-visual {
-    aspect-ratio: 4/3; border-radius: var(--radius-xl); position: relative; overflow: hidden;
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: var(--surface);
     border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px 28px;
+    text-align: center;
+    box-shadow: 0 40px 80px -32px rgba(22, 24, 29, 0.18);
   }
-  .invis-visual img { width: 100%; height: 100%; object-fit: cover; }
-  .invis-copy .eyebrow { margin-bottom: 1rem; }
-  .invis-copy h2 { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; font-size: clamp(1.8rem, 1.5rem + 1.4vw, 2.5rem); margin-bottom: 1.3rem; }
-  .invis-copy p.lede { color: var(--muted); font-size: 1.05rem; margin-bottom: 1.6rem; max-width: 48ch; }
-  .check-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; }
-  .check-list li { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 0.96rem; }
-  .check-list .tick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; margin-top: 0.1rem; }
-  @media (max-width: 860px) { .invis { grid-template-columns: 1fr; } .invis-visual { order: -1; } }
-
-  /* ---------- Non-linear feature grid ---------- */
-  .feature-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1.25rem; margin-top: clamp(2.5rem, 3vw, 3.5rem); }
-  .f-card {
-    background: var(--surface); border: 1px solid var(--border);
-    padding: clamp(1.75rem, 2vw, 2.4rem); border-radius: var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-sm);
-    transition: transform 0.35s var(--ease), border-color 0.35s var(--ease);
+  h1 {
+    margin: 0 0 10px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
-  .f-card:hover { transform: translateY(-4px); border-color: var(--border-strong); }
-  .f-card h3 { font-family: var(--font-body); font-weight: 800; letter-spacing: -0.01em; font-size: 1.25rem; margin-bottom: 0.7rem; }
-  .f-card p { color: var(--muted); font-size: 0.95rem; max-width: 40ch; }
-  .f-card .icon { width: 46px; height: 46px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 1.2rem; font-size: 1.2rem; }
-
-  .f-room-service { grid-column: span 7; display: flex; flex-direction: column; justify-content: space-between; gap: 2rem; }
-  .f-room-service .photo-swap {
-    height: 200px; border-radius: var(--radius-lg); overflow: hidden;
-    object-fit: cover; width: 100%; display: block;
+  p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
   }
-  .f-checkin { grid-column: span 5; background: var(--surface-sunken); border-color: transparent; display: flex; flex-direction: column; justify-content: space-between; }
-  .f-checkin .qr-mini { width: 88px; height: 88px; border: 2px dashed var(--border-strong); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: var(--muted-soft); margin: 1.5rem auto 0; background: #fff; }
-  .f-chat { grid-column: span 4; background: var(--ink); color: #fff; border-color: transparent; }
-  .f-chat h3, .f-chat p { color: #fff; }
-  .f-chat p { opacity: 0.72; }
-  .f-chat .bubble { margin-top: 1.4rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius); padding: 0.8rem 1rem; font-size: 0.8rem; }
-  .f-chat .bubble b { color: var(--primary); }
-  .f-small { grid-column: span 4; }
-  .f-small-row { grid-column: span 8; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-  @media (max-width: 900px) {
-    .f-room-service, .f-checkin, .f-chat, .f-small, .f-small-row { grid-column: span 12; }
-    .f-small-row { grid-template-columns: 1fr; }
+  a {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
   }
-
-  /* ---------- Experience cycle ---------- */
-  .cycle-head { text-align: center; max-width: 640px; margin: 0 auto clamp(3rem, 4vw, 4.5rem); }
-  .cycle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem; position: relative; }
-  .cycle::before { content: ""; position: absolute; top: 26px; left: 4%; right: 4%; height: 1px; background: var(--border-strong); }
-  .cycle-step { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.9rem 1.6rem; transition: border-color 0.3s var(--ease), transform 0.3s var(--ease); }
-  .cycle-step:hover { border-color: var(--primary); transform: translateY(-3px); }
-  .cycle-step .num { font-family: var(--font-body); font-size: 2.1rem; font-weight: 800; color: var(--primary-soft); margin-bottom: 1rem; font-variant-numeric: tabular-nums; }
-  .cycle-step:hover .num { color: var(--primary-dim); }
-  .cycle-step h4 { font-size: 0.82rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.6rem; }
-  .cycle-step p { font-size: 0.88rem; color: var(--muted); }
-  .cycle-step:nth-child(2) { transform: translateY(1.2rem); }
-  .cycle-step:nth-child(3) { transform: translateY(2.4rem); }
-  .cycle-step:nth-child(4) { transform: translateY(3.6rem); }
-  .cycle-step:nth-child(2):hover { transform: translateY(1.2rem) translateY(-3px); }
-  .cycle-step:nth-child(3):hover { transform: translateY(2.4rem) translateY(-3px); }
-  .cycle-step:nth-child(4):hover { transform: translateY(3.6rem) translateY(-3px); }
-  @media (max-width: 860px) {
-    .cycle { grid-template-columns: 1fr 1fr; row-gap: 1.4rem; }
-    .cycle::before { display: none; }
-    .cycle-step, .cycle-step:nth-child(2), .cycle-step:nth-child(3), .cycle-step:nth-child(4) { transform: none; }
-    .cycle-step:hover, .cycle-step:nth-child(2):hover, .cycle-step:nth-child(3):hover, .cycle-step:nth-child(4):hover { transform: translateY(-3px); }
-  }
-
-  /* ---------- Pricing ---------- */
-  .pricing-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; flex-wrap: wrap; margin-bottom: clamp(2.5rem, 3vw, 3.5rem); }
-  .pricing-head p { color: var(--muted); font-size: 1.02rem; max-width: 46ch; margin-top: 1rem; }
-  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-  .plan { padding: clamp(1.9rem, 2vw, 2.6rem); background: var(--surface); border-left: 1px solid var(--border); transition: background 0.3s var(--ease); }
-  .plan:first-child { border-left: none; }
-  .plan:hover { background: var(--surface-alt); }
-  .plan-featured { background: var(--surface); position: relative; }
-  .plan-featured:hover { background: var(--surface); }
-  .plan-badge { position: absolute; top: 0; right: 0; background: var(--primary); color: #fff; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; padding: 0.35rem 0.9rem; border-radius: 0 0 0 var(--radius); }
-  .plan-name { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-  .plan-featured .plan-name { color: var(--primary); }
-  .plan-price { font-family: var(--font-body); font-size: 2.2rem; font-weight: 800; letter-spacing: -0.01em; margin-top: 1.1rem; font-variant-numeric: tabular-nums; }
-  .plan-price span { font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; color: var(--muted); }
-  .plan-note { font-size: 0.85rem; color: var(--muted); font-style: italic; margin-top: 0.6rem; min-height: 1.4em; }
-  .plan-features { list-style: none; margin: 1.6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
-  .plan-features li { font-size: 0.88rem; display: flex; gap: 0.6rem; }
-  .plan-features li::before { content: "•"; color: var(--primary); font-weight: 700; }
-  .plan-cta { display: block; text-align: center; margin-top: 1.8rem; padding: 0.85rem; border-radius: var(--radius-lg); border: 1.5px solid var(--ink); font-weight: 700; font-size: 0.88rem; text-decoration: none; transition: background 0.25s var(--ease), color 0.25s var(--ease); }
-  .plan-cta:hover { background: var(--ink); color: #fff; }
-  .plan-featured .plan-cta { background: var(--primary); border-color: var(--primary); color: #fff; }
-  .plan-featured .plan-cta:hover { background: var(--ink); border-color: var(--ink); }
-  @media (max-width: 860px) { .pricing-grid { grid-template-columns: 1fr; } .plan { border-left: none; border-top: 1px solid var(--border); } .plan:first-child { border-top: none; } }
-
-  /* ---------- Final CTA ---------- */
-  .cta-band { background: var(--ink); color: #fff; border-radius: var(--radius-xl); padding: clamp(2.8rem, 4vw, 4.5rem); text-align: center; position: relative; overflow: hidden; }
-  .cta-band::after { content: ""; position: absolute; top: -40%; right: -10%; width: 55%; aspect-ratio: 1; background: var(--primary-dim); border-radius: 50%; filter: blur(70px); opacity: 0.5; }
-  .cta-band > * { position: relative; z-index: 1; }
-  .cta-band h2 { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.5rem); color: #fff; }
-  .cta-band p { opacity: 0.78; margin-top: 0.9rem; max-width: 46ch; margin-inline: auto; }
-  .cta-band .hero-actions { justify-content: center; margin-top: 1.9rem; }
-  .cta-band .btn-primary { background: var(--primary); }
-  .cta-band .btn-primary:hover { background: #fff; color: var(--ink); }
-  .cta-band .btn-ghost { border-color: rgba(255,255,255,0.3); color: #fff; }
-  .cta-band .btn-ghost:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
-
-  /* ---------- Footer ---------- */
-  footer { border-top: 1px solid var(--border); color: var(--muted); padding: clamp(2.5rem, 3vw, 3.5rem) 0 2rem; }
-  .footer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
-  .footer-brand p { font-size: 0.85rem; max-width: 32ch; margin-top: 0.9rem; }
-  .footer-col span { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); display: block; margin-bottom: 0.9rem; }
-  .footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
-  .footer-col a { color: var(--muted); text-decoration: none; font-size: 0.87rem; }
-  .footer-col a:hover { color: var(--primary); }
-  .footer-bottom { display: flex; justify-content: space-between; padding-top: 1.5rem; font-size: 0.78rem; flex-wrap: wrap; gap: 0.5rem; }
-
-  /* ---------- Reveal on scroll ---------- */
-  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
-  .reveal.in { opacity: 1; transform: none; }
 </style>
 </head>
 <body>
-
-<nav class="nav">
-  <div class="container">
-    <a href="#" class="brand">
-      <svg class="brand-mark" viewBox="0 0 100 100" fill="#FF2E88" aria-hidden="true"><rect x="46" y="6" width="8" height="30" rx="4"/><rect x="46" y="64" width="8" height="30" rx="4"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(45 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(90 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(135 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(180 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(225 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(270 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(315 50 50)"/></svg>
-      Sevvn
-    </a>
-    <ul class="nav-links">
-      <li><a href="#produto">Produto</a></li>
-      <li><a href="#como-funciona">Como funciona</a></li>
-      <li><a href="#planos">Planos</a></li>
-    </ul>
-    <div class="nav-right">
-      <a href="login.html" class="nav-signin">Entrar</a>
-      <a href="#planos" class="nav-cta">Criar conta</a>
-    </div>
+  <script>
+    const target = new URL('https://sevvn-site.vercel.app');
+    const current = new URL(window.location.href);
+    if (current.search) {
+      current.searchParams.forEach((value, key) => target.searchParams.set(key, value));
+    }
+    window.location.replace(target.toString());
+  </script>
+  <div class="card">
+    <h1>Redirecionando para o site oficial</h1>
+    <p>
+      Esta versao antiga do site ficou apenas como compatibilidade.
+      Se o redirecionamento nao acontecer automaticamente,
+      <a href="https://sevvn-site.vercel.app">clique aqui</a>.
+    </p>
   </div>
-</nav>
-
-<header class="hero">
-  <div class="container">
-    <div>
-      <p class="eyebrow">Hospitalidade invisível</p>
-      <h1>Seu hotel, <em>sua marca.</em><br>A tecnologia a gente esconde.</h1>
-      <p class="lede">White-label por definição, boutique por escolha. O hóspede vê a identidade do seu hotel do início ao fim — a Sevvn nunca aparece.</p>
-      <div class="hero-actions">
-        <a href="#planos" class="btn btn-primary">Começar agora</a>
-        <a href="mailto:contato@konekto.app" class="btn btn-ghost">Agendar demonstração</a>
-      </div>
-    </div>
-    <div class="phone-stage">
-      <div class="phone-glow" aria-hidden="true"></div>
-      <div class="float-card reveal">
-        <p class="tag">CUSTOMIZAÇÃO</p>
-        <p class="claim">Mude tudo com um clique.</p>
-        <div class="dot-row" aria-hidden="true">
-          <i style="background:#16181D"></i><i style="background:#FF2E88"></i><i style="background:#2D5A27"></i>
-        </div>
-      </div>
-      <div class="phone">
-        <div class="phone-screen" id="phone-screen">
-          <p class="phone-brand" id="phone-brand">Amara Bay</p>
-          <div class="phone-room"><span>Quarto 204</span></div>
-          <div class="phone-rows">
-            <div class="phone-row">Room service</div>
-            <div class="phone-row">Reserva de spa</div>
-            <div class="phone-row">Chave digital</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
-
-<section id="produto">
-  <div class="container">
-    <div class="invis reveal">
-      <div class="invis-visual">
-        <img src="assets/marketing/hero-checkin.jpg" alt="Hóspede escaneando um QR Code de check-in direto no balcão da recepção" width="512" height="279" loading="lazy">
-      </div>
-      <div class="invis-copy">
-        <p class="eyebrow">Identidade preservada</p>
-        <h2>A invisibilidade é a nossa maior virtude</h2>
-        <p class="lede">Diferente das grandes OTAs e apps de delivery, a Sevvn não compete pela atenção do seu hóspede. Somos a infraestrutura silenciosa que coloca a marca do seu hotel no centro da experiência digital.</p>
-        <ul class="check-list">
-          <li><span class="tick">✓</span> Logo e paleta de cores 100% customizáveis</li>
-          <li><span class="tick">✓</span> Domínio e links dedicados ao seu hotel</li>
-          <li><span class="tick">✓</span> Sem "powered by Sevvn" visível pro hóspede</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section-alt">
-  <div class="container">
-    <div class="section-head reveal">
-      <h2>Hospitalidade digital em cada detalhe</h2>
-      <div class="rule"></div>
-    </div>
-    <div class="feature-grid">
-      <div class="f-card f-room-service reveal">
-        <div>
-          <h3>Room service &amp; pedidos</h3>
-          <p>Cardápio digital com fotos profissionais — aumenta o ticket médio sem sobrecarregar a recepção.</p>
-        </div>
-        <img class="photo-swap" src="assets/marketing/room-service-dish.jpg" alt="Prato de room service elegante, servido no quarto com café da manhã" width="512" height="279" loading="lazy">
-      </div>
-      <div class="f-card f-checkin reveal">
-        <div>
-          <div class="icon">▦</div>
-          <h3>Check-in instantâneo</h3>
-          <p>Reduz fila no balcão — o hóspede acessa tudo via QR Code, sem baixar nenhum app.</p>
-        </div>
-        <div class="qr-mini">QR</div>
-      </div>
-      <div class="f-card f-chat reveal">
-        <h3>Chat em tempo real</h3>
-        <p>Comunicação direta com a recepção, sem precisar descer até o balcão.</p>
-        <div class="bubble"><b>Hóspede:</b> Posso pedir mais toalhas?</div>
-      </div>
-      <div class="f-small-row">
-        <div class="f-card f-small reveal">
-          <div class="icon">⌖</div>
-          <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:0.4rem;letter-spacing:-0.01em;">Mapa interativo</h4>
-          <p style="font-size:0.88rem">Guia local com piscinas, quadras e áreas comuns.</p>
-        </div>
-        <div class="f-card f-small reveal">
-          <div class="icon">✧</div>
-          <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:0.4rem;letter-spacing:-0.01em;">Promoções ativas</h4>
-          <p style="font-size:0.88rem">Notificações contextuais e ofertas em destaque.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="como-funciona">
-  <div class="container">
-    <div class="cycle-head reveal">
-      <p class="eyebrow">A jornada do hóspede</p>
-      <h2 style="font-family:var(--font-display);font-weight:800;letter-spacing:-0.02em;font-size:clamp(1.9rem, 1.5rem + 1.6vw, 2.75rem);margin-top:0.8rem;">O ciclo da experiência</h2>
-    </div>
-    <div class="cycle">
-      <div class="cycle-step reveal">
-        <div class="num">01</div>
-        <h4>Configuração</h4>
-        <p>Personalize o sistema com a marca do seu hotel em minutos — sem código, só design.</p>
-      </div>
-      <div class="cycle-step reveal">
-        <div class="num">02</div>
-        <h4>Acesso</h4>
-        <p>O hóspede recebe o link por e-mail/WhatsApp ou escaneia o QR Code no quarto.</p>
-      </div>
-      <div class="cycle-step reveal">
-        <div class="num">03</div>
-        <h4>Experiência</h4>
-        <p>Pedidos, chat, reservas e guias — tudo na palma da mão, com a cara do seu hotel.</p>
-      </div>
-      <div class="cycle-step reveal">
-        <div class="num">04</div>
-        <h4>Fidelização</h4>
-        <p>Coleta de feedback em tempo real, pra garantir que o hóspede volte.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section-alt" id="planos">
-  <div class="container">
-    <div class="pricing-head reveal">
-      <div>
-        <p class="eyebrow">Planos</p>
-        <h2 style="font-family:var(--font-display);font-weight:800;letter-spacing:-0.02em;font-size:clamp(1.9rem, 1.5rem + 1.6vw, 2.75rem);margin-top:0.8rem;">Investimento em hospitalidade</h2>
-        <p>Escolha o plano que melhor se adapta ao volume do seu hotel ou pousada — sem taxa de instalação oculta.</p>
-      </div>
-    </div>
-    <div class="pricing-grid reveal">
-      <div class="plan">
-        <p class="plan-name">Essencial</p>
-        <p class="plan-price">R$349<span>/mês</span></p>
-        <p class="plan-note">Pra pousadas e hotéis independentes começarem com o pé direito.</p>
-        <ul class="plan-features">
-          <li>Até 80 hóspedes ativos/mês</li>
-          <li>App com a marca do seu hotel</li>
-          <li>Check-in por código ou QR Code</li>
-          <li>Wi-Fi e detalhes do quarto</li>
-          <li>Catálogo de serviços (consulta)</li>
-        </ul>
-        <a href="mailto:contato@konekto.app" class="plan-cta">Começar agora</a>
-      </div>
-      <div class="plan plan-featured">
-        <span class="plan-badge">Mais escolhido</span>
-        <p class="plan-name">Profissional</p>
-        <p class="plan-price">R$799<span>/mês</span></p>
-        <p class="plan-note">Pra hotéis de médio porte que querem vender mais durante a estadia.</p>
-        <ul class="plan-features">
-          <li>Até 300 hóspedes ativos/mês</li>
-          <li>Tudo do Essencial</li>
-          <li>Pedidos e reservas (room service, spa, restaurante)</li>
-          <li>Chat em tempo real com a recepção</li>
-          <li>Painel de gestão de hóspedes e pedidos</li>
-        </ul>
-        <a href="mailto:contato@konekto.app" class="plan-cta">Começar agora</a>
-      </div>
-      <div class="plan">
-        <p class="plan-name">Elite</p>
-        <p class="plan-price" style="font-size:1.65rem;">Sob consulta</p>
-        <p class="plan-note">Pra redes e hotéis de luxo que querem uma experiência sob medida.</p>
-        <ul class="plan-features">
-          <li>Hóspedes ilimitados</li>
-          <li>Tudo do Profissional</li>
-          <li>Personalização total de marca e tipografia</li>
-          <li>Recomendações por IA pra aumentar consumo</li>
-          <li>Gerente de conta dedicado</li>
-        </ul>
-        <a href="mailto:contato@konekto.app" class="plan-cta">Falar com vendas</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="contato">
-  <div class="container">
-    <div class="cta-band reveal">
-      <h2>Vamos colocar seu hotel no bolso do hóspede?</h2>
-      <p>Fale com a gente e veja a Sevvn com a identidade do seu hotel em poucos dias.</p>
-      <div class="hero-actions">
-        <a href="mailto:contato@konekto.app" class="btn btn-primary">contato@konekto.app</a>
-        <a href="login.html" class="btn btn-ghost">Já sou cliente</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="container">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <a href="#" class="brand">
-          <svg class="brand-mark" viewBox="0 0 100 100" fill="#FF2E88" aria-hidden="true"><rect x="46" y="6" width="8" height="30" rx="4"/><rect x="46" y="64" width="8" height="30" rx="4"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(45 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(90 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(135 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(180 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(225 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(270 50 50)"/><rect x="46" y="6" width="8" height="30" rx="4" transform="rotate(315 50 50)"/></svg>
-          Sevvn
-        </a>
-        <p>Redefinindo a hospitalidade digital através de soluções white-label que colocam a marca do seu hotel acima de tudo.</p>
-      </div>
-      <div class="footer-col">
-        <span>Empresa</span>
-        <ul>
-          <li><a href="#contato">Contato</a></li>
-          <li><a href="login.html">Área do hotel</a></li>
-          <li><a href="https://konektoadmin.vercel.app">Acesso admin</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© 2026 Sevvn. Todos os direitos reservados.</span>
-      <span>Feito para hospitalidade de verdade.</span>
-    </div>
-  </div>
-</footer>
-
-<script>
-  // Troca cíclica de marca no mockup do telefone — demonstra o white-label ao vivo.
-  const phoneScreen = document.getElementById('phone-screen');
-  const phoneBrand = document.getElementById('phone-brand');
-  const brands = [
-    { name: 'Amara Bay', bg: '#FFFFFF', accent: '#16181D' },
-    { name: 'Verde Trilha', bg: '#F2F8F2', accent: '#2D5A27' },
-    { name: 'Ouro Preto Inn', bg: '#FFFCF5', accent: '#8A6A1F' },
-  ];
-  let brandIndex = 0;
-  setInterval(() => {
-    brandIndex = (brandIndex + 1) % brands.length;
-    const next = brands[brandIndex];
-    phoneScreen.style.opacity = '0.4';
-    setTimeout(() => {
-      phoneScreen.style.backgroundColor = next.bg;
-      phoneBrand.textContent = next.name;
-      phoneBrand.style.color = next.accent;
-      phoneScreen.style.opacity = '1';
-    }, 250);
-  }, 3200);
-
-  const revealEls = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('in');
-          io.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-    revealEls.forEach((el) => io.observe(el));
-  } else {
-    revealEls.forEach((el) => el.classList.add('in'));
-  }
-</script>
-
 </body>
 </html>

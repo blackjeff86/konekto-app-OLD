@@ -19,10 +19,16 @@ import 'package:konekto/theme/guest_app_theme.dart';
 /// quantidade/observação ou cancelar enquanto o pedido ainda estiver
 /// `pending`, e um botão pra voltar e pedir mais itens.
 class MyOrdersPage extends StatefulWidget {
+  final String hotelId;
   final Map<String, dynamic> tenantConfig;
   final GuestAppTheme theme;
 
-  const MyOrdersPage({super.key, required this.tenantConfig, required this.theme});
+  const MyOrdersPage({
+    super.key,
+    required this.hotelId,
+    required this.tenantConfig,
+    required this.theme,
+  });
 
   @override
   State<MyOrdersPage> createState() => _MyOrdersPageState();
@@ -38,7 +44,7 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
   List<GuestOrder> _orders = const [];
 
   GuestAppTheme get theme => widget.theme;
-  String get _hotelId => widget.tenantConfig['id'] ?? 'hotel_1';
+  String get _hotelId => widget.hotelId;
 
   @override
   void initState() {

@@ -1,11 +1,11 @@
 {
-    "name": "konekto_admin",
-    "short_name": "konekto_admin",
+    "name": "Sevvn Admin",
+    "short_name": "Sevvn",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Sevvn Admin — painel da plataforma para operação e gestão global.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

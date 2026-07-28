@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from "next"
+import { Inter, JetBrains_Mono } from "next/font/google"
+import { BRAND } from "@/content/brand"
+import "./globals.css"
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,10 +14,20 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sevvn — A infraestrutura digital da hospitalidade moderna",
-  description:
-    "Sevvn é a plataforma modular por trás do aplicativo do seu hotel — planos, templates e módulos reais que crescem junto com a operação, sempre com a marca do seu hotel, nunca a nossa.",
-};
+  title: BRAND.title,
+  description: BRAND.shortDescription,
+  openGraph: {
+    title: BRAND.title,
+    description: BRAND.shortDescription,
+    siteName: BRAND.name,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: BRAND.title,
+    description: BRAND.shortDescription,
+  },
+}
 
 export default function RootLayout({
   children,
@@ -31,5 +42,5 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-bg text-ink">{children}</body>
     </html>
-  );
+  )
 }

@@ -8,5 +8,5 @@
 ///   flutter run --dart-define=SITE_HOME_URL=http://localhost:3002
 const String siteHomeUrl = String.fromEnvironment(
   'SITE_HOME_URL',
-  defaultValue: 'https://konektositenext.vercel.app',
+  defaultValue: 'https://sevvn-site.vercel.app',
 );

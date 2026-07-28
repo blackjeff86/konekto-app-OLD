@@ -9,9 +9,9 @@ import { clearStoredToken, consumeTokenFromUrl, getStoredToken, setStoredToken }
 /**
  * Fonte única do fluxo de autenticação de staff — portado de
  * AuthRepository + StaffGate (apps/konekto_portal/lib/auth/*.dart). O login
- * em si acontece em apps/konekto_site/login.html (única tela de login real
- * do produto); este provider só consome o token que a página de login manda
- * via `?token=` na URL, ou rehidrata um token já persistido no localStorage.
+ * em si acontece na rota oficial `apps/konekto_site_next/app/login`; este
+ * provider só consome o token que a página de login manda via `?token=` na
+ * URL, ou rehidrata um token já persistido no localStorage.
  *
  * 100% client-side (localStorage, sem cookies) — ver decisão de arquitetura
  * no plano de migração.

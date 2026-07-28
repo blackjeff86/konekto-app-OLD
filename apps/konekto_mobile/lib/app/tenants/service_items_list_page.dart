@@ -16,12 +16,14 @@ import 'package:konekto/widgets/tenant_image.dart';
 /// (room_service_page, spa_services_list, restaurant_list_page,
 /// eventos_page, passeios_page) por uma única tela genérica.
 class ServiceItemsListPage extends StatefulWidget {
+  final String hotelId;
   final Map<String, dynamic> tenantConfig;
   final String serviceId;
   final GuestAppTheme theme;
 
   const ServiceItemsListPage({
     super.key,
+    required this.hotelId,
     required this.tenantConfig,
     required this.serviceId,
     required this.theme,
@@ -39,7 +41,7 @@ class _ServiceItemsListPageState extends State<ServiceItemsListPage> {
   bool _isReservingTable = false;
 
   GuestAppTheme get theme => widget.theme;
-  String get _hotelId => widget.tenantConfig['id'] ?? 'hotel_1';
+  String get _hotelId => widget.hotelId;
 
   @override
   void initState() {

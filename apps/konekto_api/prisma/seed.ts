@@ -45,7 +45,7 @@ async function seedGlobal(): Promise<void> {
   console.log('  brand_content/promotions <- promotions.json')
 }
 
-// Conta da equipe do Konekto pro portal admin interno (`konekto_admin`) —
+// Conta da equipe da Sevvn pro portal admin interno (`konekto_admin`) —
 // sem endpoint de auto-cadastro, então a primeira conta só existe se essas
 // duas env vars estiverem configuradas; sem elas, pula graciosamente (mesmo
 // padrão de chave ausente já usado no projeto pra outras integrações).
@@ -61,7 +61,7 @@ async function seedPlatformAdmin(): Promise<void> {
   await prisma.platformAdmin.upsert({
     where: { email },
     update: {},
-    create: { email, passwordHash, name: 'Konekto Admin' },
+    create: { email, passwordHash, name: 'Sevvn Admin' },
   })
   console.log(`  platform_admins <- ${email}`)
 }

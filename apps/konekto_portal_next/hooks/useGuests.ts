@@ -5,6 +5,7 @@ import {
   getGuest,
   listGuests,
   lookupGuestByDocument,
+  regenerateGuestAccessCode,
   revokeGuest,
   updateGuest,
 } from '@/lib/api/guests'
@@ -67,11 +68,17 @@ export function useGuest(guestId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   })
 
+  const regenerateAccessCodeMutation = useMutation({
+    mutationFn: () => regenerateGuestAccessCode(hotelId!, guestId, token!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  })
+
   return {
     guest: query.data ?? null,
     isLoading: query.isLoading,
     error: query.error,
     updateGuest: updateMutation.mutateAsync,
+    regenerateAccessCode: regenerateAccessCodeMutation.mutateAsync,
     revokeGuest: revokeMutation.mutateAsync,
   }
 }

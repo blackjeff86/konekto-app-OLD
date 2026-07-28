@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 const createRoomSchema = z.object({
   number: z.string().trim().min(1),
-  description: z.string().trim().min(1).optional(),
+  description: z.string().trim().min(1).nullable().optional(),
 })
 
 // Cadastro de quarto físico — feito em Configurações, só `gerente` (mesmo

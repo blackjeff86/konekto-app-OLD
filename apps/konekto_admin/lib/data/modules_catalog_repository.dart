@@ -9,6 +9,7 @@ class ModuleDefinition {
   final String name;
   final String description;
   final String category;
+  final String operationMode;
   final bool implemented;
 
   const ModuleDefinition({
@@ -16,6 +17,7 @@ class ModuleDefinition {
     required this.name,
     required this.description,
     required this.category,
+    required this.operationMode,
     required this.implemented,
   });
 
@@ -25,6 +27,7 @@ class ModuleDefinition {
       name: json['name'] as String,
       description: json['description'] as String,
       category: json['category'] as String,
+      operationMode: json['operationMode'] as String? ?? 'standalone',
       implemented: json['implemented'] as bool? ?? false,
     );
   }

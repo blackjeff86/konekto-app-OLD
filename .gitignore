@@ -61,6 +61,8 @@ analysis_benchmark.json
 .pub-preload-cache/
 .pub/
 build/
+.next/
+*.tsbuildinfo
 flutter_*.png
 linked_*.ds
 unlinked.ds

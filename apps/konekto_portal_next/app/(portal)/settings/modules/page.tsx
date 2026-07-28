@@ -3,14 +3,19 @@
 import { useState } from 'react'
 import { useHotelConfig } from '@/hooks/useHotelConfig'
 import { useModulesCatalog } from '@/hooks/useModulesCatalog'
-import { MODULE_CATEGORY_LABELS, type ModuleCategory, type ModuleDefinition } from '@/types/moduleCatalog'
+import {
+  MODULE_CATEGORY_LABELS,
+  MODULE_OPERATION_MODE_LABELS,
+  type ModuleCategory,
+  type ModuleDefinition,
+} from '@/types/moduleCatalog'
 
 const CATEGORY_ORDER: ModuleCategory[] = ['core', 'hospitalidade', 'financeiro', 'experiencia', 'comunicacao']
 
 /**
  * Módulos do app do hóspede — Fase 4 da arquitetura de Módulos (ver
  * tasks/plan.md). Primeira tela em que o PRÓPRIO hotel liga/desliga algo
- * (antes disso só a equipe Konekto tinha esse controle, via konekto_admin,
+ * (antes disso só a equipe Sevvn tinha esse controle, via konekto_admin,
  * e só pra flags de cortesia). Um módulo ausente de `enabledModules`
  * (vindo do GET) não está disponível pro plano do hotel de jeito nenhum —
  * aparece travado aqui, igual ao padrão já usado em /settings/appearance
@@ -111,6 +116,9 @@ function ModuleRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="text-[13px] font-semibold text-cream">{module.name}</p>
+            <span className="rounded-full bg-[#F4E7C633] px-2 py-0.5 text-[10px] font-semibold tracking-wide text-[#8A6D1F]">
+              {MODULE_OPERATION_MODE_LABELS[module.operationMode]}
+            </span>
             {locked && (
               <span className="rounded-full bg-[#D4AF371A] px-2 py-0.5 text-[10px] font-semibold tracking-wide text-[#8A6D1F]">
                 Disponível no Premium

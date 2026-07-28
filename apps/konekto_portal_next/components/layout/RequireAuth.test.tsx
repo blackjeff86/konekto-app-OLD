@@ -89,7 +89,7 @@ describe('RequireAuth', () => {
     )
 
     await waitFor(() =>
-      expect(window.location.href).toBe('https://konekto-app.vercel.app/login.html'),
+      expect(window.location.href).toBe('https://sevvn-site.vercel.app/login'),
     )
   })
 
@@ -111,7 +111,7 @@ describe('RequireAuth', () => {
 
     await waitFor(() =>
       expect(window.location.href).toBe(
-        'https://konekto-app.vercel.app/login.html?error=staff_not_found',
+        'https://sevvn-site.vercel.app/login?error=staff_not_found',
       ),
     )
   })

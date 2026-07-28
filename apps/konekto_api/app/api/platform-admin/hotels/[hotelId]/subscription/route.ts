@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requirePlatformAdmin, AuthGuardError } from '@/lib/auth-guard'
 import { isPlanPresetId } from '@/lib/plan-presets'
+import { recordPlatformAdminAudit } from '@/lib/platform-admin-audit'
 
 export const runtime = 'nodejs'
 
@@ -32,8 +33,9 @@ const subscriptionSchema = z.object({
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ hotelId: string }> }) {
   const { hotelId } = await params
 
+  let admin
   try {
-    await requirePlatformAdmin(request)
+    admin = await requirePlatformAdmin(request)
   } catch (error) {
     if (error instanceof AuthGuardError) return error.response
     throw error
@@ -51,10 +53,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const { planName, monthlyAmount, status, paymentStatus, notes, plan } = parsed.data
   const presetId = parsed.data.presetId ?? plan
-  const subscription = await prisma.hotelSubscription.upsert({
-    where: { hotelId },
-    create: { hotelId, planName, monthlyAmount, status, paymentStatus, notes, plan, presetId },
-    update: { planName, monthlyAmount, status, paymentStatus, notes, plan, presetId },
+  const subscription = await prisma.$transaction(async (tx) => {
+    const nextSubscription = await tx.hotelSubscription.upsert({
+      where: { hotelId },
+      create: { hotelId, planName, monthlyAmount, status, paymentStatus, notes, plan, presetId },
+      update: { planName, monthlyAmount, status, paymentStatus, notes, plan, presetId },
+    })
+    await recordPlatformAdminAudit(tx, {
+      action: 'platform_admin.hotel.subscription_updated',
+      admin,
+      hotelId,
+      payload: {
+        monthlyAmount: monthlyAmount ?? null,
+        paymentStatus,
+        plan: plan ?? null,
+        planName,
+        presetId: presetId ?? null,
+        status,
+      },
+      request,
+      targetId: hotelId,
+      targetType: 'hotel_subscription',
+    })
+    return nextSubscription
   })
 
   return NextResponse.json(subscription)

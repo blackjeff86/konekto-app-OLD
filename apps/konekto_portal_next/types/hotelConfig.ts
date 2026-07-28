@@ -34,6 +34,11 @@ export interface ResolvedHotelModule {
   configuration: Record<string, unknown>
 }
 
+export interface ModuleConfigurationInput {
+  enabled?: boolean
+  configuration?: Record<string, unknown>
+}
+
 export interface WifiSettings {
   networkName: string
   password: string

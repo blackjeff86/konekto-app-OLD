@@ -2,8 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireStaffRole, AuthGuardError } from '@/lib/auth-guard'
+import { notifyStaffRecordedMinibarConsumption } from '@/lib/basic-notifications'
+import { readHotelModuleConfiguration } from '@/lib/hotel-modules'
 
 export const runtime = 'nodejs'
+
+function readRoomServiceConfig(hotelConfig: unknown) {
+  const configuration = readHotelModuleConfiguration(hotelConfig, 'room_service')
+  return {
+    allowStaffConsumptionLaunch:
+      typeof configuration.allowStaffConsumptionLaunch === 'boolean'
+        ? configuration.allowStaffConsumptionLaunch
+        : true,
+  }
+}
 
 const recordConsumptionSchema = z.object({
   guestId: z.string().min(1),
@@ -43,6 +55,15 @@ export async function POST(
     return NextResponse.json({ error: 'stay_not_found' }, { status: 404 })
   }
 
+  const hotel = await prisma.hotel.findUnique({
+    where: { id: hotelId },
+    select: { config: true },
+  })
+  const roomServiceConfig = readRoomServiceConfig(hotel?.config)
+  if (!roomServiceConfig.allowStaffConsumptionLaunch) {
+    return NextResponse.json({ error: 'staff_consumption_launch_disabled' }, { status: 403 })
+  }
+
   const guest = await prisma.guest.findFirst({ where: { id: parsed.data.guestId, stayId } })
   if (!guest) {
     return NextResponse.json({ error: 'guest_not_found' }, { status: 404 })
@@ -71,6 +92,13 @@ export async function POST(
       // no sino de notificações até ele abrir "Meus Pedidos".
       statusSeenByGuest: false,
     },
+  })
+  await notifyStaffRecordedMinibarConsumption({
+    hotelId,
+    guestId: guest.id,
+    orderId: order.id,
+    itemName: item.name,
+    quantity: parsed.data.quantity,
   })
   return NextResponse.json(order, { status: 201 })
 }

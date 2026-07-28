@@ -1,15 +1,21 @@
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { Hero } from "@/components/sections/Hero";
-import { HowItWorks } from "@/components/sections/HowItWorks";
-import { ModularPlatform } from "@/components/sections/ModularPlatform";
-import { Templates } from "@/components/sections/Templates";
-import { ModuleGrid } from "@/components/sections/ModuleGrid";
-import { ContinuousEvolution } from "@/components/sections/ContinuousEvolution";
-import { Pricing } from "@/components/sections/Pricing";
-import { FoundingClients } from "@/components/sections/FoundingClients";
-import { Faq } from "@/components/sections/Faq";
-import { FinalCta } from "@/components/sections/FinalCta";
+import { SiteHeader } from "@/components/layout/SiteHeader"
+import { SiteFooter } from "@/components/layout/SiteFooter"
+import { Hero } from "@/components/sections/Hero"
+import { PlatformVision } from "@/components/sections/PlatformVision"
+import { HotelBenefits } from "@/components/sections/HotelBenefits"
+import { GuestJourney } from "@/components/sections/GuestJourney"
+import { EcosystemSection } from "@/components/sections/EcosystemSection"
+import { ProductSurfaces } from "@/components/sections/ProductSurfaces"
+import { ModularPlatform } from "@/components/sections/ModularPlatform"
+import { ModuleGrid } from "@/components/sections/ModuleGrid"
+import { TemplatesOverview } from "@/components/sections/TemplatesOverview"
+import { PartnerNetwork } from "@/components/sections/PartnerNetwork"
+import { UseCases } from "@/components/sections/UseCases"
+import { PublicRoadmapSummary } from "@/components/sections/PublicRoadmapSummary"
+import { Pricing } from "@/components/sections/Pricing"
+import { FoundingClients } from "@/components/sections/FoundingClients"
+import { Faq } from "@/components/sections/Faq"
+import { FinalCta } from "@/components/sections/FinalCta"
 
 export default function Home() {
   return (
@@ -17,11 +23,17 @@ export default function Home() {
       <SiteHeader />
       <main>
         <Hero />
-        <HowItWorks />
+        <PlatformVision />
+        <HotelBenefits />
+        <GuestJourney />
+        <EcosystemSection />
+        <ProductSurfaces />
         <ModularPlatform />
-        <Templates />
         <ModuleGrid />
-        <ContinuousEvolution />
+        <TemplatesOverview />
+        <PartnerNetwork />
+        <UseCases />
+        <PublicRoadmapSummary />
         <Pricing />
         <FoundingClients />
         <Faq />
@@ -29,5 +41,5 @@ export default function Home() {
       </main>
       <SiteFooter />
     </>
-  );
+  )
 }

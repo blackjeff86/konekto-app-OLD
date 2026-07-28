@@ -60,6 +60,55 @@ export interface RestaurantTableType {
   quantity: number
 }
 
+export type RestaurantWaitlistEntryStatus = 'waiting' | 'promoted' | 'cancelled'
+
+export interface RestaurantReservationOperation {
+  id: string
+  guestId: string
+  guestName: string
+  roomNumber: string
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+  scheduledFor: string
+  createdAt: string
+  note: string | null
+  tableTypeId: string | null
+  tableTypeLabel: string | null
+  expiresAt: string | null
+}
+
+export interface RestaurantWaitlistEntry {
+  id: string
+  guestId: string
+  guestName: string
+  roomNumber: string
+  partySize: number
+  scheduledFor: string
+  tableTypeId: string | null
+  tableTypeLabel: string | null
+  priority: number
+  note: string | null
+  source: 'staff'
+  status: RestaurantWaitlistEntryStatus
+  promotedReservationId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RestaurantOperationsSnapshot {
+  service: {
+    id: string
+    name: string
+    tableTypes: RestaurantTableType[]
+  }
+  configuration: {
+    waitlistEnabled: boolean
+    waitlistCapacity: number | null
+    reservationExpiryMinutes: number | null
+  }
+  reservations: RestaurantReservationOperation[]
+  waitlist: RestaurantWaitlistEntry[]
+}
+
 export type ServiceType = 'room_service' | 'restaurant' | 'activity'
 
 export const serviceTypeLabel: Record<ServiceType, string> = {

@@ -1,6 +1,6 @@
 # konekto_api
 
-Backend de API do Konekto — Next.js (App Router, só rotas de API) + Prisma + Neon (Postgres serverless). Substitui o Firebase/Firestore usado anteriormente pelo app do hóspede e pelo portal do hotel.
+Backend de API da Sevvn — Next.js (App Router, só rotas de API) + Prisma + Neon (Postgres serverless). Substitui o Firebase/Firestore usado anteriormente pelo app do hóspede e pelo portal do hotel.
 
 ## Setup
 

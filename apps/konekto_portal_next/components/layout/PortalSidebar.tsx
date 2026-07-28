@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { KonektoMark } from '@/components/ui/KonektoMark'
+import { SevvnMark } from '@/components/ui/KonektoMark'
 import { useAuth } from '@/lib/auth/AuthProvider'
 import { PORTAL_NAV_SECTIONS } from '@/lib/portalNav'
 import { staffRoleLabel } from '@/types/staffSession'
@@ -25,10 +25,10 @@ export function PortalSidebar({ badgeCounts }: { badgeCounts: PortalBadgeCounts 
   return (
     <div className="sticky top-0 flex h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-border bg-surface px-4 py-8">
       <div className="mb-10 flex items-center gap-2.5 px-2">
-        <KonektoMark size={26} />
+        <SevvnMark size={26} />
         <div className="min-w-0">
           <p className="text-base font-extrabold tracking-tight text-cream">Sevvn</p>
-          <p className="text-[10px] font-bold tracking-[0.2em] text-slate-soft uppercase">Portal do hotel</p>
+          <p className="text-[10px] font-bold tracking-[0.2em] text-slate-soft uppercase">Hotel Console</p>
         </div>
       </div>
       <nav className="flex flex-1 flex-col gap-1">

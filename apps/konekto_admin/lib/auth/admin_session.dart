@@ -1,4 +1,4 @@
-/// Sessão de um admin da PLATAFORMA (equipe do Konekto) — sem `hotelId`,
+/// Sessão de um admin da PLATAFORMA (equipe da Sevvn) — sem `hotelId`,
 /// diferente da `StaffSession` do portal: essa conta enxerga todos os
 /// hotéis clientes.
 class AdminSession {

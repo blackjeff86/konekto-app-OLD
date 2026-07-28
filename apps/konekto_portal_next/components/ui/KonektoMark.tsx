@@ -1,5 +1,5 @@
 /** Monograma "[S]" da Sevvn — mesmo desenho de apps/konekto_site/assets/logo/mini_logo.svg. */
-export function KonektoMark({ size = 32 }: { size?: number }) {
+export function SevvnMark({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={(size * 1913) / 1405} viewBox="0 0 1405 1913" aria-hidden="true" className="shrink-0">
       <mask id="konekto-mark-s-outline" maskUnits="userSpaceOnUse" x="422" y="836" width="592" height="536" fill="black">

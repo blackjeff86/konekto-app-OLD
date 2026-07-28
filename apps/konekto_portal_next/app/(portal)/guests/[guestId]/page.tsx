@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Modal } from '@/components/ui/Modal'
 import { CopyableCodeBox } from '@/components/ui/CopyableCodeBox'
 import { GuestEditDialog } from '@/components/guests/GuestEditDialog'
+import { SimpleAccessCodeDialog } from '@/components/ui/SimpleAccessCodeDialog'
 import { useGuest } from '@/hooks/useGuests'
 import { documentTypeLabel, guestFullName, type Guest } from '@/types/guest'
 import { stayStatusLabel } from '@/types/stay'
@@ -30,9 +31,11 @@ const STATUS_COLOR: Record<string, string> = {
 /** Portado de apps/konekto_portal/lib/features/guests/guest_detail_page.dart. */
 export default function GuestDetailPage({ params }: { params: Promise<{ guestId: string }> }) {
   const { guestId } = use(params)
-  const { guest, isLoading, error, updateGuest, revokeGuest } = useGuest(guestId)
+  const { guest, isLoading, error, updateGuest, regenerateAccessCode, revokeGuest } = useGuest(guestId)
   const [isEditing, setIsEditing] = useState(false)
+  const [isConfirmingRegenerate, setIsConfirmingRegenerate] = useState(false)
   const [isConfirmingRevoke, setIsConfirmingRevoke] = useState(false)
+  const [newAccessCode, setNewAccessCode] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   if (isLoading) {
@@ -59,6 +62,18 @@ export default function GuestDetailPage({ params }: { params: Promise<{ guestId:
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Falha ao revogar hóspede.')
       setIsConfirmingRevoke(false)
+    }
+  }
+
+  async function handleRegenerateAccessCode() {
+    setActionError(null)
+    try {
+      const updatedGuest = await regenerateAccessCode()
+      setIsConfirmingRegenerate(false)
+      setNewAccessCode(updatedGuest.accessCode)
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Falha ao regenerar código de acesso.')
+      setIsConfirmingRegenerate(false)
     }
   }
 
@@ -134,6 +149,15 @@ export default function GuestDetailPage({ params }: { params: Promise<{ guestId:
             <div>
               <p className="mb-2 text-[10px] font-bold tracking-wide text-slate uppercase">Código de acesso</p>
               <CopyableCodeBox value={guest.accessCode} fontSize={16} />
+              {isActive && (
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmingRegenerate(true)}
+                  className="mt-3 text-[12.5px] font-semibold text-gold-light"
+                >
+                  Regenerar código de acesso
+                </button>
+              )}
             </div>
           </div>
         </SectionCard>
@@ -224,6 +248,39 @@ export default function GuestDetailPage({ params }: { params: Promise<{ guestId:
             código.
           </p>
         </Modal>
+      )}
+
+      {isConfirmingRegenerate && (
+        <Modal
+          title="Regenerar código de acesso?"
+          onClose={() => setIsConfirmingRegenerate(false)}
+          footer={
+            <>
+              <button
+                type="button"
+                onClick={() => setIsConfirmingRegenerate(false)}
+                className="text-sm text-slate"
+              >
+                Cancelar
+              </button>
+              <button type="button" onClick={handleRegenerateAccessCode} className="text-sm font-semibold text-gold-light">
+                Regenerar
+              </button>
+            </>
+          }
+        >
+          <p className="text-[13px] text-cream">
+            Isso invalida o código atual de &ldquo;{guestFullName(guest)}&rdquo; e gera um novo acesso para entrar no app do hóspede.
+          </p>
+        </Modal>
+      )}
+
+      {newAccessCode && (
+        <SimpleAccessCodeDialog
+          title="Novo código gerado"
+          accessCode={newAccessCode}
+          onClose={() => setNewAccessCode(null)}
+        />
       )}
     </div>
   )

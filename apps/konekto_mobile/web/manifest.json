@@ -1,11 +1,11 @@
 {
-    "name": "Konekto",
-    "short_name": "Konekto",
+    "name": "Sevvn",
+    "short_name": "Sevvn",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#14181F",
     "theme_color": "#14181F",
-    "description": "Konekto — a experiência do seu hotel, sem precisar baixar um app.",
+    "description": "Sevvn — a experiência do seu hotel, sem precisar baixar um app.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

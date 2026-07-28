@@ -1,52 +1,47 @@
 export interface FaqItem {
-  question: string;
-  answer: string;
+  question: string
+  answer: string
 }
 
 export const FAQ_ITEMS: FaqItem[] = [
   {
-    question: "Como funciona a plataforma?",
+    question: "A Sevvn é um aplicativo ou uma plataforma?",
     answer:
-      "Você escolhe um plano, um template visual, ativa os módulos que fazem sentido e personaliza sua marca. O app publicado é a soma dessas escolhas, rodando sobre a mesma plataforma.",
+      "A Sevvn é uma plataforma. O aplicativo do hóspede é uma das interfaces dessa estrutura, ao lado do portal do hotel, da administração central da Sevvn e da camada de integrações e módulos.",
   },
   {
-    question: "Posso trocar de template futuramente?",
+    question: "Meu hotel precisa trocar de PMS para usar a Sevvn?",
     answer:
-      "Sim, a qualquer momento. Módulos e dados permanecem intactos, só a identidade visual muda.",
+      "Não. A proposta da Sevvn é se integrar à operação do hotel. A profundidade da integração depende do cenário e da fase do projeto, mas a base para PMS e sistemas hoteleiros já faz parte da plataforma.",
   },
   {
-    question: "Posso ativar novos módulos depois?",
-    answer: "Sim. Sua plataforma evolui continuamente, sem reconstrução do aplicativo.",
-  },
-  {
-    question: "Preciso trocar meu PMS?",
-    answer: "Não. A Sevvn integra com os principais PMS do mercado.",
-  },
-  {
-    question: "As integrações já estão incluídas?",
+    question: "Os módulos podem ser ativados aos poucos?",
     answer:
-      "As integrações padrão estão incluídas conforme o plano; integrações específicas fazem parte do plano Enterprise.",
+      "Sim. Essa é uma das bases da Sevvn. Cada hotel ativa o que faz sentido para sua operação e expande a jornada sem precisar trocar de plataforma.",
   },
   {
-    question: "Quanto tempo leva a implantação?",
+    question: "Os templates são aplicativos diferentes?",
     answer:
-      "Times de fundadores costumam publicar o app em poucas semanas, dependendo dos módulos escolhidos.",
+      "Não. Os templates definem a identidade visual. Os módulos definem os recursos. Hoje, os cinco templates preservam os fluxos centrais do piloto sobre a mesma base operacional da plataforma.",
   },
   {
-    question: "O aplicativo funciona em Android e iPhone?",
-    answer: "Sim, funciona como PWA instalável nas duas plataformas, sem passar por loja de apps.",
-  },
-  {
-    question: "O aplicativo terá minha marca?",
-    answer: "Sim, 100% White Label. O hóspede não vê a marca Sevvn em nenhum momento.",
-  },
-  {
-    question: "Meu hotel pode ativar apenas alguns módulos?",
-    answer: "Sim, você ativa só o que faz sentido para sua operação hoje, e expande quando quiser.",
-  },
-  {
-    question: "É possível crescer sem trocar de aplicativo?",
+    question: "Já existe portal para a equipe do hotel?",
     answer:
-      "Sim. Essa é a base da nossa arquitetura: evolução contínua sobre o mesmo aplicativo publicado.",
+      "Sim. A Sevvn já possui portal operacional para gestão de módulos, pedidos, serviços, hóspedes, branding e integrações.",
   },
-];
+  {
+    question: "A Rede Sevvn já está lançada?",
+    answer:
+      "Ainda não como produto completo. A rede está em desenvolvimento e faz parte da evolução estratégica da plataforma para parceiros, experiências e novos modelos de receita.",
+  },
+  {
+    question: "Quais recursos já podem ser demonstrados hoje?",
+    answer:
+      "Hoje já podemos demonstrar a base da plataforma, o portal do hotel, a camada administrativa, os cinco templates, módulos centrais da jornada e serviços como room service, restaurantes, mensagens, spa, passeios, promoções controladas e estrutura de integrações.",
+  },
+  {
+    question: "A Sevvn serve para pousadas e também para redes?",
+    answer:
+      "Sim. A lógica modular permite começar com uma operação menor e evoluir para cenários mais complexos, inclusive grupos e estruturas multiunidade.",
+  },
+]

@@ -12,10 +12,10 @@ describe('module-catalog / module-registry consistency', () => {
 
   it('every implemented module either has a configSchemaId or intentionally needs no configuration', () => {
     const implementedWithoutSchema = MODULE_CATALOG.filter((module) => module.implemented && !module.configSchemaId).map((module) => module.id)
-    // core navigation modules (home/services/bookings/messages/profile/hotel_info/basic_notifications)
+    // core navigation modules (home/services/bookings/messages/profile/hotel_info)
     // são estruturais, sem configuration própria — todo o resto implementado precisa de configSchemaId.
     expect(implementedWithoutSchema.sort()).toEqual(
-      ['home', 'hotel_info', 'services', 'bookings', 'messages', 'profile', 'basic_notifications'].sort(),
+      ['home', 'hotel_info', 'services', 'bookings', 'messages', 'profile'].sort(),
     )
   })
 })
@@ -45,5 +45,16 @@ describe('validateModuleConfiguration', () => {
     const entry = MODULE_REGISTRY.restaurant
     expect(entry.actions).toContain('bookTable')
     expect(entry.capabilities.some((c) => c.id === 'allowsTableBooking')).toBe(true)
+  })
+
+  it('accepts a valid concierge configuration', () => {
+    const result = validateModuleConfiguration('concierge', {
+      title: 'Concierge Sevvn',
+      requestCategories: ['Transfer', 'Reservas', 'Passeios'],
+      responseSlaMinutes: 15,
+      showEstimatedResponseTime: true,
+      escalationMode: 'hybrid',
+    })
+    expect(result.success).toBe(true)
   })
 })

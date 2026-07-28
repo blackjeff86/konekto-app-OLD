@@ -32,9 +32,9 @@ import 'package:konekto/widgets/tenant_image.dart';
 ///
 /// Pedido real: faz um `POST /api/orders` de verdade usando o guest token
 /// salvo em `GuestClaimRepository`. Só cai no SnackBar de simulação no modo
-/// asset (`USE_API=false`, sem backend real pra vincular o pedido) — no
-/// modo API (produção) o hóspede sempre tem token, já que a entrada no app
-/// exige um claim bem-sucedido.
+/// asset (`APP_RUNTIME_MODE=asset`, sem backend real pra vincular o pedido)
+/// — no modo API (produção/piloto) o hóspede sempre tem token, já que a
+/// entrada no app exige um claim bem-sucedido.
 class ServiceItemDetailPage extends StatefulWidget {
   final Map<String, dynamic> tenantConfig;
   final String serviceId;

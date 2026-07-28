@@ -5,6 +5,8 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     hotel: { findUnique: vi.fn(), update: vi.fn() },
     staff: { findMany: vi.fn() },
+    platformAdminAuditLog: { create: vi.fn() },
+    $transaction: vi.fn(),
   },
 }))
 
@@ -15,6 +17,15 @@ vi.mock('@/lib/platform-admin-hotel-shape', () => ({
 import { prisma } from '@/lib/prisma'
 import { signPlatformAdminToken } from '@/lib/platform-auth'
 import { GET, PATCH } from './route'
+
+interface HotelPatchTxMock {
+  hotel: {
+    update: ReturnType<typeof vi.fn>
+  }
+  platformAdminAuditLog: {
+    create: ReturnType<typeof vi.fn>
+  }
+}
 
 function getRequest(token: string | null): NextRequest {
   return new NextRequest('http://localhost/api/platform-admin/hotels/hotel_1', {
@@ -101,9 +112,13 @@ describe('PATCH /api/platform-admin/hotels/[hotelId]', () => {
       id: 'hotel_1',
       config: { hotelInfo: { name: 'Hotel 1' }, extraModules: ['loyalty'] },
     } as never)
-    vi.mocked(prisma.hotel.update).mockImplementation(
-      (async (args: { data: { config: unknown } }) => ({ id: 'hotel_1', config: args.data.config })) as never,
-    )
+    const tx: HotelPatchTxMock = {
+      hotel: {
+        update: vi.fn(async (args: { data: { config: unknown } }) => ({ id: 'hotel_1', config: args.data.config })),
+      },
+      platformAdminAuditLog: { create: vi.fn().mockResolvedValue({ id: 'audit_1' }) },
+    }
+    vi.mocked(prisma.$transaction).mockImplementation(((callback: (tx: HotelPatchTxMock) => unknown) => callback(tx)) as never)
 
     const response = await PATCH(patchRequest(token, { extraModules: ['interactive_map', 'digital_wallet'] }), {
       params: Promise.resolve({ hotelId: 'hotel_1' }),
@@ -113,5 +128,16 @@ describe('PATCH /api/platform-admin/hotels/[hotelId]', () => {
     const body = await response.json()
     expect(body.extraModules).toEqual(['interactive_map', 'digital_wallet'])
     expect(body.hotelInfo).toEqual({ name: 'Hotel 1' })
+    expect(tx.platformAdminAuditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'platform_admin.hotel.extra_modules_updated',
+        adminEmail: 'a@konekto.app',
+        adminId: 'admin_1',
+        hotelId: 'hotel_1',
+        targetId: 'hotel_1',
+        targetType: 'hotel',
+        payload: { extraModules: ['interactive_map', 'digital_wallet'] },
+      }),
+    })
   })
 })

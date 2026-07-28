@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:konekto/templates/guest_template_registry.dart';
 
 /// Tokens visuais fixos das telas compartilhadas do app do hóspede
 /// (Serviços, Reservas, Perfil, Avisos, Meus Pedidos, Info do Hotel, Conta
@@ -119,8 +120,53 @@ class GuestAppTheme {
   factory GuestAppTheme.fromTenantConfig(Map<String, dynamic> tenantConfig) {
     final hotelInfo = tenantConfig['hotelInfo'] as Map<String, dynamic>? ?? {};
     final promo = hotelInfo['promoImages'] as Map<String, dynamic>? ?? {};
+    final templateId =
+        guestTemplateIdFromString(tenantConfig['template'] as String?) ??
+        GuestTemplateId.aura;
+    final templateTheme = guestTemplateThemes[templateId]!;
     return GuestAppTheme(
-      tokens: guestSharedTokens,
+      tokens: GuestSharedTokens(
+        bg: templateTheme.colors.surface,
+        card: templateTheme.colors.brightness == Brightness.dark
+            ? templateTheme.colors.surfaceContainerHighest.withValues(
+                alpha: 0.42,
+              )
+            : Colors.white,
+        text: templateTheme.colors.onSurface,
+        muted: templateTheme.colors.onSurfaceVariant,
+        accent: templateTheme.colors.primary,
+        accentSoft:
+            templateTheme.colors.primaryContainer.withValues(alpha: 0.22),
+        navInactive: templateTheme.colors.onSurfaceVariant.withValues(
+          alpha: 0.75,
+        ),
+        bottomNavBg: templateTheme.colors.surface.withValues(
+          alpha: templateTheme.colors.brightness == Brightness.dark
+              ? 0.96
+              : 0.92,
+        ),
+        bottomNavBorder: templateTheme.colors.outlineVariant.withValues(
+          alpha: 0.28,
+        ),
+        headlineFontFamily: templateTheme.displayFontFamily,
+        bodyFontFamily: templateTheme.bodyFontFamily,
+        cardRadius: templateTheme.radiusLg,
+        heroRadius: templateTheme.radiusXl,
+        pillRadius: 999,
+        iconTileRadius: templateTheme.radiusMd,
+        screenPadding: 22,
+        cardShadow: [
+          BoxShadow(
+            color: templateTheme.colors.shadow.withValues(
+              alpha: templateTheme.colors.brightness == Brightness.dark
+                  ? 0.18
+                  : 0.08,
+            ),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       hotelName: hotelInfo['name'] as String? ?? '',
       logoUrl: hotelInfo['logoUrl'] as String?,
       promoImages: List<String>.from(promo['images'] as List? ?? const []),

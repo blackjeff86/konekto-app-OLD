@@ -1,5 +1,5 @@
 name: konekto
-description: "App mobile Konekto para hóspedes de hotel (pacote Dart chamado 'konekto', pasta apps/konekto_mobile)."
+description: "App mobile Sevvn para hóspedes de hotel (pacote Dart ainda chamado 'konekto', pasta apps/konekto_mobile)."
 publish_to: 'none'
 
 version: 1.0.0+1

@@ -23,6 +23,8 @@ import 'package:konekto/theme/guest_app_theme.dart';
 
 String navItemLabel(AppLocalizations l10n, String route) => switch (route) {
       'home' => l10n.navHome,
+      'wallet' => l10n.profileWalletTile,
+      'loyalty' => l10n.profileLoyaltyTile,
       'services' => l10n.navServices,
       'bookings' => l10n.navBookings,
       'profile' => l10n.navProfile,
@@ -54,6 +56,15 @@ class TenantHomePage extends StatefulWidget {
 }
 
 class _TenantHomePageState extends State<TenantHomePage> {
+  static const Set<String> _supportedNavRoutes = {
+    'home',
+    'services',
+    'bookings',
+    'profile',
+    'wallet',
+    'loyalty',
+  };
+
   int _selectedIndex = 0;
   late Future<GuestAppTheme> _themeFuture;
   Map<String, dynamic>? _tenantConfig;
@@ -91,7 +102,24 @@ class _TenantHomePageState extends State<TenantHomePage> {
     try {
       final catalog = await _moduleCatalogRepository.getCatalog();
       final resolvedModules = resolvedModulesFromTenantConfig(tenantConfigMap);
-      _navItems = ModuleEngine.resolveNavItems(enabledModules: resolvedModules, catalog: catalog);
+      final templateId = guestTemplateIdFromString(tenantConfigMap['template'] as String?) ?? GuestTemplateId.aura;
+      final features = GuestFeatures.fromTenantConfig(tenantConfigMap);
+      final loyaltyScreen = resolveLoyaltyScreen(templateId, features);
+      final walletScreen = resolveWalletScreen(templateId, features);
+
+      final resolvedNavItems = ModuleEngine.resolveNavItems(enabledModules: resolvedModules, catalog: catalog)
+          .where((item) => _supportedNavRoutes.contains(item.route))
+          .where((item) {
+            if (item.route == 'wallet') return walletScreen != null;
+            if (item.route == 'loyalty') return loyaltyScreen != null;
+            return true;
+          })
+          .toList();
+
+      _navItems = resolvedNavItems.isEmpty ? kGuestNavItems : resolvedNavItems;
+      if (_selectedIndex >= _navItems.length) {
+        _selectedIndex = 0;
+      }
     } on StateError {
       // Catálogo indisponível (sem rede, backend fora do ar): mantém o
       // fallback fixo já setado — nunca deixa a nav vazia/quebrada.
@@ -121,26 +149,56 @@ class _TenantHomePageState extends State<TenantHomePage> {
     setState(() => _selectedIndex = index);
   }
 
+  void _navigateToRoute(String route) {
+    final index = _navItems.indexWhere((item) => item.route == route);
+    if (index >= 0) {
+      _onItemTapped(index);
+    }
+  }
+
   Widget _getWidgetForIndex(int index, GuestAppTheme theme, AppLocalizations l10n) {
     final tenantConfig = _tenantConfig!;
-    return switch (_navItems[index].route) {
-      'home' => TenantHomeBody(
-          tenantId: widget.tenantId,
-          userName: widget.guestName,
+    final templateId = guestTemplateIdFromString(tenantConfig['template'] as String?) ?? GuestTemplateId.aura;
+    final features = GuestFeatures.fromTenantConfig(tenantConfig);
+    final loyaltyScreen = resolveLoyaltyScreen(templateId, features);
+    final walletScreen = resolveWalletScreen(templateId, features);
+    final route = _navItems[index].route;
+    final homePage = TenantHomeBody(
+      tenantId: widget.tenantId,
+      userName: widget.guestName,
+      roomNumber: widget.guestRoomNumber,
+      wifiNetworkName: widget.wifiNetworkName ?? l10n.notAvailable,
+      wifiPassword: widget.wifiPassword ?? l10n.notAvailable,
+      tenantConfig: tenantConfig,
+      theme: theme,
+      onNavigateToServices: () => _navigateToRoute('services'),
+      notificationCount: _notificationCount,
+      onNoticesReturned: _refreshUnreadCount,
+      onOrdersReturned: _refreshUnreadCount,
+    );
+
+    return switch (route) {
+      'home' => homePage,
+      'wallet' => walletScreen ?? _buildProfilePage(tenantConfig, theme),
+      'loyalty' => loyaltyScreen ?? _buildProfilePage(tenantConfig, theme),
+      'services' => ServicesPage(
+          hotelId: widget.tenantId,
+          tenantConfig: tenantConfig,
+          theme: theme,
+        ),
+      'bookings' => BookingsPage(tenantConfig: tenantConfig, theme: theme, onExploreServices: () => _navigateToRoute('services')),
+      'profile' => _buildProfilePage(tenantConfig, theme),
+      // Rotas legacy/auxiliares: nunca deixam a nave quebrar.
+      'messages' || 'notices' => NoticesPage(tenantConfig: tenantConfig, theme: theme),
+      'hotel_info' || 'interactive_map' || 'map' => HotelInfoPage(
           roomNumber: widget.guestRoomNumber,
           wifiNetworkName: widget.wifiNetworkName ?? l10n.notAvailable,
           wifiPassword: widget.wifiPassword ?? l10n.notAvailable,
-          tenantConfig: tenantConfig,
           theme: theme,
-          onNavigateToServices: () => _onItemTapped(1),
-          notificationCount: _notificationCount,
-          onNoticesReturned: _refreshUnreadCount,
-          onOrdersReturned: _refreshUnreadCount,
         ),
-      'services' => ServicesPage(tenantConfig: tenantConfig, theme: theme),
-      'bookings' => BookingsPage(tenantConfig: tenantConfig, theme: theme, onExploreServices: () => _onItemTapped(1)),
-      'profile' => _buildProfilePage(tenantConfig, theme),
-      _ => Center(child: Text(l10n.screenNotFound)),
+      // Qualquer rota desconhecida volta pra Home em vez de mostrar
+      // "Tela não encontrada" para o hóspede.
+      _ => homePage,
     };
   }
 
@@ -271,7 +329,13 @@ class TenantHomeBody extends StatelessWidget {
   Future<void> _openMyOrders(BuildContext context) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => MyOrdersPage(tenantConfig: tenantConfig, theme: theme)),
+      MaterialPageRoute(
+        builder: (context) => MyOrdersPage(
+          hotelId: tenantId,
+          tenantConfig: tenantConfig,
+          theme: theme,
+        ),
+      ),
     );
     onOrdersReturned();
   }

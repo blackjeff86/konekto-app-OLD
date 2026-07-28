@@ -85,7 +85,7 @@ class _ClientsListPageState extends State<ClientsListPage> {
                 children: [
                   Text('Clientes', style: KonektoBrand.display(fontSize: 22)),
                   const SizedBox(height: 4),
-                  Text('Todos os hotéis usando o Konekto.', style: KonektoBrand.body(fontSize: 13)),
+                  Text('Todos os hotéis usando a Sevvn.', style: KonektoBrand.body(fontSize: 13)),
                 ],
               ),
             ),

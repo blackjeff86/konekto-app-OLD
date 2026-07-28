@@ -6,6 +6,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     hotel: { findMany: vi.fn() },
     staff: { findUnique: vi.fn() },
+    platformAdminAuditLog: { create: vi.fn() },
     $transaction: vi.fn(),
   },
 }))
@@ -80,6 +81,7 @@ describe('POST /api/platform-admin/hotels', () => {
       hotel: { create: vi.fn().mockResolvedValue({ id: 'new-hotel-id' }) },
       staff: { create: vi.fn().mockResolvedValue({ id: 'staff_1' }) },
       hotelSubscription: { create: vi.fn().mockResolvedValue({ hotelId: 'new-hotel-id' }) },
+      platformAdminAuditLog: { create: vi.fn().mockResolvedValue({ id: 'audit_1' }) },
     }
   }
 
@@ -164,6 +166,22 @@ describe('POST /api/platform-admin/hotels', () => {
     // — nunca assume um plano pago por omissão.
     expect(tx.hotelSubscription.create).toHaveBeenCalledWith({
       data: { hotelId: body.hotelId, plan: 'essential', planName: 'Essential', status: 'trial' },
+    })
+    expect(tx.platformAdminAuditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'platform_admin.hotel.created',
+        adminEmail: 'a@konekto.app',
+        adminId: 'admin_1',
+        hotelId: body.hotelId,
+        targetId: body.hotelId,
+        targetType: 'hotel',
+        payload: {
+          gerenteEmail: 'maria@konektohotel.com',
+          gerenteName: 'Maria Gerente',
+          hotelName: 'Konekto Hotel',
+          plan: 'essential',
+        },
+      }),
     })
   })
 

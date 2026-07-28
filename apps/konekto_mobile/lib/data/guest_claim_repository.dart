@@ -10,8 +10,9 @@ import 'package:konekto/data/tenant_repository_provider.dart';
 /// de tenant. Essa é a ÚNICA forma de entrar no app — não existe mais um
 /// fluxo de código de hotel sem hóspede identificado.
 ///
-/// Em modo asset (`useApi == false`, sem backend real) não existe tabela de
-/// hóspedes pra resolver contra, então [claim] sempre devolve `null`.
+/// Em modo asset (`APP_RUNTIME_MODE=asset`, sem backend real) não existe
+/// tabela de hóspedes pra resolver contra, então [claim] sempre devolve
+/// `null`.
 class GuestClaimRepository {
   static const _tokenKey = 'konekto_guest_token';
 

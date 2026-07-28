@@ -56,6 +56,18 @@ export function updateGuest(
   })
 }
 
+export function regenerateGuestAccessCode(
+  hotelId: string,
+  guestId: string,
+  token: string,
+): Promise<Guest> {
+  return apiRequest<Guest>(`/api/hotels/${hotelId}/guests/${guestId}/access-code`, {
+    method: 'POST',
+    token,
+    errorMessage: 'Falha ao regenerar código de acesso.',
+  })
+}
+
 export function revokeGuest(hotelId: string, guestId: string, token: string): Promise<void> {
   return apiRequest<void>(`/api/hotels/${hotelId}/guests/${guestId}`, {
     method: 'DELETE',

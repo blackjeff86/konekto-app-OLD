@@ -4,6 +4,12 @@ import { useState } from 'react'
 import PhoneInput, { parsePhoneNumber } from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import { Modal } from '@/components/ui/Modal'
+import {
+  documentInputMode,
+  documentLabel,
+  formatDocumentNumber,
+  normalizeDocumentNumber,
+} from '@/lib/documentFormat'
 import { documentTypeLabel, type DocumentType, type NewGuestInput } from '@/types/guest'
 import type { Stay } from '@/types/stay'
 
@@ -33,7 +39,7 @@ export function GuestFormDialog({ activeStays, onClose, onSubmit }: GuestFormDia
   async function handleSubmit() {
     const trimmedFirstName = firstName.trim()
     const trimmedLastName = lastName.trim()
-    const trimmedDocumentNumber = documentNumber.trim()
+    const trimmedDocumentNumber = normalizeDocumentNumber(documentType, documentNumber)
     const trimmedCountry = country.trim()
 
     if (!trimmedFirstName || !trimmedLastName || !trimmedDocumentNumber || !trimmedCountry || !phone) {
@@ -127,7 +133,11 @@ export function GuestFormDialog({ activeStays, onClose, onSubmit }: GuestFormDia
             Documento
             <select
               value={documentType}
-              onChange={(event) => setDocumentType(event.target.value as DocumentType)}
+              onChange={(event) => {
+                const nextType = event.target.value as DocumentType
+                setDocumentType(nextType)
+                setDocumentNumber(formatDocumentNumber(nextType, documentNumber))
+              }}
               className="mt-1 block w-full rounded-[10px] border border-border-strong bg-surface px-3 py-2 text-[13.5px] text-cream outline-none focus:border-gold"
             >
               {(Object.keys(documentTypeLabel) as DocumentType[]).map((type) => (
@@ -137,13 +147,21 @@ export function GuestFormDialog({ activeStays, onClose, onSubmit }: GuestFormDia
               ))}
             </select>
           </label>
-          <Field label="Número do documento" value={documentNumber} onChange={setDocumentNumber} />
+          <Field
+            label={documentLabel(documentType)}
+            value={documentNumber}
+            onChange={(value) => setDocumentNumber(formatDocumentNumber(documentType, value))}
+            inputMode={documentInputMode(documentType)}
+            maxLength={documentType === 'cpf' ? 14 : documentType === 'other' ? 12 : 12}
+          />
         </div>
 
         <label className="text-xs text-slate">
           Telefone
           <PhoneInput
-            defaultCountry="BR"
+            country="BR"
+            international={false}
+            limitMaxLength
             value={phone}
             onChange={setPhone}
             className="mt-1 [&_input]:rounded-[10px] [&_input]:border [&_input]:border-border-strong [&_input]:bg-transparent [&_input]:px-3 [&_input]:py-2 [&_input]:text-[13.5px] [&_input]:text-cream [&_input]:outline-none"
@@ -164,7 +182,9 @@ export function GuestFormDialog({ activeStays, onClose, onSubmit }: GuestFormDia
           <label className="text-xs text-slate">
             WhatsApp
             <PhoneInput
-              defaultCountry="BR"
+              country="BR"
+              international={false}
+              limitMaxLength
               value={whatsapp}
               onChange={setWhatsapp}
               className="mt-1 [&_input]:rounded-[10px] [&_input]:border [&_input]:border-border-strong [&_input]:bg-transparent [&_input]:px-3 [&_input]:py-2 [&_input]:text-[13.5px] [&_input]:text-cream [&_input]:outline-none"
@@ -190,11 +210,15 @@ function Field({
   value,
   onChange,
   type = 'text',
+  inputMode,
+  maxLength,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   type?: 'text' | 'email'
+  inputMode?: 'text' | 'numeric'
+  maxLength?: number
 }) {
   return (
     <label className="flex-1 text-xs text-slate">
@@ -202,6 +226,8 @@ function Field({
       <input
         type={type}
         value={value}
+        inputMode={inputMode}
+        maxLength={maxLength}
         onChange={(event) => onChange(event.target.value)}
         className="mt-1 block w-full rounded-[10px] border border-border-strong bg-transparent px-3 py-2 text-[13.5px] text-cream outline-none focus:border-gold"
       />

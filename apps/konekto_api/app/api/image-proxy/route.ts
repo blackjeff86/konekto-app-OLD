@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isSafeHost, safeParseUrl } from '@/lib/ssrf-guard'
+import { enforceRateLimit } from '@/lib/rate-limit'
+import { withRequestLogging } from '@/lib/request-logging'
 
 export const runtime = 'nodejs'
 
@@ -88,22 +90,31 @@ async function fetchImageSafely(initialUrl: string): Promise<ProxyResult> {
 }
 
 export async function GET(request: NextRequest) {
-  const url = request.nextUrl.searchParams.get('url')
-  if (!url) {
-    return NextResponse.json({ error: 'missing_url' }, { status: 400 })
-  }
+  return withRequestLogging(request, { route: '/api/image-proxy', surface: 'public-asset-proxy' }, async () => {
+    const rateLimited = enforceRateLimit(request, {
+      bucket: 'image-proxy',
+      max: 60,
+      windowMs: 60 * 1000,
+    })
+    if (rateLimited) return rateLimited
 
-  const result = await fetchImageSafely(url)
-  if (!result.ok) {
-    return NextResponse.json({ error: 'image_fetch_failed' }, { status: result.status })
-  }
+    const url = request.nextUrl.searchParams.get('url')
+    if (!url) {
+      return NextResponse.json({ error: 'missing_url' }, { status: 400 })
+    }
 
-  return new NextResponse(Buffer.from(result.body), {
-    status: 200,
-    headers: {
-      'Content-Type': result.contentType,
-      'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400',
-      'Access-Control-Allow-Origin': '*',
-    },
+    const result = await fetchImageSafely(url)
+    if (!result.ok) {
+      return NextResponse.json({ error: 'image_fetch_failed' }, { status: result.status })
+    }
+
+    return new NextResponse(Buffer.from(result.body), {
+      status: 200,
+      headers: {
+        'Content-Type': result.contentType,
+        'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400',
+        'Access-Control-Allow-Origin': '*',
+      },
+    })
   })
 }

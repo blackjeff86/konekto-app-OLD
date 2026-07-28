@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       valueListenable: LocaleController.instance.locale,
       builder: (context, locale, _) {
         return MaterialApp(
-          title: 'Konekto',
+          title: 'Sevvn',
           debugShowCheckedModeBanner: false,
           initialRoute: homeRoute,
           routes: routes,

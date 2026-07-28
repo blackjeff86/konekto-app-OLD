@@ -9,7 +9,14 @@
  * que a contagem de itens mostrada na lista do portal seja sempre correta.
  */
 import { apiRequest } from './client'
-import type { RestaurantTableType, Service, ServiceItem, ServiceItemInput, ServiceType } from '@/types/service'
+import type {
+  RestaurantOperationsSnapshot,
+  RestaurantTableType,
+  Service,
+  ServiceItem,
+  ServiceItemInput,
+  ServiceType,
+} from '@/types/service'
 
 interface ServiceStub {
   id: string
@@ -224,5 +231,73 @@ export function deleteTableType(
     method: 'DELETE',
     token,
     errorMessage: 'Falha ao remover tipo de mesa.',
+  })
+}
+
+export interface CreateRestaurantWaitlistEntryInput {
+  guestId: string
+  partySize: number
+  scheduledFor: string
+  tableTypeId?: string | null
+  priority?: number
+  note?: string | null
+}
+
+export function getRestaurantOperations(
+  hotelId: string,
+  serviceId: string,
+  token: string,
+): Promise<RestaurantOperationsSnapshot> {
+  return apiRequest<RestaurantOperationsSnapshot>(`/api/hotels/${hotelId}/services/${serviceId}/operations`, {
+    token,
+    errorMessage: 'Falha ao carregar a operação do restaurante.',
+  })
+}
+
+export function createRestaurantWaitlistEntry(
+  hotelId: string,
+  serviceId: string,
+  token: string,
+  input: CreateRestaurantWaitlistEntryInput,
+) {
+  return apiRequest(`/api/hotels/${hotelId}/services/${serviceId}/operations`, {
+    method: 'POST',
+    token,
+    body: input,
+    conflictMessage: 'A fila de espera atingiu o limite configurado para este restaurante.',
+    errorMessage: 'Falha ao adicionar hóspede à fila de espera.',
+  })
+}
+
+export function updateRestaurantWaitlistEntry(
+  hotelId: string,
+  serviceId: string,
+  entryId: string,
+  token: string,
+  input:
+    | { action: 'reprioritize'; priority: number }
+    | { action: 'cancel' }
+    | { action: 'promote' },
+) {
+  return apiRequest(`/api/hotels/${hotelId}/services/${serviceId}/operations/waitlist/${entryId}`, {
+    method: 'PATCH',
+    token,
+    body: input,
+    conflictMessage: 'Não foi possível promover a fila porque a mesa já não está mais disponível.',
+    errorMessage: 'Falha ao atualizar a fila de espera.',
+  })
+}
+
+export function releaseRestaurantReservation(
+  hotelId: string,
+  serviceId: string,
+  token: string,
+  input: { orderId: string; autoPromoteNext?: boolean },
+) {
+  return apiRequest(`/api/hotels/${hotelId}/services/${serviceId}/operations/release`, {
+    method: 'POST',
+    token,
+    body: input,
+    errorMessage: 'Falha ao liberar a mesa.',
   })
 }

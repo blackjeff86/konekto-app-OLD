@@ -5,13 +5,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 /**
- * Porta de `apps/konekto_site/login.html` — MESMO contrato de API, mesma
- * lógica de resolução de `PORTAL_URL` (local vs. produção) e mesmo
- * mapeamento de erro. Esta é a única tela de login real do produto; o
- * portal (`konekto_portal_next`) não tem formulário próprio, só recebe o
- * token via query string e valida contra a API.
+ * Tela oficial de login do produto. O portal (`konekto_portal_next`) não
+ * tem formulário próprio; só recebe o token via query string e valida
+ * contra a API. Mantém o mesmo contrato da versão legada de login.
  */
-const API_BASE_URL = "https://konekto-api.vercel.app";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://sevvn-api.vercel.app";
 
 const ERROR_MESSAGES: Record<string, string> = {
   staff_not_found: "Esta conta não está associada a nenhum hotel. Contate o suporte.",
@@ -20,7 +19,9 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 function resolvePortalUrl(): string {
   const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
-  return isLocal ? "http://localhost:3001" : "https://konekto-portal.vercel.app";
+  return isLocal
+    ? "http://localhost:3001"
+    : process.env.NEXT_PUBLIC_PORTAL_URL ?? "https://sevvn-hotel.vercel.app";
 }
 
 export function LoginForm() {
@@ -119,8 +120,8 @@ export function LoginForm() {
           <label className="flex items-center gap-[0.45rem] text-[0.82rem] text-muted">
             <input type="checkbox" className="accent-primary" /> Lembrar de mim
           </label>
-          <a href="#" className="text-[0.82rem] font-semibold text-primary hover:text-ink">
-            Esqueci minha senha
+          <a href="mailto:suporte@sevvn.app" className="text-[0.82rem] font-semibold text-primary hover:text-ink">
+            Falar com o suporte
           </a>
         </div>
 
@@ -139,7 +140,7 @@ export function LoginForm() {
       <p className="text-center text-[0.82rem] leading-[1.6] text-muted">
         Ainda não é cliente Sevvn?
         <br />
-        <Link href="/#contato" className="font-semibold text-primary hover:text-ink">
+        <Link href="/contato" className="font-semibold text-primary hover:text-ink">
           Fale com a gente
         </Link>{" "}
         e coloque seu hotel no ar.
