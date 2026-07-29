@@ -13,17 +13,27 @@ export interface BrandingInput {
   name?: string | null
   logoUrl?: string | null
   address?: string | null
+  guestSubdomain?: string | null
+  customGuestDomain?: string | null
   primary?: string | null
   secondary?: string | null
 }
 
 export function updateBranding(hotelId: string, token: string, input: BrandingInput): Promise<void> {
   const body: Record<string, unknown> = {}
-  if (input.name != null || input.logoUrl != null || input.address != null) {
+  if (
+    input.name != null ||
+    input.logoUrl != null ||
+    input.address != null ||
+    input.guestSubdomain != null ||
+    input.customGuestDomain != null
+  ) {
     body.hotelInfo = {
       ...(input.name != null ? { name: input.name } : {}),
       ...(input.logoUrl != null ? { logoUrl: input.logoUrl } : {}),
       ...(input.address != null ? { address: input.address } : {}),
+      ...(input.guestSubdomain != null ? { guestSubdomain: input.guestSubdomain } : {}),
+      ...(input.customGuestDomain != null ? { customGuestDomain: input.customGuestDomain } : {}),
     }
   }
   if (input.primary != null || input.secondary != null) {

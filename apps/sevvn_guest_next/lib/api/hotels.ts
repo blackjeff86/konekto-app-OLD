@@ -1,10 +1,19 @@
 import { apiRequest } from "@/lib/api/client";
 import type {
+  GuestClaimBranding,
   GuestHotelConfig,
   GuestItemAvailabilityResponse,
   GuestService,
   GuestTableAvailabilityResponse,
 } from "@/lib/guest-types";
+
+export function resolveGuestBranding(host: string): Promise<GuestClaimBranding> {
+  const search = new URLSearchParams({ host });
+
+  return apiRequest<GuestClaimBranding>(`/api/public/guest-branding/resolve?${search.toString()}`, {
+    errorMessage: "Falha ao carregar a identidade do hotel.",
+  });
+}
 
 export function getGuestHotelConfig(hotelId: string): Promise<GuestHotelConfig> {
   return apiRequest<GuestHotelConfig>(`/api/hotels/${hotelId}`, {

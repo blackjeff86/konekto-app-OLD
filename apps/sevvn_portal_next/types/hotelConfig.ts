@@ -4,6 +4,8 @@ export interface HotelConfig {
     name?: string
     logoUrl?: string
     address?: string
+    guestSubdomain?: string
+    customGuestDomain?: string
     promoImages?: {
       images?: string[]
       carouselHeight?: number

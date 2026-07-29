@@ -107,6 +107,11 @@ const patchHotelSchema = z.object({
       // verdade). Não confundir com Guest.address, que é o endereço do
       // hóspede.
       address: z.string().min(1).optional(),
+      // Identidade pública do app do hóspede. `guestSubdomain` prepara o
+      // hostname `hotel.sevvn.app`; `customGuestDomain` permite domínios
+      // próprios do cliente apontando para a mesma experiência guest.
+      guestSubdomain: z.string().min(1).optional(),
+      customGuestDomain: z.string().min(1).optional(),
       // Carrossel de imagens de destaque na home do hóspede — substitui o
       // objeto inteiro quando enviado (não dá pra adicionar/remover uma
       // imagem isolada via PATCH parcial, o portal sempre manda a lista

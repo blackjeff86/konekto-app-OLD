@@ -16,6 +16,8 @@ export default function BrandingPage() {
   const [name, setName] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
   const [address, setAddress] = useState('')
+  const [guestSubdomain, setGuestSubdomain] = useState('')
+  const [customGuestDomain, setCustomGuestDomain] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
@@ -25,6 +27,8 @@ export default function BrandingPage() {
     setName(config.hotelInfo?.name ?? '')
     setLogoUrl(config.hotelInfo?.logoUrl ?? '')
     setAddress(config.hotelInfo?.address ?? '')
+    setGuestSubdomain(config.hotelInfo?.guestSubdomain ?? '')
+    setCustomGuestDomain(config.hotelInfo?.customGuestDomain ?? '')
     setHasLoadedOnce(true)
   }, [config, hasLoadedOnce])
 
@@ -35,10 +39,14 @@ export default function BrandingPage() {
       const trimmedName = name.trim()
       const trimmedLogoUrl = logoUrl.trim()
       const trimmedAddress = address.trim()
+      const trimmedGuestSubdomain = guestSubdomain.trim().toLowerCase()
+      const trimmedCustomGuestDomain = customGuestDomain.trim().toLowerCase()
       await updateBranding({
         name: trimmedName || null,
         logoUrl: trimmedLogoUrl || null,
         address: trimmedAddress || null,
+        guestSubdomain: trimmedGuestSubdomain || null,
+        customGuestDomain: trimmedCustomGuestDomain || null,
       })
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Falha ao salvar configuração.')
@@ -88,6 +96,32 @@ export default function BrandingPage() {
                 onChange={(event) => setAddress(event.target.value)}
                 className="mt-1 block w-full rounded-[10px] border border-border-strong bg-black/3 px-3.5 py-3 text-sm text-cream outline-none focus:border-gold"
               />
+            </label>
+            <label className="text-xs text-slate">
+              Subdomínio guest na Sevvn
+              <input
+                type="text"
+                value={guestSubdomain}
+                onChange={(event) => setGuestSubdomain(event.target.value)}
+                placeholder="ex: amara-bay"
+                className="mt-1 block w-full rounded-[10px] border border-border-strong bg-black/3 px-3.5 py-3 text-sm text-cream outline-none focus:border-gold"
+              />
+              <span className="mt-1 block text-[11px] text-slate">
+                Quando o domínio oficial estiver ativo, poderá responder como `subdominio.sevvn.app`.
+              </span>
+            </label>
+            <label className="text-xs text-slate">
+              Domínio customizado do guest
+              <input
+                type="text"
+                value={customGuestDomain}
+                onChange={(event) => setCustomGuestDomain(event.target.value)}
+                placeholder="ex: app.seuhotel.com.br"
+                className="mt-1 block w-full rounded-[10px] border border-border-strong bg-black/3 px-3.5 py-3 text-sm text-cream outline-none focus:border-gold"
+              />
+              <span className="mt-1 block text-[11px] text-slate">
+                Opcional. Serve para a Sevvn reconhecer o hotel também por um domínio próprio.
+              </span>
             </label>
             <button
               type="button"

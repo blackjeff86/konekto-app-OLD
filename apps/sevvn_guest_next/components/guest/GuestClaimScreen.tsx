@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { AuraCard, AuraIconButton, AuraSectionHeading, AuraShell, AuraTopBar } from "@/components/guest/aura/AuraPrimitives";
+import { resolveGuestBranding } from "@/lib/api/hotels";
+import type { GuestClaimBranding } from "@/lib/guest-types";
 
 export function GuestClaimScreen({
   claimCode,
@@ -18,7 +20,18 @@ export function GuestClaimScreen({
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   themeStyle: React.CSSProperties;
 }) {
-  const branding = useMemo(() => inferClaimBranding(), []);
+  const [branding, setBranding] = useState<GuestClaimBranding>(getFallbackBranding());
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const hostname = window.location.hostname;
+    if (!hostname) return;
+
+    void resolveGuestBranding(hostname)
+      .then((result) => setBranding(result))
+      .catch(() => setBranding(getFallbackBranding()));
+  }, []);
 
   return (
     <AuraShell
@@ -58,7 +71,7 @@ export function GuestClaimScreen({
 
         <AuraSectionHeading
           title="Entre com o seu codigo"
-          copy="O hotel exibido neste app sera sempre derivado do codigo de acesso validado, nunca de uma escolha manual do navegador."
+          copy="O acesso do hospede continua protegido pelo codigo validado pela Sevvn. O hotel exibido nesta tela vem do endereco oficial configurado para a propriedade."
         />
 
         <form className="guest-form" onSubmit={onSubmit}>
@@ -89,71 +102,14 @@ export function GuestClaimScreen({
   );
 }
 
-function inferClaimBranding(): {
-  hotelName: string;
-  logoUrl: string | null;
-  monogram: string;
-  welcomeCopy: string;
-} {
-  if (typeof window === "undefined") {
-    return {
-      hotelName: "Seu hotel na Sevvn",
-      logoUrl: null,
-      monogram: "S",
-      welcomeCopy:
-        "Bem-vindo. Digite o seu codigo de acesso para entrar na sua experiencia de hospedagem.",
-    };
-  }
-
-  const hostname = window.location.hostname.toLowerCase();
-  const reservedHosts = new Set([
-    "localhost",
-    "127.0.0.1",
-    "sevvn-guest.vercel.app",
-    "sevvnguestnext.vercel.app",
-    "sevvnguestnext-5ohd8v0ej-jeffersonbrito86-gmailcoms-projects.vercel.app",
-  ]);
-
-  if (reservedHosts.has(hostname) || hostname.endsWith(".vercel.app")) {
-    return {
-      hotelName: "Seu hotel na Sevvn",
-      logoUrl: null,
-      monogram: "S",
-      welcomeCopy:
-        "Bem-vindo. Digite o seu codigo de acesso para entrar na sua experiencia de hospedagem.",
-    };
-  }
-
-  const subdomain = hostname.split(".")[0]?.trim();
-  if (!subdomain) {
-    return {
-      hotelName: "Seu hotel na Sevvn",
-      logoUrl: null,
-      monogram: "S",
-      welcomeCopy:
-        "Bem-vindo. Digite o seu codigo de acesso para entrar na sua experiencia de hospedagem.",
-    };
-  }
-
-  const hotelName = subdomain
-    .split("-")
-    .filter(Boolean)
-    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
-    .join(" ");
-
-  const monogram = hotelName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-
+function getFallbackBranding(): GuestClaimBranding {
   return {
-    hotelName,
+    hotelId: "",
+    hotelName: "Seu hotel na Sevvn",
     logoUrl: null,
-    monogram: monogram || "S",
+    monogram: "S",
     welcomeCopy:
       "Bem-vindo. Digite o seu codigo de acesso para entrar na sua experiencia de hospedagem.",
+    matchType: "fallback",
   };
 }

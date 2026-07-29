@@ -37,6 +37,17 @@ export interface GuestHotelConfig {
   enabledModules?: ResolvedHotelModule[];
 }
 
+export interface GuestClaimBranding {
+  hotelId: string;
+  hotelName: string;
+  logoUrl: string | null;
+  monogram: string;
+  welcomeCopy: string;
+  colorPalette?: ColorPalette;
+  template?: GuestTemplateId;
+  matchType: "subdomain" | "custom-domain" | "fallback";
+}
+
 export type RestaurantBookingMode =
   | "party_size_only"
   | "table_type_selection"

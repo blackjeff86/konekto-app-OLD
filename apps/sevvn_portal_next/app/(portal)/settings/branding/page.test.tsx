@@ -12,7 +12,7 @@ import { useWifiSettings } from '@/hooks/useWifiSettings'
 import { useAuth } from '@/lib/auth/AuthProvider'
 
 function mockHooks({
-  config = { hotelInfo: { name: 'Hotel Teste', logoUrl: '', address: '' } },
+  config = { hotelInfo: { name: 'Hotel Teste', logoUrl: '', address: '', guestSubdomain: 'hotel-teste', customGuestDomain: '' } },
   updateBranding = vi.fn(),
 }: {
   config?: Record<string, unknown> | null
@@ -60,7 +60,7 @@ describe('BrandingPage', () => {
 
     await waitFor(() =>
       expect(updateBranding).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'Novo Nome' }),
+        expect.objectContaining({ name: 'Novo Nome', guestSubdomain: 'hotel-teste' }),
       ),
     )
   })
