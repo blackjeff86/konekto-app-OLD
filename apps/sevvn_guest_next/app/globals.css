@@ -381,6 +381,74 @@ textarea {
   margin: 0 auto;
 }
 
+.aura-claim-stage {
+  display: grid;
+  gap: 24px;
+  min-height: calc(100vh - 96px);
+  align-content: center;
+}
+
+.aura-claim-brand {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.aura-claim-brand-mark {
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  overflow: clip;
+  background:
+    radial-gradient(circle at top left, rgba(233, 221, 255, 0.95), transparent 32%),
+    linear-gradient(145deg, rgba(103, 80, 164, 1), rgba(225, 212, 253, 1));
+  box-shadow: 0 18px 34px rgba(103, 80, 164, 0.18);
+}
+
+.aura-claim-brand-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.aura-claim-brand-monogram {
+  color: white;
+  font-family: var(--font-aura-heading), Arial, sans-serif;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.aura-claim-brand-name {
+  margin: 0;
+  font-family: var(--font-aura-display), Georgia, serif;
+  font-size: clamp(32px, 8vw, 44px);
+  line-height: 0.98;
+  color: var(--aura-primary-strong);
+}
+
+.aura-claim-brand-copy {
+  margin: 0;
+  max-width: 30ch;
+  color: var(--aura-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.aura-claim-card {
+  padding-top: 0;
+}
+
+.aura-claim-card-heading {
+  margin: -20px -20px 20px;
+  padding: 20px;
+  border-bottom: 1px solid rgba(203, 196, 210, 0.72);
+}
+
 .aura-shell-surface {
   min-height: calc(100vh - 52px);
   border: 1px solid rgba(203, 196, 210, 0.92);
