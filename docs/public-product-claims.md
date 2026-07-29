@@ -17,8 +17,8 @@ Last updated: 2026-07-27
 |---|---|---|
 | Sevvn é uma Guest Experience Platform modular | comprovada no produto | Backend, portal, admin, templates, plan presets and modules catalog exist |
 | O aplicativo do hóspede é apenas uma das interfaces da plataforma | comprovada no produto | Guest app, hotel portal and platform admin all exist |
-| Existe um portal operacional para o hotel | comprovada no produto | `apps/konekto_portal_next` |
-| Existe uma administração central da plataforma | comprovada no produto | `apps/konekto_admin` + platform admin API routes |
+| Existe um portal operacional para o hotel | comprovada no produto | `apps/sevvn_portal_next` |
+| Existe uma administração central da plataforma | comprovada no produto | `apps/sevvn_admin` + platform admin API routes |
 | A plataforma suporta múltiplos hotéis com marca própria | comprovada no produto | Multi-tenant backend and per-hotel config/template/modeling |
 | Novos módulos podem ser ativados sem reconstruir a base da plataforma | demonstrável em ambiente de teste | Module catalog + plan presets + hotel config toggles exist |
 
@@ -97,3 +97,4 @@ Supporting validation updates completed on July 27, 2026:
 
 - [pilot-module-validation-2026-07-27.md](/abs/path/C:/ProjetosFlutter/konekto_app/docs/pilot-module-validation-2026-07-27.md:1)
 - [template-compatibility-validation-2026-07-27.md](/abs/path/C:/ProjetosFlutter/konekto_app/docs/template-compatibility-validation-2026-07-27.md:1)
+

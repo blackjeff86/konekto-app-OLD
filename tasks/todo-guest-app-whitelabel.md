@@ -205,7 +205,7 @@ Plano completo: `tasks/plan-guest-app-whitelabel.md`.
       `flutter analyze` limpo no mobile/admin). Deployado e verificado nos
       3 apps com pipeline Vercel.
 - [x] Task 16: Documentar convenção pra novo template/feature flag —
-      `apps/konekto_api/lib/feature-flags.ts` (cabeçalho do arquivo, fonte
+      `apps/sevvn_api/lib/feature-flags.ts` (cabeçalho do arquivo, fonte
       de verdade dos 2 catálogos) + `apps/konekto_mobile/lib/templates/README.md`
       (espelha a mesma convenção do lado Flutter). Passo a passo pra 6º
       template (4 lugares) e 10ª feature flag (2 lugares).
@@ -222,3 +222,4 @@ Plano completo: `tasks/plan-guest-app-whitelabel.md`.
 - [x] Essential = Aura + Bosque. Premium/Enterprise = todos.
 - [x] Mapeamento de template no cutover: manual, por hotel.
 - [x] Toggle de cortesia de feature: só equipe Konekto (`konekto_admin`), não exposto ao hotel.
+

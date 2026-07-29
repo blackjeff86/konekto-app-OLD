@@ -6,7 +6,7 @@ Last updated: 2026-07-26
 
 Primary institutional app:
 
-- `apps/konekto_site_next`
+- `apps/sevvn_site_next`
 
 Legacy parallel surface:
 
@@ -14,12 +14,12 @@ Legacy parallel surface:
 
 Functional login kept active:
 
-- `apps/konekto_site_next/app/login/page.tsx`
-- `apps/konekto_site_next/app/login/LoginForm.tsx`
+- `apps/sevvn_site_next/app/login/page.tsx`
+- `apps/sevvn_site_next/app/login/LoginForm.tsx`
 
 ## 2. Current Home Structure
 
-Current `/` composition in `apps/konekto_site_next/app/page.tsx`:
+Current `/` composition in `apps/sevvn_site_next/app/page.tsx`:
 
 1. `SiteHeader`
 2. `Hero`
@@ -94,7 +94,7 @@ Not to remove:
 
 Current state:
 
-- login is already moved to `apps/konekto_site_next/app/login`
+- login is already moved to `apps/sevvn_site_next/app/login`
 - it posts to the real API auth endpoint
 - it redirects to the real hotel portal with token query string
 - visible branding already says `Sevvn`
@@ -143,3 +143,4 @@ Rebuild the institutional content architecture around:
 2. public status honesty second
 3. hotels and partners as distinct journeys
 4. the guest app as one interface inside a larger operational system
+

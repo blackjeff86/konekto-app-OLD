@@ -1,5 +1,5 @@
 /// Catálogo de feature flags do app do hóspede — espelha
-/// `apps/konekto_api/lib/feature-flags.ts` (`FEATURE_FLAGS`). Cada entrada
+/// `apps/sevvn_api/lib/feature-flags.ts` (`FEATURE_FLAGS`). Cada entrada
 /// aqui precisa ter uma correspondente lá, e vice-versa.
 enum GuestFeatureFlag {
   digitalCheckin('digital_checkin'),
@@ -20,7 +20,7 @@ enum GuestFeatureFlag {
 /// hóspede atual, a partir de `tenantConfig['enabledModules']` — a lista já
 /// resolvida pelo Module Engine (backend), que soma preset do plano +
 /// cortesia da equipe Konekto − o que o hotel desligou (ver
-/// `apps/konekto_api/lib/module-engine.ts`). Antes da arquitetura de
+/// `apps/sevvn_api/lib/module-engine.ts`). Antes da arquitetura de
 /// módulos isso lia `tenantConfig['enabledFeatures']` (campo renomeado pra
 /// `extraModules` — só os extras de cortesia, não o resolvido) — atualizado
 /// aqui pra não ficar lendo um campo morto e sempre resolver pra
@@ -50,3 +50,4 @@ class GuestFeatures {
 
   bool has(GuestFeatureFlag flag) => _enabledIds.contains(flag.id);
 }
+

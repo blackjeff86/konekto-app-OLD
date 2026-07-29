@@ -6,12 +6,12 @@ Last updated: 2026-07-26
 
 This document captures the actual current state of the repository before any further platform implementation work. It reflects the codebase as found in:
 
-- `apps/konekto_api`
-- `apps/konekto_portal_next`
+- `apps/sevvn_api`
+- `apps/sevvn_portal_next`
 - `apps/konekto_mobile`
-- `apps/konekto_admin`
+- `apps/sevvn_admin`
 - `apps/konekto_site`
-- `apps/konekto_site_next`
+- `apps/sevvn_site_next`
 
 The product is still named `Konekto` in code, but this analysis treats it as the current codebase that would need to evolve into the Sevvn platform.
 
@@ -19,13 +19,13 @@ The product is still named `Konekto` in code, but this analysis treats it as the
 
 ```text
                            ┌──────────────────────────┐
-                           │   apps/konekto_admin     │
+                           │   apps/sevvn_admin     │
                            │ Flutter platform admin   │
                            └────────────┬─────────────┘
                                         │ HTTP
                                         ▼
 ┌──────────────────────┐      ┌──────────────────────────┐      ┌──────────────────────┐
-│ apps/konekto_site_*  │      │   apps/konekto_api       │      │ apps/konekto_portal  │
+│ apps/konekto_site_*  │      │   apps/sevvn_api       │      │ apps/konekto_portal  │
 │ official site + login│◄────►│ Next.js API-only backend │◄────►│ Next.js hotel portal │
 └──────────────────────┘      │ Prisma + Neon/Postgres   │      └──────────────────────┘
                               └────────────┬─────────────┘
@@ -52,7 +52,7 @@ Key architectural observation:
 
 ## 2. Applications
 
-### `apps/konekto_api`
+### `apps/sevvn_api`
 
 - Stack: Next.js 16 App Router used as API-only backend
 - Language: TypeScript
@@ -61,7 +61,7 @@ Key architectural observation:
 - Tests: Vitest
 - Role in platform: source of truth for hotel data, staff auth, guest auth, modules catalog, plan presets, services, stays, guests, orders, coupons, support, integrations, analytics, and platform-admin operations
 
-### `apps/konekto_portal_next`
+### `apps/sevvn_portal_next`
 
 - Stack: Next.js 16
 - Language: TypeScript + React 19
@@ -76,7 +76,7 @@ Key architectural observation:
 - Important current behavior: can run either from backend APIs or from packaged asset JSON fixtures, controlled by `USE_API`
 - Default behavior today: API-first for pilot-safe builds; asset mode remains only as an explicit fallback
 
-### `apps/konekto_admin`
+### `apps/sevvn_admin`
 
 - Stack: Flutter
 - Role in platform: global Konekto admin / future Sevvn Admin
@@ -86,7 +86,7 @@ Key architectural observation:
 
 - Legacy compatibility package kept only for redirects/archive behavior
 
-### `apps/konekto_site_next`
+### `apps/sevvn_site_next`
 
 - Next.js institutional website and official login surface
 
@@ -116,7 +116,7 @@ Key architectural observation:
 
 ## 4. Database And Schema State
 
-Primary schema lives in `apps/konekto_api/prisma/schema.prisma`.
+Primary schema lives in `apps/sevvn_api/prisma/schema.prisma`.
 
 Core models already present:
 
@@ -219,10 +219,10 @@ Important conclusion:
 
 Source of truth:
 
-- `apps/konekto_api/lib/module-catalog.ts`
-- `apps/konekto_api/lib/module-registry.ts`
-- `apps/konekto_api/lib/module-engine.ts`
-- `apps/konekto_api/lib/plan-presets.ts`
+- `apps/sevvn_api/lib/module-catalog.ts`
+- `apps/sevvn_api/lib/module-registry.ts`
+- `apps/sevvn_api/lib/module-engine.ts`
+- `apps/sevvn_api/lib/plan-presets.ts`
 
 Current catalog totals:
 
@@ -628,3 +628,4 @@ This repository is not a blank slate and not just a UI prototype. It already con
 - production security and observability
 
 That makes a 30-day pilot plausible only if the work is framed as platform hardening and scope control, not as adding every listed future module.
+

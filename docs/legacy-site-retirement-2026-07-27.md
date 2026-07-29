@@ -18,7 +18,7 @@ Its new role is:
 
 The active official surface is:
 
-- `apps/konekto_site_next`
+- `apps/sevvn_site_next`
 
 ## Runtime Decision
 
@@ -36,8 +36,8 @@ The legacy package now redirects:
 
 The active app configs already point to the new official surface:
 
-- `apps/konekto_portal_next/lib/siteConfig.ts`
-- `apps/konekto_admin/lib/site_config.dart`
+- `apps/sevvn_portal_next/lib/siteConfig.ts`
+- `apps/sevvn_admin/lib/site_config.dart`
 
 The legacy runtime dependency was reduced by:
 
@@ -65,3 +65,4 @@ Before final deletion of `apps/konekto_site`, the team should still confirm:
 ## Conclusion
 
 Task 12 is satisfied once the legacy package is reduced to compatibility behavior and no longer acts as an operationally required site.
+

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:konekto/api_config.dart';
 import 'package:konekto/data/tenant_repository.dart';
 
-/// Implementação HTTP: lê os dados de `apps/konekto_api`, o backend Next.js
+/// Implementação HTTP: lê os dados de `apps/sevvn_api`, o backend Next.js
 /// que substituiu o Firestore. Mesmo contrato de [TenantRepository] — a UI
 /// não percebe a diferença.
 class HttpTenantRepository implements TenantRepository {
@@ -80,3 +80,4 @@ class HttpPromotionsRepository implements PromotionsRepository {
     return json.decode(response.body) as Map<String, dynamic>;
   }
 }
+

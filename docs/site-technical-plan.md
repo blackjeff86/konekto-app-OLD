@@ -4,7 +4,7 @@ Last updated: 2026-07-26
 
 ## 1. Content Architecture
 
-Create a structured content layer under `apps/konekto_site_next/content/`:
+Create a structured content layer under `apps/sevvn_site_next/content/`:
 
 - `brand.ts`
 - `navigation.ts`
@@ -154,3 +154,4 @@ Not allowed without explicit validation:
 5. hotels/resources/templates/plans/about/contact pages
 6. forms and conversion wiring
 7. QA and deploy
+

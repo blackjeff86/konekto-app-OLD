@@ -106,7 +106,7 @@ Current status:
 
 Reference:
 
-- [route.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_api/app/api/hotels/[hotelId]/route.ts:1)
+- [route.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_api/app/api/hotels/[hotelId]/route.ts:1)
 
 Current behavior:
 
@@ -179,8 +179,8 @@ Current status:
 
 Reference:
 
-- [auth-guard.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_api/lib/auth-guard.ts:1)
-- [stay-expiration.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_api/lib/stay-expiration.ts:1)
+- [auth-guard.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_api/lib/auth-guard.ts:1)
+- [stay-expiration.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_api/lib/stay-expiration.ts:1)
 
 Risk:
 
@@ -321,3 +321,4 @@ Recommended release position:
 
 - acceptable for controlled staging after hardening
 - not yet acceptable for externally exposed pilot traffic without the immediate actions above
+

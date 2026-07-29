@@ -1,4 +1,4 @@
-/// Espelha `ModuleDefinition` em apps/konekto_api/lib/module-catalog.ts —
+/// Espelha `ModuleDefinition` em apps/sevvn_api/lib/module-catalog.ts —
 /// buscado via `GET /api/modules-catalog` (ModuleCatalogRepository), nunca
 /// hardcoded aqui.
 enum ModuleCategory { core, hospitalidade, financeiro, experiencia, comunicacao }
@@ -72,7 +72,7 @@ class ModuleDefinition {
   }
 }
 
-/// Espelha `ResolvedModule` em apps/konekto_api/lib/module-engine.ts —
+/// Espelha `ResolvedModule` em apps/sevvn_api/lib/module-engine.ts —
 /// já vem calculado dentro de `tenantConfig['enabledModules']` (o backend
 /// resolve preset + extras + desligados, o Flutter nunca refaz essa conta).
 class ResolvedModule {
@@ -100,7 +100,7 @@ List<ResolvedModule> resolvedModulesFromTenantConfig(Map<String, dynamic> tenant
   return raw.whereType<Map<String, dynamic>>().map(ResolvedModule.fromJson).toList();
 }
 
-/// Espelha `ServiceGroup` em apps/konekto_api/lib/module-catalog.ts —
+/// Espelha `ServiceGroup` em apps/sevvn_api/lib/module-catalog.ts —
 /// agrupamento da tela de Serviços (Fase 12).
 class ServiceGroup {
   final String id;
@@ -117,3 +117,4 @@ class ServiceGroup {
     );
   }
 }
+

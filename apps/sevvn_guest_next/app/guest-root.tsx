@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import type { AuraBottomNavItem } from "@/components/guest/aura/AuraPrimitives";
+import { GuestAuthenticatedShell } from "@/components/guest/GuestAuthenticatedShell";
+import { GuestClaimScreen } from "@/components/guest/GuestClaimScreen";
+import { GuestCurrentView } from "@/components/guest/GuestCurrentView";
 import { claimGuestAccess } from "@/lib/api/guest";
 import {
   getGuestHotelConfig,
@@ -10,6 +14,7 @@ import {
   getGuestServices,
 } from "@/lib/api/hotels";
 import { getModulesCatalog } from "@/lib/api/modules-catalog";
+import { getGuestNotices } from "@/lib/api/notices";
 import { createGuestOrder, getGuestOrders } from "@/lib/api/orders";
 import { getGuestMessages, sendGuestMessage } from "@/lib/api/messages";
 import type {
@@ -18,6 +23,7 @@ import type {
   GuestHotelConfig,
   GuestItemAvailabilityResponse,
   GuestMessage,
+  GuestNotice,
   GuestOrder,
   RoomServiceModuleConfig,
   GuestScheduledSlot,
@@ -41,35 +47,20 @@ import {
   resolveHomeModules,
   resolveServicesMenuModules,
 } from "@/lib/module-engine";
-
-type LoadState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | {
-      status: "ready";
-      hotel: GuestHotelConfig;
-      services: GuestService[];
-      modulesCatalog: ModulesCatalogResponse;
-    }
-  | { status: "error"; message: string };
-
-type ViewState =
-  | { kind: "home" }
-  | { kind: "services" }
-  | { kind: "bookings" }
-  | { kind: "profile" }
-  | { kind: "service-detail"; serviceId: string };
-
-type OrdersState = {
-  status: "idle" | "loading" | "ready" | "error";
-  orders: GuestOrder[];
-};
-
-type ServiceDetailState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "ready"; service: GuestService }
-  | { status: "error"; message: string };
+import {
+  activeModuleId,
+  getModuleRuntimeStatus,
+  iconForModule,
+  supportsModuleNavigation,
+  type GuestLoadState as LoadState,
+  type GuestOrdersState as OrdersState,
+  type GuestServiceDetailState as ServiceDetailState,
+  type GuestViewState as ViewState,
+  type ResolvedModulesShape,
+  useResolvedModules,
+  viewForModule,
+} from "@/lib/guest-shell";
+import { createAuraThemeStyle } from "@/lib/theme/aura";
 
 type RoomServiceComposerProps = {
   token: string;
@@ -97,6 +88,7 @@ type ConciergeComposerProps = {
   token: string;
   service: GuestService;
   moduleConfig: ConciergeModuleConfig;
+  variant?: "inline" | "page";
 };
 
 const templateAccent: Record<GuestTemplateId, string> = {
@@ -120,6 +112,13 @@ export function GuestRoot() {
   });
   const [serviceDetailState, setServiceDetailState] = useState<ServiceDetailState>({
     status: "idle",
+  });
+  const [noticesState, setNoticesState] = useState<{
+    status: "idle" | "loading" | "ready" | "error";
+    notices: GuestNotice[];
+  }>({
+    status: "idle",
+    notices: [],
   });
 
   useEffect(() => {
@@ -217,6 +216,30 @@ export function GuestRoot() {
     };
   }, [session, view]);
 
+  useEffect(() => {
+    if (!session || view.kind !== "notices") return;
+
+    let cancelled = false;
+    setNoticesState((current) => ({
+      status: current.notices.length > 0 ? "ready" : "loading",
+      notices: current.notices,
+    }));
+
+    void getGuestNotices(session.token)
+      .then((notices) => {
+        if (cancelled) return;
+        setNoticesState({ status: "ready", notices });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setNoticesState({ status: "error", notices: [] });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session, view]);
+
   const accentColor = useMemo(() => {
     if (loadState.status !== "ready") return "var(--accent)";
     const template = loadState.hotel.template ?? "aura";
@@ -224,6 +247,23 @@ export function GuestRoot() {
   }, [loadState]);
 
   const resolvedModules = useResolvedModules(loadState);
+  const themeStyle = useMemo(
+    () =>
+      createAuraThemeStyle(
+        loadState.status === "ready" ? loadState.hotel : undefined,
+      ),
+    [loadState],
+  );
+
+  const bottomNavItems = useMemo<AuraBottomNavItem[]>(() => {
+    if (!resolvedModules) return [];
+
+    return resolvedModules.bottomNav.map((module) => ({
+      id: module.id,
+      icon: iconForModule(module.id),
+      label: module.name,
+    }));
+  }, [resolvedModules]);
 
   function handleClaimSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -267,113 +307,71 @@ export function GuestRoot() {
 
   if (!session) {
     return (
-      <main className="guest-stage">
-        <section className="guest-panel">
-          <p className="guest-eyebrow">Sevvn Guest Next</p>
-          <h1 className="guest-title">Acesso do hospede</h1>
-          <p className="guest-copy">
-            O hotel exibido neste app sera sempre derivado do codigo de acesso
-            validado, nunca de uma escolha manual do navegador.
-          </p>
-
-          <form className="guest-form" onSubmit={handleClaimSubmit}>
-            <label className="guest-label" htmlFor="claimCode">
-              Codigo de acesso
-            </label>
-            <input
-              id="claimCode"
-              value={claimCode}
-              onChange={(event) => setClaimCode(event.target.value)}
-              placeholder="SV-P84YQ3"
-              autoCapitalize="characters"
-              className="guest-input"
-            />
-            <button
-              type="submit"
-              className="guest-button"
-              disabled={isPending || !claimCode.trim()}
-            >
-              {isPending ? "Validando..." : "Entrar"}
-            </button>
-          </form>
-
-          {claimError ? <p className="guest-error">{claimError}</p> : null}
-        </section>
-      </main>
+      <GuestClaimScreen
+        claimCode={claimCode}
+        claimError={claimError}
+        isPending={isPending}
+        onChangeClaimCode={setClaimCode}
+        onSubmit={handleClaimSubmit}
+        themeStyle={themeStyle}
+      />
     );
   }
 
   return (
-    <main className="guest-stage">
-      <section className="guest-panel">
-        <div className="guest-shell-header">
-          <div>
-            <p className="guest-eyebrow">Sessao autenticada</p>
-            <h1 className="guest-title" style={{ color: accentColor }}>
-              {session.guest.firstName} {session.guest.lastName}
-            </h1>
-            <p className="guest-copy">
-              Quarto {session.guest.roomNumber} • hotel {session.guest.hotelId}
-            </p>
+    <GuestAuthenticatedShell
+      bottomNavItems={bottomNavItems}
+      loadState={loadState}
+      onSignOut={handleSignOut}
+      onViewChange={setView}
+      resolvedModules={resolvedModules}
+      session={session}
+      themeStyle={themeStyle}
+      view={view}
+    >
+      {loadState.status === "ready" && resolvedModules ? (
+        <GuestCurrentView>
+          <div className="guest-module-nav">
+            {resolvedModules.home.slice(0, 4).map((module) => (
+              <button
+              key={module.id}
+              type="button"
+              className={`aura-action-tile${
+                supportsModuleNavigation(module) ? "" : " aura-action-tile-disabled"
+              }`}
+              disabled={!supportsModuleNavigation(module)}
+              onClick={() => setView(viewForModule(module))}
+            >
+                <span className="aura-action-tile-visual material-symbols-outlined">
+                  {iconForModule(module.id)}
+                </span>
+                <span className="aura-action-tile-label">{module.name}</span>
+              </button>
+            ))}
           </div>
-          <button
-            type="button"
-            className="guest-secondary-button"
-            onClick={handleSignOut}
-          >
-            Sair
-          </button>
-        </div>
 
-        <section className="guest-security-note">
-          <strong>Regra de seguranca ativa:</strong> o app carrega dados apenas
-          para o hotel vinculado ao claim autenticado. O `hotelId` vem da
-          sessao do hospede, nao de URL livre ou troca manual.
-        </section>
-
-        {loadState.status === "loading" ? (
-          <p className="guest-copy">Carregando hotel e servicos...</p>
-        ) : null}
-
-        {loadState.status === "error" ? (
-          <p className="guest-error">{loadState.message}</p>
-        ) : null}
-
-        {loadState.status === "ready" && resolvedModules ? (
-          <>
-            <nav className="guest-module-nav">
-              {resolvedModules.bottomNav.map((module) => (
-                <button
-                  key={module.id}
-                  type="button"
-                  className={`guest-nav-button${
-                    isModuleActive(module, view) ? " guest-nav-button-active" : ""
-                  }`}
-                  onClick={() => setView(viewForModule(module))}
-                >
-                  {module.name}
-                </button>
-              ))}
-            </nav>
-
-            {renderCurrentView({
-              view,
-              hotel: loadState.hotel,
-              session,
-              services: loadState.services,
-              resolvedModules,
-              ordersState,
-              serviceDetailState,
-              token: session.token,
-              onOrderCreated: handleGuestOrderCreated,
-              onOpenServices: () => setView({ kind: "services" }),
-              onOpenService: (serviceId) => setView({ kind: "service-detail", serviceId }),
-              onBackToServices: () => setView({ kind: "services" }),
-            })}
-          </>
-        ) : null}
-      </section>
-    </main>
+          {renderCurrentView({
+            view,
+            hotel: loadState.hotel,
+            session,
+            services: loadState.services,
+            resolvedModules,
+            ordersState,
+            serviceDetailState,
+            token: session.token,
+            onOrderCreated: handleGuestOrderCreated,
+            onOpenServices: () => setView({ kind: "services" }),
+            onOpenBookings: () => setView({ kind: "bookings" }),
+            onOpenMessages: () => setView({ kind: "messages" }),
+            onOpenNotices: () => setView({ kind: "notices" }),
+            onOpenProfile: () => setView({ kind: "profile" }),
+            onOpenService: (serviceId) => setView({ kind: "service-detail", serviceId }),
+            onBackToServices: () => setView({ kind: "services" }),
+            noticesState,
+          })}
+        </GuestCurrentView>
+      ) : null}
+    </GuestAuthenticatedShell>
   );
 }
 
@@ -395,8 +393,13 @@ function renderCurrentView({
   token,
   onOrderCreated,
   onOpenServices,
+  onOpenBookings,
+  onOpenMessages,
+  onOpenNotices,
+  onOpenProfile,
   onOpenService,
   onBackToServices,
+  noticesState,
 }: {
   view: ViewState;
   hotel: GuestHotelConfig;
@@ -408,67 +411,86 @@ function renderCurrentView({
   token: string;
   onOrderCreated: (order: GuestOrder) => void;
   onOpenServices: () => void;
+  onOpenBookings: () => void;
+  onOpenMessages: () => void;
+  onOpenNotices: () => void;
+  onOpenProfile: () => void;
   onOpenService: (serviceId: string) => void;
   onBackToServices: () => void;
+  noticesState: {
+    status: "idle" | "loading" | "ready" | "error";
+    notices: GuestNotice[];
+  };
 }) {
   if (view.kind === "services") {
     return (
-      <div className="guest-grid">
-        <article className="guest-card guest-card-wide">
-          <p className="guest-card-label">Servicos por modulo</p>
-          <h2 className="guest-card-title">
-            {resolvedModules.servicesMenu.length} modulo(s) de hospitalidade
-          </h2>
-          <div className="guest-chip-list">
-            {resolvedModules.servicesMenu.map((module) => (
-              <span key={module.id} className="guest-chip">
-                {module.name}
-              </span>
-            ))}
-          </div>
-        </article>
+      <>
+        <section className="aura-directory-hero">
+          <p className="guest-card-label">Catalogo autenticado</p>
+          <h2 className="aura-directory-title">Servicos</h2>
+          <p className="guest-copy aura-directory-copy">
+            Experiencias e operacoes habilitadas especificamente para este hotel.
+            O catalogo abaixo reflete os modulos ativos e os servicos reais disponiveis.
+          </p>
+        </section>
 
-        <article className="guest-card guest-card-wide">
-          <p className="guest-card-label">Servicos do hotel</p>
-          <h2 className="guest-card-title">
-            {services.length} servico(s) disponivel(is)
-          </h2>
-          <div className="guest-services-groups">
-            {resolvedModules.groupedServices.map((section) => (
-              <section key={section.id} className="guest-services-section">
-                {section.title ? (
-                  <h3 className="guest-section-title">{section.title}</h3>
-                ) : null}
-                <div className="guest-services-list">
-                  {section.services.map((service) => (
-                    <button
-                      key={service.id}
-                      type="button"
-                      className="guest-service-button"
-                      onClick={() => onOpenService(service.id)}
-                    >
-                      <div className="guest-service-row">
-                        <div>
-                          <strong>{service.name}</strong>
-                          <p className="guest-copy">{service.description}</p>
-                        </div>
-                        <span className="guest-service-tag">
-                          {service.type.replaceAll("_", " ")}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            ))}
-            {resolvedModules.groupedServices.length === 0 ? (
-              <p className="guest-copy">
-                Nenhum servico agrupado disponivel no momento.
-              </p>
-            ) : null}
+        <section className="aura-directory-grid">
+          {resolvedModules.groupedServices.flatMap((section, sectionIndex) =>
+            section.services.map((service, serviceIndex) => {
+              const isFeature = sectionIndex === 0 && serviceIndex === 0;
+              return (
+                <button
+                  key={service.id}
+                  type="button"
+                  className={`aura-service-card${isFeature ? " aura-service-card-feature" : ""}`}
+                  onClick={() => onOpenService(service.id)}
+                >
+                  {service.bannerImageUrl ? (
+                    <div
+                      className="aura-service-card-media"
+                      style={{ backgroundImage: `url(${service.bannerImageUrl})` }}
+                    />
+                  ) : (
+                    <div className="aura-service-card-media aura-service-card-media-fallback" />
+                  )}
+                  <div className="aura-service-card-overlay" />
+                  <div className="aura-service-card-content">
+                    <div className="aura-service-card-topline">
+                      <span className="material-symbols-outlined">
+                        {service.icon || iconForModule(service.moduleId ?? service.type)}
+                      </span>
+                      <span>{section.title ?? service.category ?? "Hospitalidade"}</span>
+                    </div>
+                    <h3>{service.name}</h3>
+                    <p>{service.description}</p>
+                  </div>
+                </button>
+              );
+            }),
+          )}
+        </section>
+
+        <section className="aura-directory-note">
+          <div className="aura-directory-note-icon">
+            <span className="material-symbols-outlined">concierge</span>
           </div>
-        </article>
-      </div>
+          <div>
+            <h3>Solicitacoes especiais</h3>
+            <p>
+              Se o que voce procura nao estiver listado aqui, o concierge pode
+              receber pedidos personalizados dentro do mesmo contexto autenticado.
+            </p>
+          </div>
+        </section>
+
+        {resolvedModules.groupedServices.length === 0 ? (
+          <section className="guest-card guest-card-wide">
+            <p className="guest-copy">
+              Nenhum servico agrupado disponivel no momento.
+            </p>
+          </section>
+        ) : null}
+      </>
     );
   }
 
@@ -501,146 +523,187 @@ function renderCurrentView({
       service.type !== "restaurant" || restaurantModuleConfig.showMenuPrices !== false;
 
     return (
-      <div className="guest-grid">
-        <article className="guest-card guest-card-wide">
-          <div className="guest-detail-header">
+      <>
+        <section className="aura-detail-hero">
+          {service.bannerImageUrl ? (
+            <div
+              className="aura-detail-hero-media"
+              style={{ backgroundImage: `url(${service.bannerImageUrl})` }}
+            />
+          ) : (
+            <div className="aura-detail-hero-media aura-detail-hero-media-fallback" />
+          )}
+          <div className="aura-detail-hero-overlay" />
+          <div className="aura-detail-hero-content">
             <button
               type="button"
-              className="guest-secondary-button"
+              className="aura-back-chip"
               onClick={onBackToServices}
             >
+              <span className="material-symbols-outlined">arrow_back</span>
               Voltar para servicos
             </button>
-            <span className="guest-service-tag">
-              {service.type.replaceAll("_", " ")}
+            <span className="aura-service-card-topline">
+              <span className="material-symbols-outlined">
+                {service.icon || iconForModule(service.moduleId ?? service.type)}
+              </span>
+              <span>{service.type.replaceAll("_", " ")}</span>
             </span>
+            <h2>{service.name}</h2>
+            <p>{service.description}</p>
           </div>
-          <p className="guest-card-label">Detalhe do servico</p>
-          <h2 className="guest-card-title">{service.name}</h2>
-          <p className="guest-copy">{service.description}</p>
-          {service.bannerImageUrl ? (
-            <div className="guest-service-row">
-              <div>
-                <strong>Banner carregado</strong>
-                <p className="guest-copy">{service.bannerImageUrl}</p>
+        </section>
+
+        <section className="aura-detail-meta">
+          <article className="aura-detail-meta-card">
+            <p className="guest-card-label">Modulo</p>
+            <strong>{service.moduleId ?? "Nao informado"}</strong>
+          </article>
+          <article className="aura-detail-meta-card">
+            <p className="guest-card-label">Itens ativos</p>
+            <strong>{service.items?.length ?? 0}</strong>
+          </article>
+          <article className="aura-detail-meta-card">
+            <p className="guest-card-label">Template</p>
+            <strong>{hotel.template ?? "aura"}</strong>
+          </article>
+        </section>
+
+        {showRestaurantMenu ? (
+          service.items?.length ? (
+            <section className="aura-detail-items">
+              <div className="aura-section-headline">
+                <h3 className="aura-section-title">Itens disponiveis</h3>
+                <span className="guest-card-label">Catalogo real do hotel</span>
               </div>
-            </div>
-          ) : null}
-          <div className="guest-services-list">
-            <div className="guest-service-row">
-              <div>
-                <strong>Modulo vinculado</strong>
-                <p className="guest-copy">{service.moduleId ?? "Nao informado"}</p>
+              <div className="aura-detail-item-list">
+                {service.items.map((item) => (
+                  <article key={item.id} className="aura-detail-item-card">
+                    <div className="aura-detail-item-media">
+                      {item.imageUrl ? (
+                        <div
+                          className="aura-detail-item-media-image"
+                          style={{ backgroundImage: `url(${item.imageUrl})` }}
+                        />
+                      ) : (
+                        <div className="aura-detail-item-media-fallback">
+                          <span className="material-symbols-outlined">
+                            {service.icon || iconForModule(service.moduleId ?? service.type)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="aura-detail-item-body">
+                      <div className="aura-detail-item-header">
+                        <h4>{item.name}</h4>
+                        <strong>
+                          {showRestaurantPrices
+                            ? formatItemPrice(item.price)
+                            : "oculto"}
+                        </strong>
+                      </div>
+                      <p>{item.description || "Sem descricao."}</p>
+                      <div className="guest-chip-list">
+                        <span className="guest-chip">{item.category ?? "item"}</span>
+                        {item.durationMinutes ? (
+                          <span className="guest-chip">
+                            {item.durationMinutes} min
+                          </span>
+                        ) : null}
+                        {item.isMinibarItem ? (
+                          <span className="guest-chip">frigobar</span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </article>
+                ))}
               </div>
+            </section>
+          ) : null
+        ) : service.type === "restaurant" ? (
+          <section className="guest-card guest-card-wide">
+            <p className="guest-card-label">Cardapio</p>
+            <h3 className="guest-card-title">Cardapio oculto pelo hotel</h3>
+            <p className="guest-copy">
+              Este restaurante aceita reservas mesmo sem exibir os pratos dentro do
+              app do hospede.
+            </p>
+          </section>
+        ) : null}
+
+        {service.tableTypes?.length ? (
+          <section className="guest-card guest-card-wide">
+            <div className="aura-section-headline">
+              <h3 className="aura-section-title">Mesas e configuracoes</h3>
+              <span className="guest-card-label">Restaurante</span>
             </div>
-            <div className="guest-service-row">
-              <div>
-                <strong>Itens disponiveis</strong>
-                <p className="guest-copy">
-                  {service.items?.length ?? 0} item(ns) carregado(s) no detalhe real.
-                </p>
-              </div>
-            </div>
-            {showRestaurantMenu ? (
-              service.items?.map((item) => (
-                <div key={item.id} className="guest-service-row">
+            <div className="guest-services-list">
+              {service.tableTypes.map((tableType) => (
+                <div key={tableType.id} className="guest-service-row">
                   <div>
-                    <strong>{item.name}</strong>
-                    <p className="guest-copy">{item.description || "Sem descricao."}</p>
+                    <strong>{tableType.name}</strong>
                     <p className="guest-copy">
-                      Preco:{" "}
-                      {showRestaurantPrices
-                        ? item.price != null
-                          ? new Intl.NumberFormat("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            }).format(item.price)
-                          : "sob consulta"
-                        : "oculto pelo hotel"}
+                      Capacidade: {tableType.capacity} pessoa(s)
                     </p>
-                    {item.durationMinutes ? (
-                      <p className="guest-copy">
-                        Duracao prevista: {item.durationMinutes} minuto(s)
-                      </p>
-                    ) : null}
-                    {item.isMinibarItem ? (
-                      <p className="guest-copy">Item configurado para frigobar.</p>
-                    ) : null}
+                    <p className="guest-copy">
+                      {tableType.description || "Tipo de mesa sem descricao."}
+                    </p>
                   </div>
-                  <span className="guest-service-tag">
-                    {item.category ?? "item"}
-                  </span>
+                  <span className="guest-service-tag">mesa</span>
                 </div>
-              ))
-            ) : service.type === "restaurant" ? (
-              <div className="guest-service-row">
-                <div>
-                  <strong>Cardapio oculto pelo hotel</strong>
-                  <p className="guest-copy">
-                    Este restaurante pode aceitar reservas mesmo sem exibir os pratos
-                    dentro do app do hospede.
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            {service.tableTypes?.map((tableType) => (
-              <div key={tableType.id} className="guest-service-row">
-                <div>
-                  <strong>{tableType.name}</strong>
-                  <p className="guest-copy">
-                    Capacidade: {tableType.capacity} pessoa(s)
-                  </p>
-                  <p className="guest-copy">
-                    {tableType.description || "Tipo de mesa sem descricao."}
-                  </p>
-                </div>
-                <span className="guest-service-tag">mesa</span>
-              </div>
-            ))}
-            {service.type === "room_service" && service.items?.length ? (
-              <RoomServiceComposer
-                token={token}
-                service={service}
-                moduleConfig={roomServiceModuleConfig}
-                onOrderCreated={onOrderCreated}
-              />
-            ) : null}
-            {service.type === "restaurant" ? (
-              <RestaurantReservationComposer
-                token={token}
-                hotelId={hotel.id}
-                service={service}
-                moduleConfig={restaurantModuleConfig}
-                onOrderCreated={onOrderCreated}
-              />
-            ) : null}
-            {service.type === "activity" && service.items?.length ? (
-              <ActivityBookingComposer
-                token={token}
-                hotelId={hotel.id}
-                service={service}
-                onOrderCreated={onOrderCreated}
-              />
-            ) : null}
-            {service.moduleId === "concierge" ? (
-              <ConciergeComposer
-                token={token}
-                service={service}
-                moduleConfig={conciergeModuleConfig}
-              />
-            ) : null}
-            <div className="guest-service-row">
-              <div>
-                <strong>Proxima etapa</strong>
-                <p className="guest-copy">
-                  Aqui vamos encaixar pedido, agendamento e reserva autenticados
-                  por token, sempre no escopo do hotel do hospede.
-                </p>
-              </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <section className="guest-card guest-card-wide">
+          <div className="aura-section-headline">
+            <h3 className="aura-section-title">Operacao autenticada</h3>
+            <span className="guest-card-label">Fluxo real</span>
+          </div>
+          {service.type === "room_service" && service.items?.length ? (
+            <RoomServiceComposer
+              token={token}
+              service={service}
+              moduleConfig={roomServiceModuleConfig}
+              onOrderCreated={onOrderCreated}
+            />
+          ) : null}
+          {service.type === "restaurant" ? (
+            <RestaurantReservationComposer
+              token={token}
+              hotelId={hotel.id}
+              service={service}
+              moduleConfig={restaurantModuleConfig}
+              onOrderCreated={onOrderCreated}
+            />
+          ) : null}
+          {service.type === "activity" && service.items?.length ? (
+            <ActivityBookingComposer
+              token={token}
+              hotelId={hotel.id}
+              service={service}
+              onOrderCreated={onOrderCreated}
+            />
+          ) : null}
+          {service.moduleId === "concierge" ? (
+            <ConciergeComposer
+              token={token}
+              service={service}
+              moduleConfig={conciergeModuleConfig}
+            />
+          ) : null}
+          <div className="guest-service-row">
+            <div>
+              <strong>Isolamento ativo</strong>
+              <p className="guest-copy">
+                Pedidos, reservas e mensagens continuam vinculados ao hotel e ao
+                hospede autenticados pelo token da estadia.
+              </p>
             </div>
           </div>
-        </article>
-      </div>
+        </section>
+      </>
     );
   }
 
@@ -703,121 +766,508 @@ function renderCurrentView({
     );
   }
 
-  if (view.kind === "profile") {
+  if (view.kind === "messages") {
+    const conciergeModuleConfig = getConciergeModuleConfig(hotel.enabledModules);
+    const conciergeService =
+      services.find((entry) => entry.moduleId === "concierge") ?? {
+        id: "virtual-concierge",
+        name: conciergeModuleConfig.title?.trim() || "Concierge Sevvn",
+        slug: "concierge",
+        icon: "concierge",
+        description:
+          "Canal autenticado para conversar com a recepcao, solicitar apoio e coordenar demandas da estadia.",
+        type: "activity" as const,
+        moduleId: "concierge",
+        bannerImageUrl: null,
+      };
+
     return (
-      <div className="guest-grid">
-        <article className="guest-card">
-          <p className="guest-card-label">Hospede</p>
-          <h2 className="guest-card-title">
-            {session.guest.firstName} {session.guest.lastName}
-          </h2>
-          <p className="guest-copy">Quarto {session.guest.roomNumber}</p>
-        </article>
-        <article className="guest-card">
-          <p className="guest-card-label">Hotel</p>
-          <h2 className="guest-card-title">
-            {hotel.hotelInfo?.name ?? "Hotel sem nome"}
-          </h2>
-          <p className="guest-copy">
-            Template ativo: {hotel.template ?? "aura"}
-          </p>
-        </article>
-      </div>
+      <>
+        <section className="aura-chat-hero">
+          <div className="aura-chat-hero-avatar">
+            <span className="material-symbols-outlined">concierge</span>
+          </div>
+          <div>
+            <p className="guest-card-label">Canal autenticado</p>
+            <h2 className="aura-section-title">
+              {conciergeModuleConfig.title?.trim() || "Concierge"}
+            </h2>
+            <p className="guest-copy">
+              Atendimento vinculado a esta estadia e isolado no hotel autenticado.
+            </p>
+          </div>
+        </section>
+
+        <section className="guest-card guest-card-wide">
+          <ConciergeComposer
+            token={token}
+            service={conciergeService}
+            moduleConfig={conciergeModuleConfig}
+            variant="page"
+          />
+        </section>
+      </>
     );
   }
 
+  if (view.kind === "notices") {
+    return (
+      <>
+        <section className="aura-directory-hero">
+          <p className="guest-card-label">Recepcao e operacao</p>
+          <h2 className="aura-directory-title">Notificacoes</h2>
+          <p className="guest-copy aura-directory-copy">
+            Avisos da estadia, atualizacoes operacionais e confirmacoes enviadas
+            pelo hotel autenticado.
+          </p>
+        </section>
+
+        <section className="aura-notices-list">
+          {noticesState.status === "loading" ? (
+            <article className="aura-notice-card">
+              <div className="aura-notice-icon">
+                <span className="material-symbols-outlined">notifications</span>
+              </div>
+              <div>
+                <strong>Carregando avisos...</strong>
+                <p className="guest-copy">Buscando mensagens da sua estadia.</p>
+              </div>
+            </article>
+          ) : null}
+
+          {noticesState.status === "error" ? (
+            <article className="aura-notice-card">
+              <div className="aura-notice-icon aura-notice-icon-alert">
+                <span className="material-symbols-outlined">error</span>
+              </div>
+              <div>
+                <strong>Nao foi possivel carregar os avisos</strong>
+                <p className="guest-copy">
+                  Tente novamente daqui a pouco ou confira com a recepcao.
+                </p>
+              </div>
+            </article>
+          ) : null}
+
+          {noticesState.status === "ready"
+            ? noticesState.notices.map((notice, index) => (
+                <article key={notice.id} className="aura-notice-card">
+                  <div
+                    className={`aura-notice-icon${
+                      index === 0 ? " aura-notice-icon-primary" : ""
+                    }`}
+                  >
+                    <span className="material-symbols-outlined">
+                      {index === 0 ? "hotel_class" : "notifications"}
+                    </span>
+                  </div>
+                  <div className="aura-notice-body">
+                    <div className="aura-notice-header">
+                      <strong>{summarizeNoticeTitle(notice.message, index)}</strong>
+                      <span>{formatNoticeTimestamp(notice.createdAt)}</span>
+                    </div>
+                    <p>{notice.message}</p>
+                  </div>
+                </article>
+              ))
+            : null}
+        </section>
+
+        {noticesState.status === "ready" && noticesState.notices.length === 0 ? (
+          <section className="aura-empty-state">
+            <span className="material-symbols-outlined">check_circle</span>
+            <p>Voce esta em dia com os avisos da sua estadia.</p>
+          </section>
+        ) : null}
+      </>
+    );
+  }
+
+  if (view.kind === "profile") {
+    return (
+      <>
+        <section className="aura-profile-header">
+          <div className="aura-profile-avatar">
+            <span className="material-symbols-outlined">person</span>
+          </div>
+          <h2>
+            {session.guest.firstName} {session.guest.lastName}
+          </h2>
+          <span className="aura-status-pill">
+            Hospede ativo • Quarto {session.guest.roomNumber}
+          </span>
+        </section>
+
+        <section className="aura-profile-stats">
+          <article className="aura-detail-meta-card">
+            <p className="guest-card-label">Check-in</p>
+            <strong>{formatGuestDate(session.guest.checkInDate)}</strong>
+          </article>
+          <article className="aura-detail-meta-card">
+            <p className="guest-card-label">Check-out</p>
+            <strong>{formatGuestDate(session.guest.checkOutDate)}</strong>
+          </article>
+          <article className="aura-detail-meta-card">
+            <p className="guest-card-label">Hotel</p>
+            <strong>{hotel.hotelInfo?.name ?? "Sevvn Hospitality"}</strong>
+          </article>
+        </section>
+
+        <section className="aura-profile-list">
+          <article className="aura-profile-list-item">
+            <div className="aura-profile-list-icon">
+              <span className="material-symbols-outlined">wifi</span>
+            </div>
+            <div>
+              <strong>Conectividade da estadia</strong>
+              <p>Rede: {session.guest.wifiNetworkName ?? "Nao informada"}</p>
+              <p>Senha: {session.guest.wifiPassword ?? "Solicite a recepcao"}</p>
+            </div>
+          </article>
+
+          <article className="aura-profile-list-item">
+            <div className="aura-profile-list-icon">
+              <span className="material-symbols-outlined">grid_view</span>
+            </div>
+            <div>
+              <strong>Modulos habilitados</strong>
+              <p>
+                {hotel.enabledModules?.filter((module) => module.enabled).length ?? 0}{" "}
+                modulos ativos para esta hospedagem.
+              </p>
+            </div>
+          </article>
+
+          <article className="aura-profile-list-item">
+            <div className="aura-profile-list-icon">
+              <span className="material-symbols-outlined">verified_user</span>
+            </div>
+            <div>
+              <strong>Seguranca da sessao</strong>
+              <p>
+                Os dados exibidos aqui sao resolvidos a partir do token da estadia,
+                sem troca manual de hotel no navegador.
+              </p>
+            </div>
+          </article>
+        </section>
+      </>
+    );
+  }
+
+  const wifiPassword = session.guest.wifiPassword;
+
   return (
-    <div className="guest-grid">
-      <article className="guest-card">
-        <p className="guest-card-label">Hotel</p>
-        <h2 className="guest-card-title">
-          {hotel.hotelInfo?.name ?? "Hotel sem nome"}
-        </h2>
-        <p className="guest-copy">Template ativo: {hotel.template ?? "aura"}</p>
-        <p className="guest-copy">
-          Modulos resolvidos: {hotel.enabledModules?.length ?? 0}
-        </p>
-      </article>
-
-      <article className="guest-card">
-        <p className="guest-card-label">Wi-Fi</p>
-        <h2 className="guest-card-title">
-          {session.guest.wifiNetworkName ?? "Nao informado"}
-        </h2>
-        <p className="guest-copy">
-          Senha: {session.guest.wifiPassword ?? "Nao informada"}
-        </p>
-      </article>
-
-      <article className="guest-card guest-card-wide">
-        <p className="guest-card-label">Modulos da Home</p>
-        <h2 className="guest-card-title">
-          {resolvedModules.home.length} modulo(s) na superficie Home
-        </h2>
-        <div className="guest-chip-list">
-          {resolvedModules.home.map((module) => (
-            <span key={module.id} className="guest-chip">
-              {module.name}
-            </span>
-          ))}
+    <>
+      <section className="aura-residence-card">
+        <div className="aura-residence-glow" aria-hidden="true" />
+        <div className="aura-residence-header">
+          <div>
+            <p className="guest-card-label">Sua estadia</p>
+            <h2 className="aura-residence-room">Quarto {session.guest.roomNumber}</h2>
+          </div>
+          <span className="aura-status-pill">
+            {hotel.hotelInfo?.name ?? "Sevvn Hospitality"}
+          </span>
         </div>
-      </article>
 
-      <article className="guest-card guest-card-wide">
-        <p className="guest-card-label">Acesso rapido</p>
-        <h2 className="guest-card-title">Modulos principais primeiro</h2>
-        <div className="guest-quick-actions">
-          <button type="button" className="guest-button" onClick={onOpenServices}>
-            Abrir servicos
+        <div className="aura-wifi-card">
+          <span className="material-symbols-outlined aura-wifi-icon">wifi</span>
+          <div className="aura-wifi-copy">
+            <p className="guest-card-label">Wi-Fi do hotel</p>
+            <strong>{session.guest.wifiNetworkName ?? "Rede nao informada"}</strong>
+            <p className="guest-copy">
+              Senha: {wifiPassword ?? "Solicite a recepcao"}
+            </p>
+          </div>
+          {wifiPassword ? (
+            <button
+              type="button"
+              className="aura-inline-icon-button"
+              onClick={() => {
+                if (typeof navigator === "undefined" || !navigator.clipboard) return;
+                void navigator.clipboard.writeText(wifiPassword);
+              }}
+              aria-label="Copiar senha do Wi-Fi"
+            >
+              <span className="material-symbols-outlined">content_copy</span>
+            </button>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="aura-section-block">
+        <div className="aura-section-headline">
+          <h3 className="aura-section-title">Acessos rapidos</h3>
+          <button type="button" className="aura-link-button" onClick={onOpenServices}>
+            Ver servicos
           </button>
         </div>
-      </article>
+        <div className="aura-action-grid">
+          {resolvedModules.home.slice(0, 4).map((module) => (
+            <div key={module.id} className="aura-action-tile-stack">
+            <button
+              type="button"
+              className={`aura-action-tile${
+                supportsModuleNavigation(module) ? "" : " aura-action-tile-disabled"
+              }`}
+              disabled={!supportsModuleNavigation(module)}
+              onClick={() => {
+                if (!supportsModuleNavigation(module)) {
+                  return;
+                }
+                const nextView = viewForModule(module);
+                if (nextView.kind === "home") {
+                  onOpenServices();
+                  return;
+                }
+                if (nextView.kind === "services") {
+                  onOpenServices();
+                  return;
+                }
+                if (nextView.kind === "bookings") {
+                  onOpenBookings();
+                  return;
+                }
+                if (nextView.kind === "messages") {
+                  onOpenMessages();
+                  return;
+                }
+                if (nextView.kind === "notices") {
+                  onOpenNotices();
+                  return;
+                }
+                if (nextView.kind === "profile") {
+                  onOpenProfile();
+                  return;
+                }
+                onOpenServices();
+              }}
+            >
+              <span className="aura-action-tile-visual material-symbols-outlined">
+                {iconForModule(module.id)}
+              </span>
+              <span className="aura-action-tile-label">{module.name}</span>
+            </button>
+            <span
+              className={`aura-runtime-chip aura-runtime-chip-${getModuleRuntimeStatus(module)}`}
+            >
+              {describeRuntimeStatus(getModuleRuntimeStatus(module))}
+            </span>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      <article className="guest-card guest-card-wide">
-        <p className="guest-card-label">Politica de isolamento</p>
-        <h2 className="guest-card-title">Base pronta para endurecimento</h2>
+      <section className="aura-section-block">
+        <div className="aura-section-headline">
+          <h3 className="aura-section-title">Sua estadia</h3>
+          <span className="guest-card-label">Contexto autenticado</span>
+        </div>
+        <div className="aura-stay-scroll">
+          <article className="aura-stay-mini-card">
+            <span className="material-symbols-outlined aura-stay-mini-icon">login</span>
+            <p className="guest-card-label">Check-in</p>
+            <strong>{formatGuestDate(session.guest.checkInDate)}</strong>
+            <p className="guest-copy">Inicio da estadia</p>
+          </article>
+          <article className="aura-stay-mini-card">
+            <span className="material-symbols-outlined aura-stay-mini-icon">logout</span>
+            <p className="guest-card-label">Check-out</p>
+            <strong>{formatGuestDate(session.guest.checkOutDate)}</strong>
+            <p className="guest-copy">Encerramento previsto</p>
+          </article>
+          <article className="aura-stay-mini-card">
+            <span className="material-symbols-outlined aura-stay-mini-icon">apps</span>
+            <p className="guest-card-label">Modulos ativos</p>
+            <strong>{hotel.enabledModules?.filter((module) => module.enabled).length ?? 0}</strong>
+            <p className="guest-copy">Pacote habilitado neste hotel</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="aura-promo-banner">
+        {hotel.hotelInfo?.promoImages?.images?.[0] ? (
+          <div
+            className="aura-promo-media"
+            style={{ backgroundImage: `url(${hotel.hotelInfo.promoImages.images[0]})` }}
+          />
+        ) : (
+          <div className="aura-promo-media aura-promo-media-fallback" />
+        )}
+        <div className="aura-promo-overlay" />
+        <div className="aura-promo-content">
+          <span className="aura-promo-badge">EM BREVE</span>
+          <h3>Experiencias e ofertas do hotel dentro do app</h3>
+          <p>
+            Esta superficie ja esta preparada para receber campanhas, destaques e
+            beneficios conectados aos modulos habilitados pela Sevvn.
+          </p>
+        </div>
+      </section>
+
+      <section className="guest-card guest-card-wide">
+        <div className="aura-section-headline">
+          <h3 className="aura-section-title">Prontidao do pacote Essential</h3>
+          <span className="guest-card-label">29/07/2026</span>
+        </div>
+        <div className="aura-status-matrix">
+          {buildEssentialSurfaceStatuses(resolvedModules).map((entry) => (
+            <article key={entry.id} className="aura-status-row">
+              <div>
+                <strong>{entry.label}</strong>
+                <p className="guest-copy">{entry.description}</p>
+              </div>
+              <span className={`aura-runtime-chip aura-runtime-chip-${entry.status}`}>
+                {describeRuntimeStatus(entry.status)}
+              </span>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="guest-card guest-card-wide">
+        <p className="guest-card-label">Isolamento de dados</p>
+        <h2 className="guest-card-title">Base pronta para operacao segura</h2>
         <div className="guest-services-list">
           <div className="guest-service-row">
             <div>
-              <strong>Contexto do hotel</strong>
+              <strong>Hotel autenticado pelo claim</strong>
               <p className="guest-copy">
-                O `hotelId` usado no app nasce da sessao autenticada do hospede
-                e nao de parametros livres.
+                O app monta esta home a partir do token do hospede e do
+                `hotelId` validado no backend.
               </p>
             </div>
           </div>
           <div className="guest-service-row">
             <div>
-              <strong>Modulos e servicos</strong>
+              <strong>Superficies orientadas por modulo</strong>
               <p className="guest-copy">
-                O shell ja foi organizado para renderizar catalogo, nav e
-                agrupamento com base no hotel autenticado.
-              </p>
-            </div>
-          </div>
-          <div className="guest-service-row">
-            <div>
-              <strong>Modo de operacao</strong>
-              <p className="guest-copy">
-                A mesma estrutura vai atender hoteis standalone e hoteis
-                integrados com PMS, POS, ERP ou middleware, sempre pela camada
-                normalizada da Sevvn.
-              </p>
-            </div>
-          </div>
-          <div className="guest-service-row">
-            <div>
-              <strong>Fluxos autenticados</strong>
-              <p className="guest-copy">
-                `Reservas` ja usa o token do hospede no endpoint autenticado de
-                pedidos. O mesmo padrao vai valer para mensagens e conta.
+                Home, servicos e reservas passam a refletir apenas o que esse hotel
+                habilitou no pacote Sevvn.
               </p>
             </div>
           </div>
         </div>
-      </article>
-    </div>
+      </section>
+    </>
   );
+}
+
+function formatGuestDate(dateValue: string): string {
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) {
+    return dateValue;
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "medium",
+  }).format(parsed);
+}
+
+function formatItemPrice(price: number | null | undefined): string {
+  if (price == null) {
+    return "sob consulta";
+  }
+
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(price);
+}
+
+function formatNoticeTimestamp(dateValue: string): string {
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) {
+    return dateValue;
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(parsed);
+}
+
+function summarizeNoticeTitle(message: string, index: number): string {
+  const normalized = message.trim();
+  if (!normalized) {
+    return index === 0 ? "Novo aviso da estadia" : "Aviso da recepcao";
+  }
+
+  const [firstSentence] = normalized.split(/[.!?]/);
+  const compact = firstSentence.trim();
+  if (compact.length <= 54) {
+    return compact;
+  }
+
+  return `${compact.slice(0, 51).trimEnd()}...`;
+}
+
+function describeRuntimeStatus(
+  status: "live" | "gated" | "coming_soon",
+): string {
+  if (status === "live") return "ao vivo";
+  if (status === "gated") return "por modulo";
+  return "em breve";
+}
+
+function buildEssentialSurfaceStatuses(
+  resolvedModules: ResolvedModulesShape,
+): Array<{
+  id: string;
+  label: string;
+  description: string;
+  status: "live" | "gated" | "coming_soon";
+}> {
+  const hasModule = (id: string) =>
+    resolvedModules.home.some((module) => module.id === id) ||
+    resolvedModules.bottomNav.some((module) => module.id === id) ||
+    resolvedModules.servicesMenu.some((module) => module.id === id);
+
+  return [
+    {
+      id: "home",
+      label: "Home da hospedagem",
+      description: "Quarto, Wi-Fi, datas da estadia e atalhos essenciais.",
+      status: "live",
+    },
+    {
+      id: "services",
+      label: "Directory de servicos",
+      description: "Catalogo real do hotel, agrupado por modulo e servico.",
+      status: "live",
+    },
+    {
+      id: "orders",
+      label: "Pedidos e reservas",
+      description: "Historico autenticado do hospede com pedidos e reservas.",
+      status: "live",
+    },
+    {
+      id: "messages",
+      label: "Concierge / mensagens",
+      description: "Conversa com a recepcao pelo token da estadia.",
+      status: hasModule("messages") || hasModule("concierge") ? "live" : "gated",
+    },
+    {
+      id: "notifications",
+      label: "Notificacoes basicas",
+      description: "Avisos da estadia enviados pelo hotel autenticado.",
+      status: hasModule("basic_notifications") ? "live" : "gated",
+    },
+    {
+      id: "profile",
+      label: "Perfil / contexto da estadia",
+      description: "Identidade do hospede, hotel e seguranca da sessao.",
+      status: "live",
+    },
+    {
+      id: "wallet",
+      label: "Carteira / fidelidade",
+      description: "Superficies ainda nao portadas para o corte Essential do Aura.",
+      status: "coming_soon",
+    },
+  ];
 }
 
 function RoomServiceComposer({
@@ -1768,6 +2218,7 @@ function ConciergeComposer({
   token,
   service,
   moduleConfig,
+  variant = "inline",
 }: ConciergeComposerProps) {
   const [messagesState, setMessagesState] = useState<{
     status: "idle" | "loading" | "ready" | "error";
@@ -1826,7 +2277,7 @@ function ConciergeComposer({
 
   return (
     <>
-      <div className="guest-service-row">
+      <div className={variant === "page" ? "aura-chat-meta" : "guest-service-row"}>
         <div>
           <strong>{moduleConfig.title?.trim() || service.name}</strong>
           <p className="guest-copy">
@@ -1852,7 +2303,7 @@ function ConciergeComposer({
       </div>
 
       {moduleConfig.requestCategories?.length ? (
-        <div className="guest-service-row">
+        <div className={variant === "page" ? "aura-chat-quick-actions" : "guest-service-row"}>
           <div>
             <strong>Categorias de atendimento</strong>
             <div className="guest-chip-list">
@@ -1866,7 +2317,7 @@ function ConciergeComposer({
         </div>
       ) : null}
 
-      <div className="guest-service-row">
+      <div className={variant === "page" ? "aura-chat-surface" : "guest-service-row"}>
         <div style={{ width: "100%" }}>
           <strong>Conversa com a equipe</strong>
           <p className="guest-copy">
@@ -1885,15 +2336,36 @@ function ConciergeComposer({
           ) : null}
 
           {messagesState.status === "ready" ? (
-            <div className="guest-services-list">
+            <div className={variant === "page" ? "aura-message-thread" : "guest-services-list"}>
               {messagesState.messages.length === 0 ? (
                 <p className="guest-copy">
                   Nenhuma conversa iniciada ainda. Envie a primeira mensagem.
                 </p>
               ) : (
                 messagesState.messages.map((message) => (
-                  <div key={message.id} className="guest-service-row">
-                    <div>
+                  <div
+                    key={message.id}
+                    className={
+                      variant === "page"
+                        ? `aura-message-bubble-wrap${
+                            message.senderType === "guest"
+                              ? " aura-message-bubble-wrap-guest"
+                              : ""
+                          }`
+                        : "guest-service-row"
+                    }
+                  >
+                    <div
+                      className={
+                        variant === "page"
+                          ? `aura-message-bubble${
+                              message.senderType === "guest"
+                                ? " aura-message-bubble-guest"
+                                : " aura-message-bubble-staff"
+                            }`
+                          : ""
+                      }
+                    >
                       <strong>
                         {message.senderType === "guest"
                           ? "Voce"
@@ -1907,22 +2379,27 @@ function ConciergeComposer({
                         }).format(new Date(message.createdAt))}
                       </p>
                     </div>
-                    <span className="guest-service-tag">
-                      {message.senderType === "guest" ? "enviado" : "recebido"}
-                    </span>
+                    {variant === "page" ? null : (
+                      <span className="guest-service-tag">
+                        {message.senderType === "guest" ? "enviado" : "recebido"}
+                      </span>
+                    )}
                   </div>
                 ))
               )}
             </div>
           ) : null}
 
-          <form className="guest-form" onSubmit={handleSubmit}>
+          <form
+            className={variant === "page" ? "aura-chat-input-shell" : "guest-form"}
+            onSubmit={handleSubmit}
+          >
             <label className="guest-label" htmlFor={`concierge-message-${service.id}`}>
               Nova mensagem
             </label>
             <textarea
               id={`concierge-message-${service.id}`}
-              className="guest-input"
+              className={variant === "page" ? "guest-input aura-chat-textarea" : "guest-input"}
               rows={4}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
@@ -1986,53 +2463,4 @@ function formatTableTypeLabel(tableType: GuestTableAvailabilityItem): string {
     ? tableType.label
     : `${tableType.seats} lugares`;
   return `${label} • ${tableType.availableQuantity}/${tableType.totalQuantity} disponivel(is)`;
-}
-
-function viewForModule(module: ModuleDefinition): ViewState {
-  const route = module.screenId ?? module.id;
-
-  if (route === "services") return { kind: "services" };
-  if (route === "bookings") return { kind: "bookings" };
-  if (route === "profile") return { kind: "profile" };
-  return { kind: "home" };
-}
-
-function isModuleActive(module: ModuleDefinition, view: ViewState): boolean {
-  const route = module.screenId ?? module.id;
-
-  if (view.kind === "service-detail" && route === "services") return true;
-  if (view.kind === "home" && route === "home") return true;
-  if (view.kind === "services" && route === "services") return true;
-  if (view.kind === "bookings" && route === "bookings") return true;
-  if (view.kind === "profile" && route === "profile") return true;
-  return false;
-}
-
-type ResolvedModulesShape = {
-  bottomNav: ModuleDefinition[];
-  home: ModuleDefinition[];
-  servicesMenu: ModuleDefinition[];
-  groupedServices: ReturnType<typeof groupServicesByCatalog>;
-};
-
-function useResolvedModules(
-  loadState: LoadState,
-): ResolvedModulesShape | null {
-  return useMemo(() => {
-    if (loadState.status !== "ready") return null;
-
-    const enabledModules = loadState.hotel.enabledModules ?? [];
-    const catalog = loadState.modulesCatalog.modules;
-
-    return {
-      bottomNav: resolveBottomNavModules(enabledModules, catalog),
-      home: resolveHomeModules(enabledModules, catalog),
-      servicesMenu: resolveServicesMenuModules(enabledModules, catalog),
-      groupedServices: groupServicesByCatalog({
-        services: loadState.services,
-        serviceGroups: loadState.modulesCatalog.serviceGroups,
-        catalog,
-      }),
-    };
-  }, [loadState]);
 }

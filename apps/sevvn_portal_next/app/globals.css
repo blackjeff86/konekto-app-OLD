@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+/*
+ * Tokens de marca — mantidos em sincronia com lib/theme/tokens.ts.
+ * Identidade clara/rosa da marca Sevvn (#FF2E88 / #16181D / #F7F5F3 /
+ * #FAFAF9), substituindo o tema escuro dourado herdado do Flutter
+ * original. Nomes de token mantidos (ink, gold, cream, slate...) por
+ * papel semântico, não pela cor literal — ver comentário em
+ * lib/theme/tokens.ts.
+ */
+:root {
+  --color-page: #fafaf9;
+  --color-ink: #16181d;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7f5f3;
+  --color-border: rgba(22, 24, 29, 0.08);
+  --color-border-strong: rgba(22, 24, 29, 0.16);
+  --color-gold: #ff2e88;
+  --color-gold-light: #b6005b;
+  --color-cream: #16181d;
+  --color-slate: #5b5f68;
+  --color-slate-soft: #85899a;
+}
+
+@theme inline {
+  --color-page: var(--color-page);
+  --color-ink: var(--color-ink);
+  --color-surface: var(--color-surface);
+  --color-surface-alt: var(--color-surface-alt);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-gold: var(--color-gold);
+  --color-gold-light: var(--color-gold-light);
+  --color-cream: var(--color-cream);
+  --color-slate: var(--color-slate);
+  --color-slate-soft: var(--color-slate-soft);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-cream);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Linguagem visual "editorial minimalista" — inspirada no design system do
+ * Stitch (brand identity/DESIGN.md: sombras quase imperceptíveis,
+ * grandes raios de blur e baixíssima opacidade, ao invés de sombras
+ * "encardidas" tradicionais). Usado nos cards do portal (dashboard,
+ * hóspedes, quartos, pedidos, suporte).
+ */
+.whisper-shadow {
+  box-shadow: 0 24px 48px -16px rgba(22, 24, 29, 0.08);
+}
+
+.hairline-divide > * + * {
+  border-top: 1px solid var(--color-border);
+}
+
+/* Usado no miolo do mockup de iPhone (seletor de aparência) — rola sem barra de scroll visível, como um celular de verdade. */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}

@@ -102,7 +102,7 @@ Status:
 
 Scope:
 
-- make `apps/konekto_site_next/app/login` the primary login implementation
+- make `apps/sevvn_site_next/app/login` the primary login implementation
 - move any remaining runtime logic from legacy HTML to Next.js login
 - update portal/admin defaults to new login endpoint
 
@@ -171,11 +171,11 @@ Goal:
 
 Scope candidates:
 
-- `apps/konekto_api` -> `apps/sevvn_api`
+- `apps/sevvn_api` -> `apps/sevvn_api`
 - `apps/konekto_mobile` -> `apps/sevvn_mobile`
-- `apps/konekto_admin` -> `apps/sevvn_admin`
-- `apps/konekto_portal_next` -> `apps/sevvn_portal_next`
-- `apps/konekto_site_next` -> `apps/sevvn_site_next`
+- `apps/sevvn_admin` -> `apps/sevvn_admin`
+- `apps/sevvn_portal_next` -> `apps/sevvn_portal_next`
+- `apps/sevvn_site_next` -> `apps/sevvn_site_next`
 
 Also includes:
 
@@ -234,3 +234,4 @@ Then continue with:
 - safe visible rebrand text
 - keep structure stable
 - postpone folder/package/native renames until exact production targets and pilot scope are stable
+

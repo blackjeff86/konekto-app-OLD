@@ -2,7 +2,7 @@
 
 > **Nota histórica**: este spec foi escrito na época em que o portal do hotel era o
 > app Flutter `apps/konekto_portal`. Esse app foi descontinuado e removido do
-> repositório — o portal em produção hoje é `apps/konekto_portal_next` (Next.js). As
+> repositório — o portal em produção hoje é `apps/sevvn_portal_next` (Next.js). As
 > referências a `apps/konekto_portal` abaixo são um registro fiel do que foi
 > construído naquele momento, não instruções válidas pro código atual.
 
@@ -23,7 +23,7 @@ O portal do hotel (`apps/konekto_portal`) hoje só tem login funcional e um dash
 
 ## Tech Stack
 
-- Backend: Next.js 16 (App Router, só rotas de API) + Prisma 7 + Neon Postgres — `apps/konekto_api`
+- Backend: Next.js 16 (App Router, só rotas de API) + Prisma 7 + Neon Postgres — `apps/sevvn_api`
 - Portal: Flutter Web — `apps/konekto_portal`
 - App do hóspede: Flutter (mobile + web) — `apps/konekto_mobile`
 - Auth: JWT (`jose`) — já existe pro staff; esta fase adiciona um JWT equivalente pro hóspede (sem senha — resolve de um código de acesso)
@@ -39,7 +39,7 @@ Cada uma dessas é tratada como uma sub-fase com seu próprio ciclo Plan → Tas
 ## Commands
 
 ```
-# Backend (apps/konekto_api)
+# Backend (apps/sevvn_api)
 Dev:      npm run dev
 Build:    npm run build
 Lint:     npm run lint
@@ -61,7 +61,7 @@ Test:     flutter test
 ## Project Structure (o que muda)
 
 ```
-apps/konekto_api/
+apps/sevvn_api/
   prisma/schema.prisma        → novos models: Guest, Order (+ enums GuestStatus, OrderStatus, OrderType)
   app/api/hotels/[hotelId]/guests/            → CRUD de hóspedes (staff)
   app/api/hotels/[hotelId]/orders/            → listagem/atualização de pedidos (staff)
@@ -98,7 +98,7 @@ abstract class GuestsRepository {
 ```
 
 ```ts
-// Rota de API — mesmo formato de apps/konekto_api/app/api/auth/login/route.ts:
+// Rota de API — mesmo formato de apps/sevvn_api/app/api/auth/login/route.ts:
 // zod pra validar body, prisma pra persistir, NextResponse.json pra responder
 export async function POST(request: NextRequest) {
   const parsed = createGuestSchema.safeParse(await request.json().catch(() => null))
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
 
 ## Testing Strategy
 
-- **API** (`apps/konekto_api`): `curl` manual contra cada rota nova (mesmo processo usado nesta sessão pra `/api/auth/login`, `/api/auth/me`) — sem framework de teste automatizado configurado no backend ainda; não introduzir um novo nesta fase (fora de escopo).
+- **API** (`apps/sevvn_api`): `curl` manual contra cada rota nova (mesmo processo usado nesta sessão pra `/api/auth/login`, `/api/auth/me`) — sem framework de teste automatizado configurado no backend ainda; não introduzir um novo nesta fase (fora de escopo).
 - **Portal** (`apps/konekto_portal`): `flutter analyze` + `flutter test` limpos após cada sub-fase, como já vem sendo feito. Smoke test por tela nova (renderiza sem erro), seguindo `test/widget_test.dart` existente.
 - **App do hóspede**: `flutter analyze` + `flutter test` limpos. Testar manualmente o fluxo de claim de código (`flutter run -d chrome`).
 - Verificação end-to-end manual entre as três partes (portal cria hóspede → hóspede reivindica código no app → hóspede faz pedido → portal vê o pedido) é o critério de aceite real, não só testes unitários.
@@ -144,3 +144,4 @@ Isso **substitui** o plano original da Fase 4 (repetir o editor de Room Service 
 4. **Convite de `recepcao`**: incluído nesta fase — fluxo do plano original (`gerente` cria um convite → nova conta se cadastra com o código do convite → vira `recepcao` daquele hotel), sem Cloud Functions.
 
 Dado o escopo bem maior que o mínimo original, a fase de Plan (próxima etapa) vai quebrar isso em sub-entregas sequenciais menores dentro de cada seção — ver `tasks/plan.md` quando gerado.
+

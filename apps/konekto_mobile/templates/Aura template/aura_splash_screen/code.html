@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AURA - Welcome</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&family=Work+Sans:wght@400;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&family=Work+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed-variant": "#594400",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "surface": "#fdf7ff",
+                    "outline-variant": "#cbc4d2",
+                    "secondary-container": "#e1d4fd",
+                    "on-error-container": "#93000a",
+                    "surface-variant": "#e6e0e9",
+                    "on-primary-container": "#e0d2ff",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#cfbcff",
+                    "surface-container": "#f2ecf4",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-container": "#503d00",
+                    "error": "#ba1a1a",
+                    "inverse-on-surface": "#f5eff7",
+                    "background": "#fdf7ff",
+                    "primary": "#4f378a",
+                    "on-tertiary": "#ffffff",
+                    "inverse-surface": "#322f35",
+                    "on-primary-fixed": "#22005d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-container": "#645a7d",
+                    "on-primary": "#ffffff",
+                    "surface-tint": "#6750a4",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "surface-container-low": "#f8f2fa",
+                    "on-surface": "#1d1b20",
+                    "surface-dim": "#ded8e0",
+                    "secondary": "#63597c",
+                    "surface-container-highest": "#e6e0e9",
+                    "surface-container-high": "#ece6ee",
+                    "on-background": "#1d1b20",
+                    "surface-bright": "#fdf7ff",
+                    "outline": "#7a7582",
+                    "on-secondary-fixed": "#1f1635",
+                    "tertiary-container": "#c9a74d",
+                    "tertiary": "#765b00",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#cfbcff",
+                    "primary-fixed": "#e9ddff",
+                    "on-tertiary-fixed": "#241a00",
+                    "secondary-fixed": "#e9ddff",
+                    "tertiary-fixed": "#ffdf93",
+                    "on-surface-variant": "#494551",
+                    "primary-container": "#6750a4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "gutter": "16px",
+                    "xl": "64px",
+                    "md": "24px",
+                    "margin-desktop": "80px",
+                    "xs": "4px",
+                    "margin-mobile": "20px",
+                    "sm": "12px",
+                    "lg": "40px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Work Sans"],
+                    "body-lg": ["Work Sans"],
+                    "title-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "display-lg": ["Libre Caslon Text"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-sm": ["Work Sans"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(10px); }
+            40% { opacity: 1; transform: translateY(0); }
+            60% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+
+        @keyframes subtleDrift {
+            0% { transform: scale(1.0); }
+            100% { transform: scale(1.1); }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .letter-spacing-widest {
+            letter-spacing: 0.4em;
+        }
+
+        .aura-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background overflow-hidden h-screen w-screen flex flex-col justify-center items-center">
+<!-- Splash Screen Container -->
+<main class="relative w-full h-full flex flex-col items-center justify-center overflow-hidden">
+<!-- Background Atmospheric Element -->
+<div class="absolute inset-0 z-0 opacity-40">
+<div class="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-primary-fixed blur-[120px]"></div>
+<div class="absolute bottom-[-5%] right-[-5%] w-[50%] h-[50%] rounded-full bg-secondary-container blur-[100px]"></div>
+</div>
+<!-- Central Identity -->
+<div class="relative z-10 flex flex-col items-center">
+<!-- Animated Logo -->
+<div class="fade-in-up flex flex-col items-center">
+<h1 class="font-display-lg text-display-lg text-primary letter-spacing-widest mb-2">
+                    AURA
+                </h1>
+<!-- Tagline with slight delay -->
+<p class="font-label-caps text-label-caps text-outline uppercase tracking-[0.2em] opacity-0 [animation-delay:400ms] [animation-fill-mode:forwards]" style="animation: fadeInUp 1s ease 0.5s forwards;">
+                    Essential Hospitality
+                </p>
+</div>
+<!-- Loading Indicator -->
+<div class="mt-xl h-[1px] w-32 bg-outline-variant relative overflow-hidden">
+<div class="absolute inset-0 bg-primary aura-shimmer w-1/2 rounded-full" style="animation: shimmer-move 2s infinite ease-in-out;"></div>
+</div>
+</div>
+<!-- Footer Branding -->
+<div class="absolute bottom-12 w-full text-center fade-in-up" style="animation-delay: 800ms;">
+<div class="flex items-center justify-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary" style="font-size: 16px;">verified</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">The Elite Collection</span>
+</div>
+<p class="font-label-caps text-label-caps text-outline-variant">EST. 1924</p>
+</div>
+<!-- Decorative Foreground Detail -->
+<div class="absolute inset-0 pointer-events-none border-[1px] border-outline-variant/10 m-6 rounded-xl"></div>
+</main>
+<!-- Background Animation (Optional Subtle Layer) -->
+<div class="fixed inset-0 z-[-1] pointer-events-none opacity-20">
+<div class="absolute inset-0 w-full h-full opacity-30 pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" id="grain"></div>
+</div>
+<script>
+        // Simple loading bar animation
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes shimmer-move {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(200%); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Simulate app entry redirect
+        // In a real app, this would check auth or state
+        setTimeout(() => {
+            console.log('Transitioning to Dashboard...');
+            // Example: window.location.href = '/dashboard';
+        }, 3500);
+
+        // Vanilla interaction: Logo hover glow
+        const logo = document.querySelector('h1');
+        logo.addEventListener('mousemove', (e) => {
+            const { offsetX, offsetY } = e;
+            const x = (offsetX / logo.clientWidth) * 100;
+            const y = (offsetY / logo.clientHeight) * 100;
+            logo.style.textShadow = `${(x-50)/10}px ${(y-50)/10}px 15px rgba(79, 55, 138, 0.2)`;
+        });
+        logo.addEventListener('mouseleave', () => {
+            logo.style.textShadow = 'none';
+        });
+    </script>
+</body></html>

@@ -195,3 +195,10 @@ export interface GuestMessage {
     lastName?: string | null;
   } | null;
 }
+
+export interface GuestNotice {
+  id: string;
+  stayId: string;
+  message: string;
+  createdAt: string;
+}

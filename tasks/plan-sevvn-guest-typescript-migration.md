@@ -8,7 +8,7 @@ The immediate goal is not a full multi-app rewrite. The first target is `sevvn-g
 
 ## Architecture Decisions
 
-- Build the new guest app in TypeScript on the same stack family already used by `apps/konekto_portal_next` and `apps/konekto_site_next`: Next.js + React + TypeScript.
+- Build the new guest app in TypeScript on the same stack family already used by `apps/sevvn_portal_next` and `apps/sevvn_site_next`: Next.js + React + TypeScript.
 - Treat the API as the single runtime source of truth. The guest app must render from:
   - `GET /api/hotels/:hotelId`
   - module catalog / resolved enabled modules
@@ -16,9 +16,9 @@ The immediate goal is not a full multi-app rewrite. The first target is `sevvn-g
   - guest claim / guest-authenticated endpoints
 - Keep templates as a presentation layer only. Template selection controls theme, layout, and component styling, not business rules.
 - Reuse existing TypeScript contracts and patterns wherever possible:
-  - data fetching and mutations from `apps/konekto_portal_next`
-  - hotel configuration contracts from `apps/konekto_api`
-  - brand and page conventions from `apps/konekto_site_next`
+  - data fetching and mutations from `apps/sevvn_portal_next`
+  - hotel configuration contracts from `apps/sevvn_api`
+  - brand and page conventions from `apps/sevvn_site_next`
 - Do not block on full feature parity before shipping the first vertical slice. The migration should happen by real guest-facing slices.
 - Keep the existing Flutter app alive until the TypeScript guest app has a validated replacement path for the pilot flow.
 - Treat Sevvn as the hotel experience core, not as a mandatory replacement for PMS, POS, ERP, channel manager, or middleware tools already used by the property.
@@ -34,7 +34,7 @@ The immediate goal is not a full multi-app rewrite. The first target is `sevvn-g
 
 ## Current State Summary
 
-- Backend module resolution already exists in TypeScript (`apps/konekto_api/lib/module-engine.ts` and related files).
+- Backend module resolution already exists in TypeScript (`apps/sevvn_api/lib/module-engine.ts` and related files).
 - Hotel portal already exposes TypeScript patterns for:
   - hotel configuration
   - modules
@@ -272,7 +272,7 @@ The TypeScript guest app should become:
     - [ ] Manual check from hotel portal branding/reception flow
   - Dependencies: Task 10
   - Files likely touched:
-    - `apps/konekto_portal_next/lib/guestAppConfig.ts`
+    - `apps/sevvn_portal_next/lib/guestAppConfig.ts`
     - related QR/branding pages
   - Estimated scope: Small
 
@@ -310,7 +310,7 @@ The TypeScript guest app should become:
 ## Open Questions
 
 - What should be the final app path/name in the repo for the TypeScript guest app?
-- Do we want to reuse components/utilities from `apps/konekto_portal_next` directly, or only copy patterns/contracts?
+- Do we want to reuse components/utilities from `apps/sevvn_portal_next` directly, or only copy patterns/contracts?
 - Should the first production cutover replace `sevvn-guest.vercel.app` directly, or use a rehearsal URL first?
 
 ## Essential Execution Track
@@ -496,3 +496,4 @@ After the work already completed up to July 28, 2026, the recommended immediate 
 - communication flows (`messages` + `basic_notifications`) are shared infrastructure, not one-off behavior;
 - at least one TypeScript guest template is fully aligned with the stable `essential` module contracts;
 - the second `essential` template is adapted without changing backend business rules.
+

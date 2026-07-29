@@ -6,7 +6,7 @@ import 'package:konekto/templates/shared/guest_template_theme.dart';
 /// costeiro" (azul-oceano + laranja-pôr-do-sol).
 ///
 /// Tratado como "em breve" no catálogo por ora (`templatesOfPlan` no backend
-/// não inclui `horizon` ainda — ver `apps/konekto_api/lib/feature-flags.ts`),
+/// não inclui `horizon` ainda — ver `apps/sevvn_api/lib/feature-flags.ts`),
 /// mas ao contrário do que se pensava antes de abrir este export, o zip TEM
 /// telas reais pra ele (home, room_service, concierge_chat, onboarding,
 /// splash, loyalty_rewards, experiences_directory, wallet_billing — 8 no
@@ -49,3 +49,4 @@ const horizonTheme = GuestTemplateTheme(
   radiusLg: 16,
   radiusXl: 24,
 );
+

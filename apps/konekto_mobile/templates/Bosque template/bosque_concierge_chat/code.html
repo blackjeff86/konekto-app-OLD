@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bosque Concierge Chat</title>
+<!-- Google Fonts: Literata (Serif) & Plus Jakarta Sans (Sans-serif) -->
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed": "#ccead6",
+                    "on-background": "#1b1c1a",
+                    "surface-dim": "#dbdad6",
+                    "on-secondary-fixed-variant": "#5d4034",
+                    "on-primary": "#ffffff",
+                    "on-surface-variant": "#424844",
+                    "on-secondary-fixed": "#2c160c",
+                    "on-primary-container": "#98b5a3",
+                    "outline-variant": "#c2c8c2",
+                    "on-primary-fixed-variant": "#324c3e",
+                    "inverse-primary": "#b0cdbb",
+                    "surface-variant": "#e4e2de",
+                    "on-surface": "#1b1c1a",
+                    "tertiary-fixed-dim": "#f0bd8b",
+                    "primary-container": "#2d4739",
+                    "tertiary-container": "#5c3a13",
+                    "on-tertiary-container": "#d5a474",
+                    "outline": "#727973",
+                    "surface-bright": "#fbf9f5",
+                    "secondary-container": "#ffd4c4",
+                    "tertiary": "#422401",
+                    "surface-container-high": "#eae8e4",
+                    "on-error": "#ffffff",
+                    "primary": "#173124",
+                    "inverse-on-surface": "#f2f0ed",
+                    "secondary": "#77574b",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f5f3ef",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed": "#ffdbce",
+                    "on-secondary": "#ffffff",
+                    "inverse-surface": "#30312e",
+                    "surface-container-highest": "#e4e2de",
+                    "on-tertiary-fixed-variant": "#623f18",
+                    "error": "#ba1a1a",
+                    "surface": "#fbf9f5",
+                    "surface-tint": "#496455",
+                    "tertiary-fixed": "#ffdcbd",
+                    "secondary-fixed-dim": "#e7beae",
+                    "surface-container": "#efeeea",
+                    "on-secondary-container": "#7a594d",
+                    "on-primary-fixed": "#062014",
+                    "primary-fixed-dim": "#b0cdbb",
+                    "on-tertiary-fixed": "#2c1600",
+                    "background": "#fbf9f5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "margin-mobile": "16px",
+                    "md": "24px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "base": "8px",
+                    "lg": "48px",
+                    "margin-desktop": "64px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Literata"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Literata"],
+                    "headline-md": ["Literata"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Literata"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fbf9f5;
+            color: #1b1c1a;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .chat-container {
+            height: calc(100vh - 64px - 84px);
+            scrollbar-width: none;
+        }
+        .chat-container::-webkit-scrollbar {
+            display: none;
+        }
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md-mobile md:text-body-md overflow-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl flex items-center justify-between px-margin-mobile h-16 shadow-sm shadow-secondary/10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-primary-container/10">
+<img class="w-full h-full object-cover" data-alt="A warm, professional portrait of a friendly forest concierge guide with a soft smile. The lighting is warm golden hour sunlight filtering through trees. The guide wears a sustainable linen vest in forest green. The overall aesthetic is serene and welcoming, following the Bosque brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5Dt2WSj-zCgWTrbOJpUw7CRB1Lj9V9EURpuoU_b_1UX5eO1441lPzqlKrdqFCoRt7DAGEX1cDcEVXpAYjQ6reWc0Th8zVKGllAtaOPohc8ls-gPB3Whr0O5wi9glYn_H3wQwDvrjv3SJ3TV0W9pj3AKLdZvVrgz-wNP1sIh3WUw2UxUqkK-NPQXDBhlwfRB7kKXLjpob0AZD9CT7bBTenGvF6-o1hSXoOr4kRZxUeaxvwWfQU7eiySS0oZc2CYV0d5pfsbUZS9_4"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary">Chat with our Guide</h1>
+<p class="text-[10px] text-on-surface-variant font-medium flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                    Online and ready to help
+                </p>
+</div>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-primary-container/10 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-16 pb-[84px] h-screen w-full flex flex-col bg-background">
+<!-- Message Thread -->
+<div class="chat-container flex-1 overflow-y-auto px-margin-mobile py-6 flex flex-col gap-6">
+<!-- Date/Time Anchor -->
+<div class="flex justify-center">
+<span class="bg-surface-container-high px-4 py-1 rounded-full text-[11px] font-label-sm text-on-surface-variant uppercase tracking-wider">Today</span>
+</div>
+<!-- Concierge Message -->
+<div class="flex items-end gap-3 max-w-[85%]">
+<div class="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A small circular avatar of a forest guide, featuring warm lighting and soft earthy tones. The guide has a friendly expression, set against a blurred background of a sun-drenched pine forest. The visual style is consistent with high-end biophilic design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrj6dv-BK49GlkwHW34e47_MYUXTSMgU2L9AiIuwdRSWiXCnw75Kl5ewXvBWG8Uz5mbTIdrP3zbUnwhAO6bElnyq0Ak-M6rMidF2T6FcK91lR0i--JXcgIiA1oKAJ5EuTLIC-uxyS4cxJzQpHxdSzk1ESueywRDm-84qyOyWq8SM_dyFpO3nAWi99wjKbyPRIxl-GKVREiSwX2jAGQSoCXBwAuLx4vjNKk3nhYXuCZBPuKDzxy8V4PvLskm6Pd0WYayu9FOfq7cLs"/>
+</div>
+<div class="bg-surface-container-high p-4 rounded-2xl rounded-bl-none shadow-sm shadow-secondary/5">
+<p class="text-on-surface font-body-md leading-relaxed">How can we make your forest stay more comfortable today?</p>
+<span class="block mt-2 text-[10px] text-on-surface-variant text-right">10:02 AM</span>
+</div>
+</div>
+<!-- User Placeholder Message (Contextual) -->
+<div class="flex flex-col items-end gap-2 max-w-[85%] self-end">
+<div class="bg-primary text-on-primary p-4 rounded-2xl rounded-br-none shadow-md shadow-primary/10">
+<p class="font-body-md leading-relaxed">I'm looking for a quiet spot for sunset yoga. Any suggestions near the river?</p>
+<span class="block mt-2 text-[10px] text-primary-fixed/60 text-right">10:05 AM</span>
+</div>
+</div>
+<!-- Concierge Reply -->
+<div class="flex items-end gap-3 max-w-[85%]">
+<div class="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Friendly forest guide avatar icon, warm professional lighting, earth tones, soft focus background of greenery. Sustainable luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeyH5JdPfZ9_P3fCUMhd9xGJrrYRssXu33icV_poQBvYM-HE_-BK7YPhfIFxOIol61HQ827fbTbux342W1Ou_1LchqGxbINnnv3qCMu00Ih8y1utFqlEEl6xZ916s5HMaK7ajCS1U0ldB0mezQ5WRT13DH--P3E09T8L5p456lWfnz83za4MG-_uoi8iCACTudDITG2vKI1XCW0gzYOgSYU6rtc-UyTFqLm0hG96wmOml6L4YmdMTV0MsiJKUOjD7K7GHzKKm9fSw"/>
+</div>
+<div class="bg-surface-container-high p-4 rounded-2xl rounded-bl-none shadow-sm shadow-secondary/5">
+<p class="text-on-surface font-body-md leading-relaxed">The Pebble Beach clearing is perfect. It's about a 10-minute walk east. I've sent the coordinates to your map!</p>
+<span class="block mt-2 text-[10px] text-on-surface-variant text-right">10:06 AM</span>
+</div>
+</div>
+</div>
+<!-- Sticky Interaction Zone -->
+<div class="px-margin-mobile pb-4 bg-gradient-to-t from-background via-background to-transparent pt-8">
+<!-- Quick Responses Carousel -->
+<div class="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+<button class="whitespace-nowrap bg-secondary-fixed text-on-secondary-fixed-variant px-4 py-2.5 rounded-full font-label-md hover:bg-secondary-container transition-colors shadow-sm active:scale-95 duration-150">
+                    Need more wood for fireplace
+                </button>
+<button class="whitespace-nowrap bg-secondary-fixed text-on-secondary-fixed-variant px-4 py-2.5 rounded-full font-label-md hover:bg-secondary-container transition-colors shadow-sm active:scale-95 duration-150">
+                    Best hiking trails
+                </button>
+<button class="whitespace-nowrap bg-secondary-fixed text-on-secondary-fixed-variant px-4 py-2.5 rounded-full font-label-md hover:bg-secondary-container transition-colors shadow-sm active:scale-95 duration-150">
+                    Breakfast time
+                </button>
+</div>
+<!-- Input Bar -->
+<div class="flex items-center gap-2 bg-surface-container-low p-2 rounded-full border border-outline-variant/30 shadow-inner">
+<button class="w-10 h-10 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined">add_circle</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 font-body-md px-2" placeholder="Type a message..." type="text"/>
+<button class="w-10 h-10 flex items-center justify-center bg-primary text-on-primary rounded-full shadow-lg active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full rounded-t-xl z-50 bg-surface-container flex justify-around items-center py-3 px-2 pb-safe shadow-[0_-4px_20px_0_rgba(93,64,52,0.08)]">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">spa</span>
+<span class="font-label-sm text-label-sm">Services</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<span class="font-label-sm text-label-sm">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-sm text-label-sm">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for quick response buttons
+        document.querySelectorAll('button.whitespace-nowrap').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.innerText;
+                const input = document.querySelector('input[type="text"]');
+                input.value = text;
+                input.focus();
+            });
+        });
+
+        // Simple scroll to bottom on load
+        window.onload = function() {
+            const container = document.querySelector('.chat-container');
+            container.scrollTop = container.scrollHeight;
+        };
+    </script>
+</body></html>

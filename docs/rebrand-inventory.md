@@ -65,7 +65,7 @@ These are the most sensitive references because changing them incorrectly can br
 Files:
 
 - [apps/konekto_site/login.html](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_site/login.html:1)
-- [apps/konekto_portal_next/lib/siteConfig.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_portal_next/lib/siteConfig.ts:1)
+- [apps/sevvn_portal_next/lib/siteConfig.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_portal_next/lib/siteConfig.ts:1)
 
 Current state:
 
@@ -78,8 +78,8 @@ Current state:
 
 Files:
 
-- [apps/konekto_site_next/app/login/page.tsx](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_site_next/app/login/page.tsx:1)
-- [apps/konekto_site_next/app/login/LoginForm.tsx](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_site_next/app/login/LoginForm.tsx:1)
+- [apps/sevvn_site_next/app/login/page.tsx](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_site_next/app/login/page.tsx:1)
+- [apps/sevvn_site_next/app/login/LoginForm.tsx](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_site_next/app/login/LoginForm.tsx:1)
 
 Current state:
 
@@ -91,7 +91,7 @@ Current state:
 
 Files:
 
-- [apps/konekto_admin/lib/site_config.dart](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_admin/lib/site_config.dart:1)
+- [apps/sevvn_admin/lib/site_config.dart](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_admin/lib/site_config.dart:1)
 
 Current state:
 
@@ -106,10 +106,10 @@ These are safer to change first because they affect presentation more than wirin
 Files:
 
 - [README.md](/abs/path/C:/ProjetosFlutter/konekto_app/README.md:1)
-- [apps/konekto_api/README.md](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_api/README.md:1)
-- [apps/konekto_admin/README.md](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_admin/README.md:1)
+- [apps/sevvn_api/README.md](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_api/README.md:1)
+- [apps/sevvn_admin/README.md](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_admin/README.md:1)
 - [apps/konekto_mobile/README.md](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_mobile/README.md:1)
-- [apps/konekto_portal_next/README.md](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_portal_next/README.md:1)
+- [apps/sevvn_portal_next/README.md](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_portal_next/README.md:1)
 
 ### Site copy and contact channels
 
@@ -117,8 +117,8 @@ Files:
 
 - [apps/konekto_site/index.html](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_site/index.html:1)
 - [apps/konekto_site/login.html](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_site/login.html:1)
-- [apps/konekto_site_next/app/login/page.tsx](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_site_next/app/login/page.tsx:1)
-- [apps/konekto_site_next/content/plans.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_site_next/content/plans.ts:1)
+- [apps/sevvn_site_next/app/login/page.tsx](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_site_next/app/login/page.tsx:1)
+- [apps/sevvn_site_next/content/plans.ts](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_site_next/content/plans.ts:1)
 
 Current state:
 
@@ -131,8 +131,8 @@ Current state:
 
 Files:
 
-- [apps/konekto_admin/web/index.html](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_admin/web/index.html:1)
-- [apps/konekto_admin/web/manifest.json](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_admin/web/manifest.json:1)
+- [apps/sevvn_admin/web/index.html](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_admin/web/index.html:1)
+- [apps/sevvn_admin/web/manifest.json](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_admin/web/manifest.json:1)
 - [apps/konekto_mobile/android/app/src/main/AndroidManifest.xml](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_mobile/android/app/src/main/AndroidManifest.xml:1)
 - [apps/konekto_mobile/windows/runner/Runner.rc](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_mobile/windows/runner/Runner.rc:1)
 - [apps/konekto_mobile/windows/runner/main.cpp](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_mobile/windows/runner/main.cpp:1)
@@ -145,12 +145,12 @@ These are not just copy changes. They affect imports, build outputs, package res
 
 Current folders:
 
-- `apps/konekto_admin`
-- `apps/konekto_api`
+- `apps/sevvn_admin`
+- `apps/sevvn_api`
 - `apps/konekto_mobile`
-- `apps/konekto_portal_next`
+- `apps/sevvn_portal_next`
 - `apps/konekto_site`
-- `apps/konekto_site_next`
+- `apps/sevvn_site_next`
 
 Impact of renaming:
 
@@ -179,7 +179,7 @@ Impact:
 
 Files:
 
-- [apps/konekto_admin/pubspec.yaml](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_admin/pubspec.yaml:1)
+- [apps/sevvn_admin/pubspec.yaml](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_admin/pubspec.yaml:1)
 
 Current state:
 
@@ -189,10 +189,10 @@ Current state:
 
 Files:
 
-- [apps/konekto_api/package.json](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_api/package.json:1)
-- [apps/konekto_portal_next/package.json](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_portal_next/package.json:1)
+- [apps/sevvn_api/package.json](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_api/package.json:1)
+- [apps/sevvn_portal_next/package.json](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_portal_next/package.json:1)
 - [apps/konekto_site/package.json](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_site/package.json:1)
-- [apps/konekto_site_next/package.json](/abs/path/C:/ProjetosFlutter/konekto_app/apps/konekto_site_next/package.json:1)
+- [apps/sevvn_site_next/package.json](/abs/path/C:/ProjetosFlutter/konekto_app/apps/sevvn_site_next/package.json:1)
 
 ### Mobile platform identifiers
 
@@ -259,7 +259,7 @@ Examples:
 
 ### Phase C — remove legacy site from runtime path
 
-- move real login flow fully to `apps/konekto_site_next`
+- move real login flow fully to `apps/sevvn_site_next`
 - switch portal/admin defaults away from `konekto-app.vercel.app`
 - confirm production routing works
 - only then archive or remove `apps/konekto_site`
@@ -303,3 +303,4 @@ Do not yet:
 - rename mobile application ids
 - delete `apps/konekto_site`
 - change production domains without explicit target values
+

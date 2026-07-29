@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Profile - Aura Hospitality</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Work+Sans:wght@400;500;600&amp;family=Libre+Caslon+Text&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed-variant": "#594400",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "surface": "#fdf7ff",
+                    "outline-variant": "#cbc4d2",
+                    "secondary-container": "#e1d4fd",
+                    "on-error-container": "#93000a",
+                    "surface-variant": "#e6e0e9",
+                    "on-primary-container": "#e0d2ff",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#cfbcff",
+                    "surface-container": "#f2ecf4",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-container": "#503d00",
+                    "error": "#ba1a1a",
+                    "inverse-on-surface": "#f5eff7",
+                    "background": "#fdf7ff",
+                    "primary": "#4f378a",
+                    "on-tertiary": "#ffffff",
+                    "inverse-surface": "#322f35",
+                    "on-primary-fixed": "#22005d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-container": "#645a7d",
+                    "on-primary": "#ffffff",
+                    "surface-tint": "#6750a4",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "surface-container-low": "#f8f2fa",
+                    "on-surface": "#1d1b20",
+                    "surface-dim": "#ded8e0",
+                    "secondary": "#63597c",
+                    "surface-container-highest": "#e6e0e9",
+                    "surface-container-high": "#ece6ee",
+                    "on-background": "#1d1b20",
+                    "surface-bright": "#fdf7ff",
+                    "outline": "#7a7582",
+                    "on-secondary-fixed": "#1f1635",
+                    "tertiary-container": "#c9a74d",
+                    "tertiary": "#765b00",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#cfbcff",
+                    "primary-fixed": "#e9ddff",
+                    "on-tertiary-fixed": "#241a00",
+                    "secondary-fixed": "#e9ddff",
+                    "tertiary-fixed": "#ffdf93",
+                    "on-surface-variant": "#494551",
+                    "primary-container": "#6750a4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "gutter": "16px",
+                    "xl": "64px",
+                    "md": "24px",
+                    "margin-desktop": "80px",
+                    "xs": "4px",
+                    "margin-mobile": "20px",
+                    "sm": "12px",
+                    "lg": "40px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Work Sans"],
+                    "body-lg": ["Work Sans"],
+                    "title-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "display-lg": ["Libre Caslon Text"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-sm": ["Work Sans"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fdf7ff;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .premium-shadow {
+            box-shadow: 0 4px 20px -2px rgba(79, 55, 138, 0.08);
+        }
+        .glass-effect {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-lg text-on-surface">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-background border-b border-outline-variant docked full-width top-0 z-50 sticky">
+<div class="flex justify-between items-center px-margin-mobile h-16 w-full">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary dark:text-primary-fixed-dim">Welcome, Mr. Julian</h1>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-primary dark:text-primary-fixed-dim p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 transition-transform" data-icon="notifications">notifications</button>
+</div>
+</div>
+</header>
+<main class="pb-32 max-w-2xl mx-auto px-margin-mobile pt-8">
+<!-- Profile Header Section -->
+<section class="flex flex-col items-center mb-10">
+<div class="relative mb-6">
+<div class="w-28 h-28 rounded-full overflow-hidden border-4 border-surface-container-lowest premium-shadow p-1 bg-gradient-to-tr from-primary to-secondary-container">
+<img class="w-full h-full object-cover rounded-full" data-alt="A professional, high-end studio portrait of a sophisticated man in his 40s with a warm, welcoming expression. He has neatly styled hair and is wearing a soft linen shirt. The background is a soft-focus, minimalist luxury hotel lobby with warm ambient lighting and a palette of creams, purples, and whites, matching a premium hospitality aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5iScNvFrWVtddE4il0S_hUHuKjJ4cirXgIpDCOpPoIXM82TUwBPfw_r2rTU_PqmzhlEZ0f5Wkx4q3ozYFMt8dqxsiYGvj_GdmLon0L0TRgP_2VN9kZuyIvy61btCv5_jxtRoZCWFtj_xuQw2aYKgyHpsUJwDifguj9p2pzieIInkQG3eo9_jSKSQYDgpq-OwVGtmjzWVQ_SHgx-9Q6oVLybFsAtaZ4h9-7NICgsEKqPPwhHxk_UvEHnRhd8f7cBpWBmAan1xC2bY"/>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary p-2 rounded-full border-2 border-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<div class="text-center">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-1">Mr. Julian</h2>
+<div class="inline-flex items-center gap-2 bg-secondary-container px-4 py-1 rounded-full">
+<span class="font-label-caps text-label-caps text-on-secondary-container">PLATINUM MEMBER</span>
+</div>
+</div>
+</section>
+<!-- Bento Grid Stats (Micro-interactions) -->
+<div class="grid grid-cols-2 gap-4 mb-10">
+<div class="bg-surface-container-lowest p-5 rounded-xl premium-shadow border border-outline-variant/30 flex flex-col items-start gap-2 active:scale-[0.98] transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-primary" data-icon="hotel">hotel</span>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">TOTAL STAYS</p>
+<p class="font-title-md text-title-md text-on-surface">24</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-xl premium-shadow border border-outline-variant/30 flex flex-col items-start gap-2 active:scale-[0.98] transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-tertiary" data-icon="loyalty">loyalty</span>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">LOYALTY POINTS</p>
+<p class="font-title-md text-title-md text-on-surface">12.5k</p>
+</div>
+</div>
+</div>
+<!-- Settings List Items -->
+<nav class="space-y-3">
+<h3 class="font-label-caps text-label-caps text-outline ml-1 mb-4">ACCOUNT PREFERENCES</h3>
+<!-- Personal Info -->
+<a class="flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl transition-all group" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined" data-icon="person_outline">person_outline</span>
+</div>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface">Personal Info</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manage your identity details</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
+</a>
+<!-- Payment Methods -->
+<a class="flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl transition-all group" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
+</div>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface">Payment Methods</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Saved cards and wallet</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
+</a>
+<!-- Stay History -->
+<a class="flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl transition-all group" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</div>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface">Stay History</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Review your previous travels</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
+</a>
+<div class="pt-6">
+<h3 class="font-label-caps text-label-caps text-outline ml-1 mb-4">SYSTEM</h3>
+</div>
+<!-- App Settings -->
+<a class="flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl transition-all group" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</div>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface">App Settings</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Notifications and appearance</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
+</a>
+<!-- Logout -->
+<button class="w-full flex items-center justify-between p-4 bg-error-container/20 hover:bg-error-container/40 rounded-xl transition-all group mt-8">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+</div>
+<div>
+<p class="font-body-lg text-body-lg text-on-error-container font-semibold">Logout</p>
+</div>
+</div>
+</button>
+</nav>
+<!-- Version Info -->
+<div class="mt-12 text-center">
+<p class="font-label-caps text-label-caps text-outline">AURA V2.4.0</p>
+<p class="font-body-sm text-body-sm text-outline-variant mt-1">Refining Luxury Experiences</p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-surface-container-lowest dark:bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(79,55,138,0.08)] rounded-t-xl md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline p-2 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline p-2 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="room_service">room_service</span>
+<span class="font-label-caps text-label-caps mt-1">Services</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline p-2 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-caps text-label-caps mt-1">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline p-2 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps mt-1">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container dark:bg-primary-container text-on-secondary-container dark:text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for list items
+        document.querySelectorAll('a, button').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                el.style.transform = 'scale(0.98)';
+            });
+            el.addEventListener('mouseup', () => {
+                el.style.transform = 'scale(1)';
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'scale(1)';
+            });
+        });
+
+        // Simple Fade-in Animation for page load
+        window.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.add('opacity-0');
+            setTimeout(() => {
+                document.body.classList.remove('opacity-0');
+                document.body.classList.add('transition-opacity', 'duration-700', 'opacity-100');
+            }, 100);
+        });
+    </script>
+</body></html>

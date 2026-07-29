@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Concierge - Aura</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;600&family=Libre+Caslon+Text&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&family=Work+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#e9ddff",
+                    "on-error": "#ffffff",
+                    "on-surface-variant": "#494551",
+                    "error-container": "#ffdad6",
+                    "surface": "#fdf7ff",
+                    "primary": "#4f378a",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "tertiary-container": "#c9a74d",
+                    "surface-container-high": "#ece6ee",
+                    "error": "#ba1a1a",
+                    "primary-fixed-dim": "#cfbcff",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "on-secondary-container": "#645a7d",
+                    "surface-variant": "#e6e0e9",
+                    "tertiary-fixed": "#ffdf93",
+                    "secondary": "#63597c",
+                    "tertiary": "#765b00",
+                    "primary-container": "#6750a4",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "background": "#fdf7ff",
+                    "inverse-on-surface": "#f5eff7",
+                    "on-primary": "#ffffff",
+                    "surface-bright": "#fdf7ff",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#cbc4d2",
+                    "secondary-container": "#e1d4fd",
+                    "inverse-surface": "#322f35",
+                    "on-tertiary-container": "#503d00",
+                    "primary-fixed": "#e9ddff",
+                    "on-tertiary-fixed": "#241a00",
+                    "surface-container": "#f2ecf4",
+                    "surface-container-low": "#f8f2fa",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-dim": "#ded8e0",
+                    "on-background": "#1d1b20",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "on-secondary-fixed": "#1f1635",
+                    "surface-container-highest": "#e6e0e9",
+                    "inverse-primary": "#cfbcff",
+                    "surface-tint": "#6750a4",
+                    "on-surface": "#1d1b20",
+                    "on-primary-container": "#e0d2ff",
+                    "outline": "#7a7582",
+                    "on-primary-fixed": "#22005d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "sm": "12px",
+                    "xs": "4px",
+                    "margin-desktop": "80px",
+                    "md": "24px",
+                    "xl": "64px",
+                    "margin-mobile": "20px",
+                    "gutter": "16px",
+                    "lg": "40px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Work Sans"],
+                    "title-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "display-lg": ["Libre Caslon Text"],
+                    "body-sm": ["Work Sans"],
+                    "label-caps": ["Work Sans"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Work Sans', sans-serif;
+            background-color: #fdf7ff;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .chat-container {
+            height: calc(100vh - 144px); /* Adjust for header and nav */
+        }
+        .message-bubble-guest {
+            border-bottom-right-radius: 4px;
+        }
+        .message-bubble-bot {
+            border-bottom-left-radius: 4px;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbc4d2;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-surface border-b border-outline-variant docked full-width top-0 z-50 flex justify-between items-center px-margin-mobile h-16 w-full shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a friendly concierge staff member in a clean, high-end hotel uniform. The person has a warm, welcoming expression, set against a soft, out-of-focus luxury lobby background with warm ambient lighting. The overall style is modern and premium, using soft pastels and professional photography techniques." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3_20vMZx_83pV7QJA_iBvUp-zQye-_soX_v48jHOecffX_Jiz4t1jlq6UTVUTbkhDvibodVmYev04KKOlG3QAx4IJVuIZNzuXvFE-URgihNI3gEPhDkeo51duUJLBkA87u1w9QIg3bPrDJqJN3zSW4GQnabZfqHbaDv6kXfDUejMQeQKtbuvsgsSgrDahYY8CejQOhSQ-pc6ri2bVtWMGjn5H7XNLIttvD1v8lpirBL3tg_l_N6g15SGuQ9g8vi5XvMo-YBTE1T8"/>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-primary leading-tight">Concierge</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Online</span>
+</div>
+</div>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-hidden flex flex-col relative chat-container">
+<!-- Message History -->
+<div class="flex-1 overflow-y-auto px-margin-mobile py-6 flex flex-col gap-6" id="message-list">
+<!-- Date Indicator -->
+<div class="flex justify-center">
+<span class="font-label-caps text-label-caps text-outline bg-surface-container px-3 py-1 rounded-full uppercase">Today</span>
+</div>
+<!-- Bot Message -->
+<div class="flex flex-col items-start max-w-[85%] group">
+<div class="bg-surface-container text-on-surface p-4 rounded-xl message-bubble-bot shadow-sm transition-all">
+<p class="font-body-sm text-body-sm">Welcome back, Mr. Julian. How can we assist you at the Aura today? Whether it's a dinner reservation or extra amenities, I am here to help.</p>
+</div>
+<span class="font-label-caps text-label-caps text-outline mt-1 px-1">09:30 AM</span>
+</div>
+<!-- Guest Message -->
+<div class="flex flex-col items-end self-end max-w-[85%] group">
+<div class="bg-primary text-on-primary p-4 rounded-xl message-bubble-guest shadow-md transition-all">
+<p class="font-body-sm text-body-sm">Good morning! I'd like to inquire about the check-out process. Is there a possibility for a late departure?</p>
+</div>
+<div class="flex items-center gap-1 mt-1 px-1">
+<span class="font-label-caps text-label-caps text-outline">09:32 AM</span>
+<span class="material-symbols-outlined text-[12px] text-primary" data-icon="done_all">done_all</span>
+</div>
+</div>
+<!-- Bot Message (Typing Placeholder) -->
+<div class="flex flex-col items-start max-w-[85%]">
+<div class="bg-surface-container text-on-surface p-4 rounded-xl message-bubble-bot shadow-sm">
+<div class="flex gap-1.5 items-center h-4">
+<div class="w-1.5 h-1.5 bg-outline rounded-full animate-bounce" style="animation-delay: 0s"></div>
+<div class="w-1.5 h-1.5 bg-outline rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+<div class="w-1.5 h-1.5 bg-outline rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Actions & Input Area -->
+<div class="bg-surface-container-lowest border-t border-outline-variant p-margin-mobile pt-3 pb-8 md:pb-6 space-y-4">
+<!-- Quick Suggestions -->
+<div class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+<button class="whitespace-nowrap px-4 py-2 rounded-full border border-outline-variant bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps hover:bg-surface-variant transition-colors active:scale-95 transition-transform flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="dry_cleaning">dry_cleaning</span>
+                    Need more towels
+                </button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full border border-outline-variant bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps hover:bg-surface-variant transition-colors active:scale-95 transition-transform flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="alarm">alarm</span>
+                    Wake up call
+                </button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full border border-outline-variant bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps hover:bg-surface-variant transition-colors active:scale-95 transition-transform flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+                    Late check-out request
+                </button>
+</div>
+<!-- Input Bar -->
+<div class="flex items-center gap-3 bg-surface-container-high rounded-full px-4 py-2 shadow-inner border border-outline-variant focus-within:ring-2 ring-primary/20 transition-all">
+<button class="text-on-surface-variant hover:text-primary transition-colors active:scale-90">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-on-surface font-body-sm placeholder:text-outline py-2" placeholder="Message Concierge..." type="text"/>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-on-primary shadow-md hover:bg-primary-container active:scale-90 transition-all">
+<span class="material-symbols-outlined" data-icon="send" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(79,55,138,0.08)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="room_service">room_service</span>
+<span class="font-label-caps text-label-caps mt-1">Services</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<span class="font-label-caps text-label-caps mt-0.5">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps mt-1">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</a>
+</nav>
+<script>
+        // Simple Interaction logic
+        const chatContainer = document.getElementById('message-list');
+        const inputField = document.querySelector('input');
+        const sendBtn = document.querySelector('[data-icon="send"]').parentElement;
+
+        // Auto-scroll to bottom on load
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        function sendMessage() {
+            const text = inputField.value.trim();
+            if (text === "") return;
+
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const messageHtml = `
+                <div class="flex flex-col items-end self-end max-w-[85%] group animate-fade-in-up">
+                    <div class="bg-primary text-on-primary p-4 rounded-xl message-bubble-guest shadow-md transition-all">
+                        <p class="font-body-sm text-body-sm">${text}</p>
+                    </div>
+                    <div class="flex items-center gap-1 mt-1 px-1">
+                        <span class="font-label-caps text-label-caps text-outline">${time}</span>
+                        <span class="material-symbols-outlined text-[12px] text-outline" data-icon="done">done</span>
+                    </div>
+                </div>
+            `;
+            
+            chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+            inputField.value = "";
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Mock delivery state
+            setTimeout(() => {
+                const lastCheck = chatContainer.querySelector('.group:last-child [data-icon="done"]');
+                if(lastCheck) {
+                    lastCheck.innerText = "done_all";
+                    lastCheck.classList.remove('text-outline');
+                    lastCheck.classList.add('text-primary');
+                }
+            }, 1000);
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Quick suggestions listener
+        document.querySelectorAll('button.whitespace-nowrap').forEach(btn => {
+            btn.addEventListener('click', () => {
+                inputField.value = btn.innerText.replace(/[^\w\s-]/gi, '').trim();
+                inputField.focus();
+            });
+        });
+    </script>
+<style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.3s ease-out forwards;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>

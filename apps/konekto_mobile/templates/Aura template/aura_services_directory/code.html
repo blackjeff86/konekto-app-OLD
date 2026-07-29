@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura - Services Directory</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Work+Sans:wght@400;500;600&family=Libre+Caslon+Text:wght@400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&family=Work+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#594400",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "surface": "#fdf7ff",
+                        "outline-variant": "#cbc4d2",
+                        "secondary-container": "#e1d4fd",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e6e0e9",
+                        "on-primary-container": "#e0d2ff",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#cfbcff",
+                        "surface-container": "#f2ecf4",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#503d00",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#f5eff7",
+                        "background": "#fdf7ff",
+                        "primary": "#4f378a",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#322f35",
+                        "on-primary-fixed": "#22005d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#645a7d",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#6750a4",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "surface-container-low": "#f8f2fa",
+                        "on-surface": "#1d1b20",
+                        "surface-dim": "#ded8e0",
+                        "secondary": "#63597c",
+                        "surface-container-highest": "#e6e0e9",
+                        "surface-container-high": "#ece6ee",
+                        "on-background": "#1d1b20",
+                        "surface-bright": "#fdf7ff",
+                        "outline": "#7a7582",
+                        "on-secondary-fixed": "#1f1635",
+                        "tertiary-container": "#c9a74d",
+                        "tertiary": "#765b00",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#cfbcff",
+                        "primary-fixed": "#e9ddff",
+                        "on-tertiary-fixed": "#241a00",
+                        "secondary-fixed": "#e9ddff",
+                        "tertiary-fixed": "#ffdf93",
+                        "on-surface-variant": "#494551",
+                        "primary-container": "#6750a4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "gutter": "16px",
+                        "xl": "64px",
+                        "md": "24px",
+                        "margin-desktop": "80px",
+                        "xs": "4px",
+                        "margin-mobile": "20px",
+                        "sm": "12px",
+                        "lg": "40px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Work Sans"],
+                        "body-lg": ["Work Sans"],
+                        "title-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-sm": ["Work Sans"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .service-card:hover .service-overlay {
+            background-color: rgba(79, 55, 138, 0.4);
+        }
+        .service-card:hover img {
+            transform: scale(1.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen selection:bg-primary/20">
+<!-- Top App Bar -->
+<header class="bg-surface border-b border-outline-variant fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-primary-fixed">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a sophisticated man with silver-flecked hair, wearing a high-end charcoal cashmere turtleneck. The lighting is soft and directional, typical of luxury hotel branding. The background is a blurred, warm-toned upscale lobby, maintaining a clean and prestigious light-mode aesthetic for an elite guest profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBx4s3rpgCZjSXri0obYC3r7D-pm2kUnvU-LgIGLn4TZP0V0PHEFvO6SO-mqUSxxm-jOiBIpd5ic3-9KDxhtH83SGv_n9nIGsYF6mYz6DzmAH72OORJpv1mBeok2u4rK8Gl-hbjVQqAO2vY8KXbCtUdaTnISIczLb_cLPhqFyuItSPZVoDgzvA8czdGe0CcgzyeCoeSTlOxGaLiwJ9ZP9qJAaVs7Wti786i915mNppFqK2kGIPCXEpZsJGZ12OIJOupKZo2Br3bkQI"/>
+</div>
+<h1 class="font-title-md text-title-md text-primary">Welcome, Mr. Julian</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="pt-24 pb-32 px-margin-mobile max-w-4xl mx-auto">
+<!-- Animated Intro Section -->
+<section class="mb-lg">
+<h2 class="font-display-lg text-display-lg text-on-background mb-base">Services</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
+                Refined essentials tailored to your journey. Explore our curated selection of on-property amenities.
+            </p>
+</section>
+<!-- Bento Grid Category Layout -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-gutter">
+<!-- Spa & Wellness (Large Feature) -->
+<div class="lg:col-span-4 lg:row-span-2 group relative overflow-hidden rounded-xl bg-surface-container-low service-card h-[320px] lg:h-[420px] transition-all duration-500 cursor-pointer">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700" data-alt="A serene, minimalist luxury spa treatment room with soft natural light filtering through sheer curtains. A smooth stone massage setup sits on a clean white linen table. The aesthetic is extremely clean and calm, dominated by soft whites, creams, and warm wood textures, reflecting a prestigious 'Quiet Luxury' hospitality environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4FgS5lCP6rxRuFe5VQIY1B2mmooOD9jOyPJEXsYZVKXpwtgdeFeOeyTAcDhtIT8NDMYaBgcfDyjBBwtIqXrwKbpFN_tyOtw3LcmucGdFkrkMw3KGycKP4B4Kxd3ROOKJL2-DPj2-Xd846zsVJYi0ts-e4EBQhGE-WbUmOfiV1n0e2EQWpdWLBxGayviKWsbI7LA3hWwdPQsm54EhLH5x2OF0_lJhF28X1Rx7TPUli4D8Dnrp2OxiPv-4je487Y7YU9q1eYVCjC6A"/>
+<div class="service-overlay absolute inset-0 bg-black/20 transition-colors duration-500"></div>
+<div class="absolute bottom-0 left-0 p-md w-full bg-gradient-to-t from-black/60 to-transparent">
+<div class="flex items-center gap-xs mb-xs">
+<span class="material-symbols-outlined text-white text-[20px]">spa</span>
+<span class="font-label-caps text-label-caps text-white/80 uppercase">Aura Signature</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-white">Spa & Wellness</h3>
+</div>
+</div>
+<!-- Fitness Center (Medium) -->
+<div class="lg:col-span-2 group relative overflow-hidden rounded-xl bg-surface-container-low service-card h-[200px] lg:h-auto transition-all duration-500 cursor-pointer">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700" data-alt="A high-end, modern boutique fitness studio with floor-to-ceiling windows showing a lush green landscape. Minimalist equipment like a single high-tech rowing machine and some elegant leather-bound dumbbells are visible. The lighting is bright and energizing with a cool, modern aesthetic consistent with white-label luxury hospitality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQ9GvTngOZ92iMjT_zPoWPw2ooR4yBAeOus-EoJ4TYZLxhD2DyfGSNEyF5nj59Z7uN-MCh1_hN_meNCB7hWD6q-IMKISLjCre9BrxFxj_ROEjbv7CAdTDUn9GwP8xA6e4oWnl6q87xKO3fB9uxwQfDxxDjphvFIT1YOc0EKxQrn9RbAj7nlDl6FQ6l-dGkBeUUtsh1hHlTRsY65S1GjDbTRfudgEmL3JsAZfVTyTG1aElLYzueGdbvjRv7TA_jXpAcTFyzKiuqg8o"/>
+<div class="service-overlay absolute inset-0 bg-black/10 transition-colors duration-500"></div>
+<div class="absolute bottom-0 left-0 p-gutter w-full bg-gradient-to-t from-black/60 to-transparent">
+<h3 class="font-title-md text-title-md text-white">Fitness Center</h3>
+</div>
+</div>
+<!-- Housekeeping (Small/Tall) -->
+<div class="lg:col-span-2 group relative overflow-hidden rounded-xl bg-surface-container-low service-card h-[200px] lg:h-auto transition-all duration-500 cursor-pointer">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700" data-alt="Close-up of perfectly crisp, high-thread-count white bed linens being smoothed by a hand, part of a luxury turndown service. A small sprig of lavender sits on the pillow. The image exudes cleanliness, attention to detail, and premium hospitality standards within a light-mode, airy atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn5l11FfZGzHUj4LP5X3pMsTQByvPH4SeS-bp_uohR5C7nNRvwzqGvtVjWjnteAnW7J2rOHvk_Lp40KfjykYNlmVV6EtLH_vh9zmOEi7AcuABSJ1KxFoNN_Z4gbgLbE9FUvJjxETj80gxTEgjL6KNDKr2dI12e2T7cOlbTp_OjYpqwlbHRDJ4mgvOPYZmaQm9CbmOeFPSqR3OG7JVzId034GO9qodM_ihKHh5E0R9SLTEDUAtb2so2Hho6_0YxIYO4UpEyK3L6Ggo"/>
+<div class="service-overlay absolute inset-0 bg-black/10 transition-colors duration-500"></div>
+<div class="absolute bottom-0 left-0 p-gutter w-full bg-gradient-to-t from-black/60 to-transparent">
+<h3 class="font-title-md text-title-md text-white">Housekeeping</h3>
+</div>
+</div>
+<!-- Laundry (Medium) -->
+<div class="lg:col-span-3 group relative overflow-hidden rounded-xl bg-surface-container-low service-card h-[200px] transition-all duration-500 cursor-pointer">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700" data-alt="An elegant laundry service presentation featuring a freshly pressed white dress shirt on a high-quality wooden hanger, encased in a subtle garment bag. The background is a warm, minimalist wooden wardrobe. The mood is one of impeccable care and prestige, with soft shadows and high-key lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjo82k5DuevjbzmgVhKT0weN91IW9QzT2OHk6OJvj5iV4fRvYFDbcgF3ScEjPGSl7JyOZ8UrrTdQwrk6O_Xd-KLlWFCsQojs4ON8BBra7T0GpJSgx5lHu1AejAN_3cZkjGqKg5AZX2yyM0vYvI43uyK53_4EVYnYGIkmS0vHT83l3o6uqrwd4BJ8ZUgxmrgWTJepfi6ujtZLv-6TTtR8x-zuoT6iHiuuggN0kAeRNYlxN9VKEFgEgsEzt2zaEFXf-TS_Jp7PnZzqc"/>
+<div class="service-overlay absolute inset-0 bg-black/10 transition-colors duration-500"></div>
+<div class="absolute bottom-0 left-0 p-gutter w-full bg-gradient-to-t from-black/60 to-transparent">
+<h3 class="font-title-md text-title-md text-white">Laundry</h3>
+</div>
+</div>
+<!-- Transportation (Medium) -->
+<div class="lg:col-span-3 group relative overflow-hidden rounded-xl bg-surface-container-low service-card h-[200px] transition-all duration-500 cursor-pointer">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700" data-alt="A sleek, black high-end electric luxury sedan parked in front of a modern architectural building at dusk. Subtle street lighting reflects off the polished surface of the car. The aesthetic is powerful, prestigious, and sophisticated, emphasizing 'Elite Tier' transportation services for guests." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZ0spnq9lGLJ6NFGB4oKM5ZlVsLh0oFTRpG1pJuBmp9oBTMzgK3swttuioLDXhPfm4jF0AwS8I23zk9Ld9NJXbnAc1OSrUJXrnrG_VbLkcc3wc5G9NE_nEM6IMc_936Qqtb406lcVQv4d9D6I-mKypfIQK-I881SNoc-qrENo61S1kClGnf348xyt-g_zrebYKEJWvlPiPkp2ARlh2UczNhs7Q__yCxF16YgfubDmNWgAGkm7h6O8LH_G7TRamtsQf3I-t5PofqVA"/>
+<div class="service-overlay absolute inset-0 bg-black/20 transition-colors duration-500"></div>
+<div class="absolute bottom-0 left-0 p-gutter w-full bg-gradient-to-t from-black/60 to-transparent">
+<h3 class="font-title-md text-title-md text-white">Transportation</h3>
+</div>
+</div>
+</div>
+<!-- Secondary Info Section -->
+<section class="mt-lg p-md bg-secondary-container/30 rounded-xl border border-primary/10">
+<div class="flex gap-gutter items-start">
+<div class="bg-primary text-white p-sm rounded-lg">
+<span class="material-symbols-outlined">concierge</span>
+</div>
+<div>
+<h4 class="font-title-md text-title-md text-primary mb-xs">Bespoke Requests</h4>
+<p class="font-body-sm text-body-sm text-on-secondary-container">
+                        Seeking something more specific? Our concierge team is available 24/7 to facilitate custom arrangements during your stay at Aura.
+                    </p>
+<button class="mt-sm font-label-caps text-label-caps text-primary border-b border-primary pb-1 hover:text-primary-container hover:border-primary-container transition-colors">
+                        CONTACT CONCIERGE
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(79,55,138,0.08)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 transition-all duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">room_service</span>
+<span class="font-label-caps text-label-caps mt-1">Services</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 transition-all duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-caps text-label-caps mt-1">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 transition-all duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps mt-1">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 transition-all duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</a>
+</nav>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('click', () => {
+                // Subtle feedback for white-label platform click
+                card.classList.add('scale-98', 'opacity-90');
+                setTimeout(() => {
+                    card.classList.remove('scale-98', 'opacity-90');
+                }, 150);
+            });
+        });
+
+        // Sticky header transparency on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('bg-surface/80', 'backdrop-blur-md');
+            } else {
+                header.classList.remove('bg-surface/80', 'backdrop-blur-md');
+            }
+        });
+    </script>
+</body></html>

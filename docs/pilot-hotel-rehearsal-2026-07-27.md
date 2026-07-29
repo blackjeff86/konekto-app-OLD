@@ -57,8 +57,8 @@ Expected outcome:
 
 Evidence in code:
 
-- `apps/konekto_api/app/api/platform-admin/hotels/route.ts`
-- `apps/konekto_api/app/api/platform-admin/hotels/route.test.ts`
+- `apps/sevvn_api/app/api/platform-admin/hotels/route.ts`
+- `apps/sevvn_api/app/api/platform-admin/hotels/route.test.ts`
 
 ### 2. Subscription and preset confirmation
 
@@ -71,7 +71,7 @@ Required rehearsal state:
 
 Evidence in code:
 
-- `apps/konekto_api/app/api/platform-admin/hotels/[hotelId]/subscription/route.ts`
+- `apps/sevvn_api/app/api/platform-admin/hotels/[hotelId]/subscription/route.ts`
 
 ### 3. Portal staff access
 
@@ -85,8 +85,8 @@ Required rehearsal checks:
 
 Evidence in code:
 
-- `apps/konekto_api/app/api/hotels/[hotelId]/route.ts`
-- `apps/konekto_portal_next/hooks/useHotelConfig.ts`
+- `apps/sevvn_api/app/api/hotels/[hotelId]/route.ts`
+- `apps/sevvn_portal_next/hooks/useHotelConfig.ts`
 
 ### 4. Hotel visual and module setup
 
@@ -104,9 +104,9 @@ Required rehearsal checks:
 
 Evidence in code:
 
-- `apps/konekto_portal_next/app/(portal)/settings/appearance/page.tsx`
-- `apps/konekto_portal_next/app/(portal)/settings/modules/page.tsx`
-- `apps/konekto_api/app/api/hotels/[hotelId]/route.ts`
+- `apps/sevvn_portal_next/app/(portal)/settings/appearance/page.tsx`
+- `apps/sevvn_portal_next/app/(portal)/settings/modules/page.tsx`
+- `apps/sevvn_api/app/api/hotels/[hotelId]/route.ts`
 
 ### 5. Room registry
 
@@ -119,7 +119,7 @@ Required rehearsal checks:
 
 Evidence in code:
 
-- `apps/konekto_portal_next/app/(portal)/settings/rooms/page.tsx`
+- `apps/sevvn_portal_next/app/(portal)/settings/rooms/page.tsx`
 
 ### 6. Stay opening and first guest creation
 
@@ -138,10 +138,10 @@ Required rehearsal checks:
 
 Evidence in code:
 
-- `apps/konekto_portal_next/components/rooms/OccupancyForm.tsx`
-- `apps/konekto_api/app/api/hotels/[hotelId]/stays/route.ts`
-- `apps/konekto_api/app/api/hotels/[hotelId]/guests/route.ts`
-- `apps/konekto_portal_next/components/rooms/OccupancyForm.test.tsx`
+- `apps/sevvn_portal_next/components/rooms/OccupancyForm.tsx`
+- `apps/sevvn_api/app/api/hotels/[hotelId]/stays/route.ts`
+- `apps/sevvn_api/app/api/hotels/[hotelId]/guests/route.ts`
+- `apps/sevvn_portal_next/components/rooms/OccupancyForm.test.tsx`
 
 ### 7. Additional guest handling
 
@@ -154,8 +154,8 @@ Required rehearsal checks:
 
 Evidence in code:
 
-- `apps/konekto_portal_next/app/(portal)/guests/page.tsx`
-- `apps/konekto_portal_next/app/(portal)/guests/page.test.tsx`
+- `apps/sevvn_portal_next/app/(portal)/guests/page.tsx`
+- `apps/sevvn_portal_next/app/(portal)/guests/page.test.tsx`
 
 ### 8. Guest claim in the app
 
@@ -170,8 +170,8 @@ Required rehearsal checks:
 
 Evidence in code:
 
-- `apps/konekto_api/app/api/guest/claim/route.ts`
-- `apps/konekto_api/app/api/guest/claim/route.test.ts`
+- `apps/sevvn_api/app/api/guest/claim/route.ts`
+- `apps/sevvn_api/app/api/guest/claim/route.test.ts`
 - `apps/konekto_mobile/README.md`
 
 Important runtime rule:
@@ -259,3 +259,4 @@ Use the following canonical desk-validation scenario for all future pilot checks
 After this rehearsal definition, the next plan item should focus on runtime cleanup:
 
 - retire `apps/konekto_site` from the active runtime path
+

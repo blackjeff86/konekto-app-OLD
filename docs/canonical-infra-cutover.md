@@ -52,7 +52,7 @@ Current root `.vercel/project.json`:
 
 ### Vercel site project
 
-Current `apps/konekto_site_next/.vercel/project.json`:
+Current `apps/sevvn_site_next/.vercel/project.json`:
 
 - `projectName`: `sevvn-site`
 - `projectId`: `prj_l1o0G4JYSCjrJm2ObM4jH7KAkqAU`
@@ -65,7 +65,7 @@ Current live institutional site:
 
 ### Vercel API project
 
-Current `apps/konekto_api/.vercel/project.json`:
+Current `apps/sevvn_api/.vercel/project.json`:
 
 - `projectName`: `sevvn-api`
 - `projectId`: `prj_KE2Qh4tyRwStRYWjsBVZgBYznVe0`
@@ -77,7 +77,7 @@ Current live API:
 
 ### Vercel hotel portal project
 
-Current `apps/konekto_portal_next/.vercel/project.json`:
+Current `apps/sevvn_portal_next/.vercel/project.json`:
 
 - `projectName`: `sevvn-hotel`
 - `projectId`: `prj_cjjlIvRzYKF6pKfgi2LIsE1z6ksj`
@@ -89,7 +89,7 @@ Current live hotel portal:
 
 ### Vercel admin project
 
-Current `apps/konekto_admin/.vercel/project.json`:
+Current `apps/sevvn_admin/.vercel/project.json`:
 
 - `projectName`: `sevvn-admin`
 - `projectId`: `prj_sAlUbY4VjpJ8NtE2s7RmWrPfDbVy`
@@ -174,7 +174,7 @@ Create new Vercel projects under the Sevvn naming convention.
 
 Recommended first project to recreate:
 
-- institutional site (`apps/konekto_site_next`)
+- institutional site (`apps/sevvn_site_next`)
 
 Reason:
 
@@ -227,3 +227,4 @@ The exact commands will depend on repo visibility and final slug, but the sequen
 - institutional site is deployed from the new canonical project path
 - old `konekto` infra is demoted to fallback only
 - Phase 6 structural rename can proceed against the new canonical identity
+

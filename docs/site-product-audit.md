@@ -11,10 +11,10 @@ Map what the public site can safely claim based on the current repository state.
 Confirmed and real:
 
 - guest app (`apps/konekto_mobile`)
-- hotel portal (`apps/konekto_portal_next`)
-- Sevvn admin / platform admin (`apps/konekto_admin`)
-- backend platform (`apps/konekto_api`)
-- institutional site (`apps/konekto_site_next`)
+- hotel portal (`apps/sevvn_portal_next`)
+- Sevvn admin / platform admin (`apps/sevvn_admin`)
+- backend platform (`apps/sevvn_api`)
+- institutional site (`apps/sevvn_site_next`)
 - real login flow for hotel staff
 
 ## 2. Plan And Template Reality
@@ -35,7 +35,7 @@ Commercially safe claims:
 
 Catalog source:
 
-- `apps/konekto_api/lib/module-catalog.ts`
+- `apps/sevvn_api/lib/module-catalog.ts`
 
 Marked `implemented: true`:
 
@@ -179,3 +179,4 @@ The site should not say:
 - the partner network is fully launched
 - digital wallet and loyalty are fully mature across all real-world flows
 - every template-specific surface is already parity-validated
+

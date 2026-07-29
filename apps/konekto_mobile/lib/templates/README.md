@@ -2,7 +2,7 @@
 
 Os 5 templates válidos: **Aura**, **Bosque**, **Elite**, **Pulse**, **Horizon**. Cada
 hotel escolhe um via `Hotel.config.template`, restrito pelo Plan Preset do hotel — ver
-`apps/konekto_api/lib/plan-presets.ts`, a fonte de verdade de quais templates cada
+`apps/sevvn_api/lib/plan-presets.ts`, a fonte de verdade de quais templates cada
 preset permite (Essential: Aura/Bosque; Premium/Enterprise: todos).
 
 **Desde a arquitetura de Módulos** (ver `tasks/plan.md`), template é só identidade
@@ -47,9 +47,9 @@ lib/theme/theme_engine.dart      — overlays (dark mode/sazonal/marca) sobre o 
 
 ## Adicionar um 6º template
 
-1. **Backend** (`apps/konekto_api/lib/plan-presets.ts`): acrescentar o id em
+1. **Backend** (`apps/sevvn_api/lib/plan-presets.ts`): acrescentar o id em
    `templateIds` do(s) preset(s) que vão poder escolhê-lo.
-2. **Portal** (`apps/konekto_portal_next/app/(portal)/settings/appearance/page.tsx`):
+2. **Portal** (`apps/sevvn_portal_next/app/(portal)/settings/appearance/page.tsx`):
    acrescentar uma entrada em `TEMPLATE_OPTIONS` — nome, tagline, descrição, cor de
    destaque, print real em `public/appearance/<id>-home.png`.
 3. **Aqui**: criar `lib/templates/<id>/theme.dart` + `home_screen.dart` no mínimo (as
@@ -62,7 +62,7 @@ lib/theme/theme_engine.dart      — overlays (dark mode/sazonal/marca) sobre o 
 
 ## Adicionar um módulo novo
 
-Não mexe em nada aqui — ver `apps/konekto_api/lib/module-catalog.ts` (Catalog) e
+Não mexe em nada aqui — ver `apps/sevvn_api/lib/module-catalog.ts` (Catalog) e
 `lib/modules/module_registry.dart` (Registry, lado Flutter). Nenhum template precisa
 mudar pra suportar um módulo novo.
 
@@ -90,3 +90,4 @@ explícita — convertê-los pra renderizar módulos genéricos regrediria visua
 Homes reais hoje (o Layout Registry só tem um card de fallback genérico, sem
 variantes desenhadas por módulo/template ainda). Converter isso é trabalho futuro,
 que exige desenho de verdade por módulo antes de tocar em `home_screen.dart`.
+

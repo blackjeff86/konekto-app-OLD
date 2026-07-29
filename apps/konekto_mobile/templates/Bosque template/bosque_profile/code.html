@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bosque - Profile</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Design System Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed": "#ccead6",
+                    "on-background": "#1b1c1a",
+                    "surface-dim": "#dbdad6",
+                    "on-secondary-fixed-variant": "#5d4034",
+                    "on-primary": "#ffffff",
+                    "on-surface-variant": "#424844",
+                    "on-secondary-fixed": "#2c160c",
+                    "on-primary-container": "#98b5a3",
+                    "outline-variant": "#c2c8c2",
+                    "on-primary-fixed-variant": "#324c3e",
+                    "inverse-primary": "#b0cdbb",
+                    "surface-variant": "#e4e2de",
+                    "on-surface": "#1b1c1a",
+                    "tertiary-fixed-dim": "#f0bd8b",
+                    "primary-container": "#2d4739",
+                    "tertiary-container": "#5c3a13",
+                    "on-tertiary-container": "#d5a474",
+                    "outline": "#727973",
+                    "surface-bright": "#fbf9f5",
+                    "secondary-container": "#ffd4c4",
+                    "tertiary": "#422401",
+                    "surface-container-high": "#eae8e4",
+                    "on-error": "#ffffff",
+                    "primary": "#173124",
+                    "inverse-on-surface": "#f2f0ed",
+                    "secondary": "#77574b",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f5f3ef",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed": "#ffdbce",
+                    "on-secondary": "#ffffff",
+                    "inverse-surface": "#30312e",
+                    "surface-container-highest": "#e4e2de",
+                    "on-tertiary-fixed-variant": "#623f18",
+                    "error": "#ba1a1a",
+                    "surface": "#fbf9f5",
+                    "surface-tint": "#496455",
+                    "tertiary-fixed": "#ffdcbd",
+                    "secondary-fixed-dim": "#e7beae",
+                    "surface-container": "#efeeea",
+                    "on-secondary-container": "#7a594d",
+                    "on-primary-fixed": "#062014",
+                    "primary-fixed-dim": "#b0cdbb",
+                    "on-tertiary-fixed": "#2c1600",
+                    "background": "#fbf9f5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "margin-mobile": "16px",
+                    "md": "24px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "base": "8px",
+                    "lg": "48px",
+                    "margin-desktop": "64px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Literata"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Literata"],
+                    "headline-md": ["Literata"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Literata"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fbf9f5;
+            color: #1b1c1a;
+            -webkit-font-smoothing: antialiased;
+        }
+        .biophilic-shadow {
+            box-shadow: 0 10px 40px -10px rgba(140, 106, 93, 0.12);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-sm shadow-secondary/10 flex items-center justify-between px-margin-mobile h-16 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container/10 border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="A professional and warm studio portrait of a mature man with a friendly expression, styled for a high-end travel app. The lighting is soft and golden, mimicking a late afternoon in a forest clearing. He is wearing a minimalist linen shirt in earth tones, reflecting a biophilic and sustainable aesthetic. Background is a soft-focus lush greenery with dappled sunlight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCX-TwXH-RVCuCcCdDrz10FYJ4CfE-I7l-1OZ9NYDExdw9xBV5DDcagPz_jm5I01SNVl3HdKi_cVg-_9R2ms9xE6dXyTspPKXKqasbvQXUjqmMfgFmvyMjmPGvGBebhGI4ND9e6j0tUz4ORrQ8edc-GnRlEWMR0IPxj1Pc3mZiMjknnrqymTB3zIkUNcQdo3sKJK4UbgQe9fQw7VpYnU2HGNBhkMHnfeDtc3h2d3RwRm0wcyY7D9D8ti_qNKpUHpxj1UGBrsn6vnnc"/>
+</div>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary">Welcome to Bosque</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-primary-container/10 transition-colors active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="pt-24 px-margin-mobile max-w-2xl mx-auto space-y-8">
+<!-- Profile Header Section -->
+<section class="flex flex-col items-center text-center space-y-4">
+<div class="relative">
+<div class="w-28 h-28 rounded-full overflow-hidden border-4 border-surface-container-high biophilic-shadow">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of Mr. Julian, a frequent traveler with a sophisticated yet approachable look. He has a warm smile, positioned against a background of soft, out-of-focus pine trees. The color palette is composed of organic browns and forest greens, emphasizing a premium biophilic design language with high-quality natural textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfpPmgYIkRU4zdUTETN3lGRWznZNU-_ZD8Mb7kXftJH_H2Q7og-XkWrlZ_RvSX9vljbPYdqJ1IEoki6P7al6cNxEOqEKO599y4wcgL7XLf2mtGRQPo-eebJK2vu6GS-mer4gQJd2FtpfZMnyz0TUUazVZT8moYF_GuGAdhc4GnD0eII3NHFK-9-7nH-3q48Zlt1UQTK0c19JA_ABjFiWw656BbUMeMCw2i8T6lvp-kGe0NmUEY4YLfI__83FWXMlbMNdhMRAnrVgI"/>
+</div>
+<div class="absolute bottom-1 right-1 bg-primary text-white p-1.5 rounded-full border-2 border-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary">Mr. Julian</h2>
+<p class="font-body-md text-on-surface-variant flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]" data-icon="forest">forest</span>
+                    Frequent Traveler
+                </p>
+</div>
+</section>
+<!-- Nature Credits Bento Card -->
+<section class="bg-primary text-on-primary p-6 rounded-3xl biophilic-shadow relative overflow-hidden group">
+<div class="absolute top-[-20px] right-[-20px] opacity-10 group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-[160px]" data-icon="eco">eco</span>
+</div>
+<div class="relative z-10 space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-sm uppercase tracking-widest opacity-80">Nature Credits</p>
+<h3 class="font-headline-xl text-headline-xl">12,450</h3>
+</div>
+<div class="bg-white/10 backdrop-blur-md p-2 rounded-xl">
+<span class="material-symbols-outlined" data-icon="redeem">redeem</span>
+</div>
+</div>
+<div class="h-2 w-full bg-white/20 rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed-dim w-3/4 rounded-full"></div>
+</div>
+<p class="font-label-sm opacity-80 italic">You're 2,550 credits away from a "Forest Canopy" upgrade</p>
+</div>
+</section>
+<!-- Quick Actions Grid -->
+<section class="grid grid-cols-1 gap-4">
+<!-- Past Stays -->
+<div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/20 hover:border-primary/20 transition-all cursor-pointer group">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-secondary-container/30 rounded-xl flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</div>
+<div>
+<h4 class="font-label-md text-on-surface">Past Stays</h4>
+<p class="font-label-sm text-on-surface-variant">12 adventures completed</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Mini Preview of last stay -->
+<div class="mt-4 flex gap-2 overflow-x-auto hide-scrollbar">
+<div class="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A serene cabin nestled deep within an ancient redwood forest. Fog rolls between the massive trunks, creating a mystical, moody atmosphere. The cabin has large glass windows reflecting the green surroundings. Captured in soft morning light, the image highlights mossy textures and rich earthy tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwmO-OVzT69AK2dfBgqUsxTFk2aff6ZUt3CQd9JZcDSnSxDdBEd7NCTx70-sjPy0dBr2KGL-2FnioZKlqc19eAK1gUS_nhIx2dkOI1xGMHAPU4UADh_zdV4llmbr_NVPqcSAlyNZ4XqKJt5L5VjrRsBAHKvXUciObzZqTu6qESLgcVZHluyjRYD1qlU1LKQ6VYohIyH0P7Mw_Qtmesnx_QhqBt0yqogUYvrzldhWd2trCWLnYIZXpsAyev6-AOLwxqZ504f4SZotE"/>
+<div class="absolute bottom-0 left-0 right-0 bg-black/40 backdrop-blur-sm p-1">
+<p class="text-[10px] text-white font-label-sm truncate">Redwood Retreat</p>
+</div>
+</div>
+<div class="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A luxury eco-tent situated on a high cliff overlooking a rugged, misty coastline. The tent is made of high-quality canvas in a neutral tone, blending with the sandy earth. The sunset sky is painted with soft oranges and purples, casting a warm glow over the crashing waves below." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAU9_L2bHs2T_rUMxbbIk7-hZtC3AVoVqDGBTQ35azr8wcGS-RfQEjMM4icp6EBDfzn6KHcKMUIpq_eGWZpSAKgBtUfHfmQPSKVZZyfIx9EmgyvrZRvTz-_w-fGtVC4G5asEE_SR3saagKx3PqsZpXwfaCXCwnVtL8t4pFwo66szG3ezAMo8kXLATN7sg9i6ZPqlCSXXdPMGT7AeGun0AdxFlpe-2SI7fXr-ikBiS1F4ICmIriP54dmv79kaqt0zjDAxj3ky9Fe7b8"/>
+<div class="absolute bottom-0 left-0 right-0 bg-black/40 backdrop-blur-sm p-1">
+<p class="text-[10px] text-white font-label-sm truncate">Pacific Edge</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Payment Methods -->
+<div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/20 hover:border-primary/20 transition-all cursor-pointer group">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-tertiary-fixed/30 rounded-xl flex items-center justify-center text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</div>
+<div>
+<h4 class="font-label-md text-on-surface">Payment Methods</h4>
+<p class="font-label-sm text-on-surface-variant">Visa ending in 4421</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Account Settings -->
+<div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/20 hover:border-primary/20 transition-all cursor-pointer group">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-primary-fixed/30 rounded-xl flex items-center justify-center text-on-primary-fixed-variant">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</div>
+<div>
+<h4 class="font-label-md text-on-surface">Account Settings</h4>
+<p class="font-label-sm text-on-surface-variant">Privacy, Security, Notifications</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Logout Button -->
+<section class="pt-4">
+<button class="w-full py-4 rounded-2xl border border-error/20 text-error font-label-md flex items-center justify-center gap-2 hover:bg-error/5 transition-colors active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Logout
+            </button>
+<p class="text-center text-on-surface-variant opacity-50 text-[12px] mt-6 font-label-sm">Bosque Version 2.4.0 (2024)</p>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full rounded-t-xl z-50 bg-surface-container shadow-[0_-4px_20px_0_rgba(93,64,52,0.08)] flex justify-around items-center w-full py-3 px-2 pb-safe">
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" data-icon="spa">spa</span>
+<span class="font-label-sm text-label-sm mt-1">Services</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-sm text-label-sm mt-1">Messages</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-sm text-label-sm mt-1">Wallet</span>
+</button>
+<!-- ACTIVE: Profile -->
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</button>
+</nav>
+<script>
+        // Micro-interactions for credit bar
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.querySelector('.h-full.bg-primary-fixed-dim');
+            if(bar) {
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.transition = 'width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    bar.style.width = '75%';
+                }, 300);
+            }
+        });
+    </script>
+</body></html>

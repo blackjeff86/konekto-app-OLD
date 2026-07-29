@@ -46,7 +46,7 @@ At the end of 30 days, Sevvn should be able to support a controlled pilot hotel 
 - no broad structural rename of folders and package roots
 - no native mobile package rename
 - no production-grade launch of wallet, loyalty, digital check-in/out, interactive map, or smart notifications
-- no rewrite of `apps/konekto_admin` to Next.js
+- no rewrite of `apps/sevvn_admin` to Next.js
 - no attempt to make every catalog module public-facing and operational this month
 
 ## Task List
@@ -151,3 +151,4 @@ Move into Phase 2:
 - add rate limiting to the sensitive public/auth surfaces
 - introduce correlation IDs and structured logging
 - tighten the guest-safe public payloads before expanding any pilot exposure
+

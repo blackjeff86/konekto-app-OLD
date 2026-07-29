@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bosque Room Service</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Literata:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed": "#ccead6",
+                    "on-background": "#1b1c1a",
+                    "surface-dim": "#dbdad6",
+                    "on-secondary-fixed-variant": "#5d4034",
+                    "on-primary": "#ffffff",
+                    "on-surface-variant": "#424844",
+                    "on-secondary-fixed": "#2c160c",
+                    "on-primary-container": "#98b5a3",
+                    "outline-variant": "#c2c8c2",
+                    "on-primary-fixed-variant": "#324c3e",
+                    "inverse-primary": "#b0cdbb",
+                    "surface-variant": "#e4e2de",
+                    "on-surface": "#1b1c1a",
+                    "tertiary-fixed-dim": "#f0bd8b",
+                    "primary-container": "#2d4739",
+                    "tertiary-container": "#5c3a13",
+                    "on-tertiary-container": "#d5a474",
+                    "outline": "#727973",
+                    "surface-bright": "#fbf9f5",
+                    "secondary-container": "#ffd4c4",
+                    "tertiary": "#422401",
+                    "surface-container-high": "#eae8e4",
+                    "on-error": "#ffffff",
+                    "primary": "#173124",
+                    "inverse-on-surface": "#f2f0ed",
+                    "secondary": "#77574b",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f5f3ef",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed": "#ffdbce",
+                    "on-secondary": "#ffffff",
+                    "inverse-surface": "#30312e",
+                    "surface-container-highest": "#e4e2de",
+                    "on-tertiary-fixed-variant": "#623f18",
+                    "error": "#ba1a1a",
+                    "surface": "#fbf9f5",
+                    "surface-tint": "#496455",
+                    "tertiary-fixed": "#ffdcbd",
+                    "secondary-fixed-dim": "#e7beae",
+                    "surface-container": "#efeeea",
+                    "on-secondary-container": "#7a594d",
+                    "on-primary-fixed": "#062014",
+                    "primary-fixed-dim": "#b0cdbb",
+                    "on-tertiary-fixed": "#2c1600",
+                    "background": "#fbf9f5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "margin-mobile": "16px",
+                    "md": "24px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "base": "8px",
+                    "lg": "48px",
+                    "margin-desktop": "64px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Literata"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Literata"],
+                    "headline-md": ["Literata"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Literata"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .biophilic-card {
+            background: linear-gradient(135deg, rgba(251, 249, 245, 0.9) 0%, rgba(245, 243, 239, 0.95) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .category-chip-active {
+            @apply bg-primary text-on-primary;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-sm shadow-secondary/10 flex items-center justify-between px-margin-mobile h-16">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="A close-up portrait of a relaxed traveler, warm sun-drenched lighting, soft forest green background, high-end photography with organic textures and a peaceful expression, in a biophilic luxury hotel aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2BtI5k7Jvq1WY00X5eHqpbK_kjiWkg9tI09fal4XFQ_b7a9i5lIKOKvAvutS9AYfjzAQgY8sFFbIJ-p_C7BluTiS0lhH1U4uqnrl8UJBB9TsfBy7CNli9L10aQIGRuNvllxXv9cuLWezV2n5_2NBORQGoDhSK9_yOjc9LXjUkCTXDwHaXS64pExRU_kHkR6SkeAwD7qV7w7Lb1Sz9TX_gF1DWu1kEoHel5rJrzLjizA3mb2MP_O-Z8UXxepPNxOLm_k1Mq40EkiA"/>
+</div>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary">Bosque</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-primary-container/10 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="pt-20 px-margin-mobile max-w-screen-md mx-auto">
+<!-- Hero Section -->
+<section class="mb-lg">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2">Room Service</h2>
+<p class="font-body-md text-on-surface-variant leading-relaxed">Nurturing flavors delivered to your forest sanctuary. Locally sourced, prepared with care.</p>
+</section>
+<!-- Categories Horizontal Scroll -->
+<nav class="flex gap-3 overflow-x-auto hide-scrollbar mb-8 -mx-margin-mobile px-margin-mobile py-2">
+<button class="whitespace-nowrap px-6 py-2.5 rounded-full bg-primary text-on-primary font-label-md shadow-md transition-all active:scale-95">Breakfast</button>
+<button class="whitespace-nowrap px-6 py-2.5 rounded-full bg-surface-container text-on-surface-variant font-label-md hover:bg-surface-container-high transition-colors active:scale-95">Farm-to-Table</button>
+<button class="whitespace-nowrap px-6 py-2.5 rounded-full bg-surface-container text-on-surface-variant font-label-md hover:bg-surface-container-high transition-colors active:scale-95">Hearth-Cooked</button>
+<button class="whitespace-nowrap px-6 py-2.5 rounded-full bg-surface-container text-on-surface-variant font-label-md hover:bg-surface-container-high transition-colors active:scale-95">Artisanal Drinks</button>
+</nav>
+<!-- Menu Bento Grid -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Item 1: Wild Mushroom Risotto -->
+<div class="biophilic-card rounded-xl overflow-hidden border border-outline-variant/20 shadow-sm transition-transform hover:shadow-md">
+<div class="flex flex-col md:flex-row">
+<div class="md:w-1/3 h-48 md:h-auto overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A gourmet dish of wild mushroom risotto served in a handcrafted ceramic bowl. Garnished with fresh herbs and shaved truffle. The lighting is warm and rustic, evoking a forest-to-table atmosphere. The texture of the creamy rice and earthy mushrooms is highly detailed and appetizing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBl-uRBtvY05i3Akg2FjTwTfxABcU1shys6tMkkNgkr0V9y9via1ULv0tDLa-gGZbdp9izrkB9rXDXMO7HWY8Nt8QHhgKjxNyVT5Tc7lfhCf5YI16kg5_krzl5SpMOOnRI2gqiDzx2MpYxHa7STJXD-fNuMieU539ScnSKRGbV8AEfOyYoyirGSZy7FlxvnP8mmii8SU7KXqEcjH66BYSWgH29OcrP1BIId8tRTKlkJUnH5BSZ0I3HYvD2pgecfoGEkHyhSbnP9OkE"/>
+</div>
+<div class="p-6 md:w-2/3 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-primary">Wild Mushroom Risotto</h3>
+<span class="font-label-md text-on-secondary-fixed-variant">$24</span>
+</div>
+<p class="font-body-md text-on-surface-variant mb-4">Slow-simmered arborio rice, forest-foraged chanterelles, and aged parmesan finished with a drizzle of truffle oil.</p>
+</div>
+<div class="flex justify-between items-center">
+<span class="flex items-center gap-1 text-on-tertiary-fixed-variant text-label-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="eco">eco</span> Earth-friendly
+                            </span>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container active:scale-90 transition-transform" onclick="updateOrder()">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2: Local Cheese Board -->
+<div class="biophilic-card rounded-xl overflow-hidden border border-outline-variant/20 shadow-sm transition-transform hover:shadow-md">
+<div class="flex flex-col md:flex-row">
+<div class="md:w-1/3 h-48 md:h-auto overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="An artisanal cheese board featuring a selection of local aged cheeses, honeycomb, fresh figs, and walnut bread. Arranged on a rustic dark wood platter. Soft, natural sunlight highlights the textures of the rinds and the sticky honey. Warm, comforting, and organic visual style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAONGYc8iuU1vr0TN1mOMgKJoToedRUPa3TjAUWy1feo9AZMgjKV2S6C2zDPhTezmKap0UiLrMwmEiyi0Y2YHHTL0mtgokUYGUZ3WNEYOiwP9Ywcz3R-kGISjcbfyNfogFm1UnOcJXZYxGRZZjSIhpNLc_trVLCuQFCHxwB3xcWLPaEJLys9ac5Iz_9HM6Qh7pGHuUNg9VaRrRfBNgEyrUh8UaykkW6NfsPSjjoIy7Nd2D52j9iym8SB1WLVltv0eORNjA-uStKmNw"/>
+</div>
+<div class="p-6 md:w-2/3 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-primary">Local Cheese Board</h3>
+<span class="font-label-md text-on-secondary-fixed-variant">$18</span>
+</div>
+<p class="font-body-md text-on-surface-variant mb-4">A curated selection of three regional cheeses, wildflower honey, and grilled house-made sourdough.</p>
+</div>
+<div class="flex justify-between items-center">
+<span class="flex items-center gap-1 text-on-tertiary-fixed-variant text-label-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="local_cafe">local_cafe</span> Seasonal
+                            </span>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-surface-container text-on-surface-variant active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3: Honey-Glazed Salmon -->
+<div class="biophilic-card rounded-xl overflow-hidden border border-outline-variant/20 shadow-sm transition-transform hover:shadow-md">
+<div class="flex flex-col md:flex-row">
+<div class="md:w-1/3 h-48 md:h-auto overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Honey-glazed wild salmon fillet served over a bed of roasted root vegetables. The salmon has a glistening amber glaze and is garnished with microgreens. Shot in a warm, rustic kitchen setting with golden hour lighting that emphasizes the rich colors and healthy, fresh ingredients." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxtKzpwnRXq1jtpmV3GRBMg-ev3unbRBXop1mNgvOXw-I_RM8XS9KaruKrPuQVw1bjfMqiLYwLbye_kWOJs9A--glIAZZvzXhHKIrUBOccxTadfoG-n_3DgFLvZi3U_iaX2_tE0vQWlVPTKo7iw-P0Pjo2zMskTOlwQDlPH_fs_EdNvf9Jngw2klxfQK2r36OAX05syZovLnDOKjcdpPybXoSCMYKTEdV4ZcwpTopH1awri0PzBFkDoxQEpxIaOMLQ-nQREnhRYso"/>
+</div>
+<div class="p-6 md:w-2/3 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-primary">Honey-Glazed Salmon</h3>
+<span class="font-label-md text-on-secondary-fixed-variant">$32</span>
+</div>
+<p class="font-body-md text-on-surface-variant mb-4">Wild-caught Atlantic salmon, glazed with local forest honey, served over seasonal roasted root vegetables.</p>
+</div>
+<div class="flex justify-between items-center">
+<span class="flex items-center gap-1 text-on-tertiary-fixed-variant text-label-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="set_meal">set_meal</span> High Protein
+                            </span>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-surface-container text-on-surface-variant active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Order Bar (Contextual Action) -->
+<div class="fixed bottom-[88px] left-margin-mobile right-margin-mobile z-40 transform transition-transform duration-300 translate-y-0" id="order-bar">
+<div class="bg-primary text-on-primary p-4 rounded-2xl flex items-center justify-between shadow-lg shadow-primary/20">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-label-md">1</div>
+<span class="font-label-md">1 Item - $24</span>
+</div>
+<button class="bg-surface-bright text-primary px-5 py-2 rounded-xl font-bold font-label-md flex items-center gap-2 active:scale-95 transition-transform">
+                View Order
+                <span class="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full rounded-t-xl z-50 bg-surface-container shadow-[0_-4px_20px_0_rgba(93,64,52,0.08)] flex justify-around items-center py-3 px-2 pb-safe">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="spa" style="font-variation-settings: 'FILL' 1;">spa</span>
+<span class="font-label-sm text-label-sm">Services</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-sm text-label-sm">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-sm text-label-sm">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for order bar
+        let items = 1;
+        let total = 24;
+
+        function updateOrder() {
+            items++;
+            total += 24;
+            const bar = document.getElementById('order-bar');
+            const countDisplay = bar.querySelector('.font-bold.text-label-md');
+            const summaryDisplay = bar.querySelector('.font-label-md:not(.font-bold)');
+            
+            countDisplay.innerText = items;
+            summaryDisplay.innerText = `${items} Items - $${total}`;
+            
+            // Pulse animation
+            bar.classList.add('scale-105');
+            setTimeout(() => bar.classList.remove('scale-105'), 150);
+        }
+
+        // Handle category selection
+        const categories = document.querySelectorAll('nav[class*="overflow-x-auto"] button');
+        categories.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categories.forEach(b => {
+                    b.classList.remove('bg-primary', 'text-on-primary', 'shadow-md');
+                    b.classList.add('bg-surface-container', 'text-on-surface-variant');
+                });
+                btn.classList.add('bg-primary', 'text-on-primary', 'shadow-md');
+                btn.classList.remove('bg-surface-container', 'text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

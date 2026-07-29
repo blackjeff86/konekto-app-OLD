@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed": "#ccead6",
+                    "on-background": "#1b1c1a",
+                    "surface-dim": "#dbdad6",
+                    "on-secondary-fixed-variant": "#5d4034",
+                    "on-primary": "#ffffff",
+                    "on-surface-variant": "#424844",
+                    "on-secondary-fixed": "#2c160c",
+                    "on-primary-container": "#98b5a3",
+                    "outline-variant": "#c2c8c2",
+                    "on-primary-fixed-variant": "#324c3e",
+                    "inverse-primary": "#b0cdbb",
+                    "surface-variant": "#e4e2de",
+                    "on-surface": "#1b1c1a",
+                    "tertiary-fixed-dim": "#f0bd8b",
+                    "primary-container": "#2d4739",
+                    "tertiary-container": "#5c3a13",
+                    "on-tertiary-container": "#d5a474",
+                    "outline": "#727973",
+                    "surface-bright": "#fbf9f5",
+                    "secondary-container": "#ffd4c4",
+                    "tertiary": "#422401",
+                    "surface-container-high": "#eae8e4",
+                    "on-error": "#ffffff",
+                    "primary": "#173124",
+                    "inverse-on-surface": "#f2f0ed",
+                    "secondary": "#77574b",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f5f3ef",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed": "#ffdbce",
+                    "on-secondary": "#ffffff",
+                    "inverse-surface": "#30312e",
+                    "surface-container-highest": "#e4e2de",
+                    "on-tertiary-fixed-variant": "#623f18",
+                    "error": "#ba1a1a",
+                    "surface": "#fbf9f5",
+                    "surface-tint": "#496455",
+                    "tertiary-fixed": "#ffdcbd",
+                    "secondary-fixed-dim": "#e7beae",
+                    "surface-container": "#efeeea",
+                    "on-secondary-container": "#7a594d",
+                    "on-primary-fixed": "#062014",
+                    "primary-fixed-dim": "#b0cdbb",
+                    "on-tertiary-fixed": "#2c1600",
+                    "background": "#fbf9f5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "margin-mobile": "16px",
+                    "md": "24px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "base": "8px",
+                    "lg": "48px",
+                    "margin-desktop": "64px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Literata"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Literata"],
+                    "headline-md": ["Literata"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Literata"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(251, 249, 245, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        body {
+            background-color: #fbf9f5;
+            color: #1b1c1a;
+        }
+        .service-card:hover .service-overlay {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .service-overlay {
+            background: linear-gradient(to top, rgba(23, 49, 36, 0.9) 0%, rgba(23, 49, 36, 0) 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-background selection:bg-primary-fixed">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl shadow-sm shadow-secondary/10 flex items-center justify-between px-margin-mobile h-16 md:px-margin-desktop">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A warm, professional headshot of a friendly nature concierge in a high-end forest retreat setting. The lighting is soft golden hour, creating a welcoming and serene mood consistent with the Bosque brand's biophilic aesthetic. The background features blurred greenery and natural textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYn0ExNE94dpkC17v-D1hUlrIroCHxPfqe5qHWyO7LZdjstmQsPYGNfLfJUAQtI-tQyTkU_-fVqQ2OpU66ofeIWcZd7-NSb9eS2zb6LDixJHdxZjC5awpeTaEwS-XpzW8qUdBgAvBNktKvg-OF-eLlNweFidegYsocGRVf4Y40JUZOWhd3nCwUhl4IlAdURoAGIzLkUQHAMpHrL8D6bcRUibsr-BFw4icWELb8d0_w-4GefUlaHyn87D20m9IzyXy4GMjmkNHeavw"/>
+</div>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-primary dark:text-primary-fixed">Welcome to Bosque</h1>
+</div>
+<button class="material-symbols-outlined text-primary dark:text-primary-fixed p-2 hover:bg-primary-container/10 transition-colors active:scale-95 transition-transform duration-200">
+            notifications
+        </button>
+</header>
+<main class="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto">
+<!-- Hero Section -->
+<section class="mb-12">
+<h2 class="font-headline-xl text-headline-lg-mobile md:text-headline-xl text-primary mb-4">Curated Experiences</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl leading-relaxed">
+                Connect with the rhythms of nature through our exclusive selection of restorative services and outdoor adventures.
+            </p>
+</section>
+<!-- Services Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Spa & Thermal Baths (Large Feature) -->
+<div class="md:col-span-8 group relative overflow-hidden rounded-xl h-[400px] shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-secondary/20">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A luxurious outdoor thermal bath carved from natural dark stone, surrounded by a lush, misty forest. Soft steam rises from the crystal-clear water. The lighting is ethereal morning light, emphasizing a tranquil, restorative atmosphere. Warm wood accents and mossy rocks frame the scene in a biophilic design style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDKnfrCkFzSqhx9LXgQzPuudN9V_1sb00xs6DgGRC1n_YUbgu8Molr5ax1WtpfHXPw51753_Xi88Framrh2SQbj3GzZ2QOA6JdLx7q94GTrNADGbmQ82YntGmgrHlXpWxRwrhhx5dfQEu2Z2nfbSf-RoDVs2Et_oxR0WIiEbYgG0ski1lib08H-Y8emLp_HNmMUrq8zKQp22_RoBtwQ8ftKpvBBuZE7Ph0o7NSgdNbQBw895_88eUFzykS3QlJ0JAgqFFXYDyFKuRI')">
+</div>
+<div class="absolute inset-0 service-overlay flex flex-col justify-end p-8 text-white">
+<span class="font-label-sm uppercase tracking-widest text-primary-fixed-dim mb-2">Wellness</span>
+<h3 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-2">Spa &amp; Thermal Baths</h3>
+<p class="font-body-md opacity-90 max-w-md">Find your center in our geothermal pools, surrounded by the whispers of the ancient pines.</p>
+<button class="mt-6 w-fit bg-primary-fixed text-primary px-6 py-3 rounded-full font-label-md flex items-center gap-2 hover:bg-white transition-colors active:scale-95">
+                        Reserve Sanctuary
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Guided Nature Hikes (Vertical Card) -->
+<div class="md:col-span-4 group relative overflow-hidden rounded-xl h-[400px] shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-secondary/20">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A professional nature guide leading a small group through a majestic old-growth forest. Sunbeams filter through the canopy (the Tyndall effect), illuminating vibrant green ferns and mossy bark. The mood is adventurous yet peaceful, highlighting the connection between humans and the natural world in high-definition biophilic detail." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDq2JVATaejrr_iXplW4HzNQCJ9LRJFStNrWdBH0O6OFb8hXebMZlckAZHrcO8Q-8xKFvs6FkmgkTaVRw-w6r7nHSdDnnxtU3lpFgQIt_DzO0BLEzTCGpP1WeAyaWMt2f38TI0jojtlT3Qkqxx64EyuHkQ6Md5a_olsQHq6MGsylfMNEJrDl5iMzuPzxLUQLmqUwBCkdguTl5X3a4MUo6XfMQWsQEgkGBxKS2gQN_dCwYiUkYQ5nWFsOKfPXkmi7rUwDS6zS-2o8CI')">
+</div>
+<div class="absolute inset-0 service-overlay flex flex-col justify-end p-8 text-white">
+<span class="font-label-sm uppercase tracking-widest text-primary-fixed-dim mb-2">Explore</span>
+<h3 class="font-headline-md text-headline-md mb-2">Guided Nature Hikes</h3>
+<button class="mt-4 w-fit bg-white/20 backdrop-blur-md text-white border border-white/30 px-4 py-2 rounded-full font-label-sm hover:bg-white/40 transition-colors">
+                        View Trails
+                    </button>
+</div>
+</div>
+<!-- Horseback Riding (Square-ish) -->
+<div class="md:col-span-6 group relative overflow-hidden rounded-xl h-[350px] shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-secondary/20">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Two majestic horses grazing in a vast, sun-drenched alpine meadow at sunset. The golden hour light casts long, soft shadows across the tall grass and distant mountain peaks. The scene is warm, inviting, and captures the essence of freedom and natural elegance in a high-end eco-resort setting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBrPty9_GyENa-fP9VHYa2W7lNsqu8b-D6hIHwYBWKL_zPNvYEH2z8_413IskN3ZIzjxC5Iw4KzqVQM61YbXPiry9HwMHQTZGeOQ_o1sAbCQu18CregS7_nePQu7AqPN9g3sIeoUbf0J3WmjoLMYn0zT4O6Tc2I8IApJCVM2lPJSoFipLH6nMxhAMmqrqSaPijvxA1uPqALdRlYL47Ws5QKSdWHMZmsMLXwzcLTilrU99hJKHPnQDk9qvm0eo4LeC6v7jZnuB3uqKM')">
+</div>
+<div class="absolute inset-0 service-overlay flex flex-col justify-end p-8 text-white">
+<span class="font-label-sm uppercase tracking-widest text-primary-fixed-dim mb-2">Adventure</span>
+<h3 class="font-headline-md text-headline-md mb-2">Horseback Riding</h3>
+<p class="font-body-md opacity-90">Traverse the wildflower meadows on a guided equestrian journey.</p>
+</div>
+</div>
+<!-- Local Vineyard Tour (Square-ish) -->
+<div class="md:col-span-6 group relative overflow-hidden rounded-xl h-[350px] shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-secondary/20">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A sophisticated outdoor wine tasting setup at a boutique vineyard. A rustic wooden table holds crystal glasses filled with amber wine, local cheeses, and grapes, with rolling green vineyard hills stretching into the background. The aesthetic is tactile and organic, with warm earth tones and professional lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAJalhmICKcXwstyWMVoBwVYSEcK1_wPf696wpd_JKEBQ7dIamGYbe2Q6-mOSEcP9o8ORZoHGq0ze9r58A6SCpD8viC_DzGQdvMetdgh-b16PY5wJCENz97TZsx3mQhGOoyjTj16R3X2PN7omevlr3JwWuL15Kpt-RQnG8_0RxGPXOsky9VufV7AGPBdhZho4msYRuY37lrfWfafQU9yFixst2SM7hQnbPZxBPuEeIETplaDNq60_UVkK1x1oxc5gtnPMNS9TLrjD0')">
+</div>
+<div class="absolute inset-0 service-overlay flex flex-col justify-end p-8 text-white">
+<span class="font-label-sm uppercase tracking-widest text-primary-fixed-dim mb-2">Culture</span>
+<h3 class="font-headline-md text-headline-md mb-2">Local Vineyard Tour</h3>
+<p class="font-body-md opacity-90">Savor the terroir of the valley with exclusive cellar tastings.</p>
+</div>
+</div>
+</div>
+<!-- Atmospheric Quote / Mid-page banner -->
+<section class="mt-24 mb-16 py-16 text-center border-y border-outline-variant/30">
+<h4 class="font-headline-md text-primary italic mb-4">"In every walk with nature, one receives far more than he seeks."</h4>
+<p class="font-label-md text-secondary">— John Muir</p>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full rounded-t-xl z-50 bg-surface-container dark:bg-surface-container-high shadow-[0_-4px_20px_0_rgba(93,64,52,0.08)] flex justify-around items-center py-3 px-2 pb-safe md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="spa">spa</span>
+<span class="font-label-sm text-label-sm mt-1">Services</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-sm text-label-sm mt-1">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-sm text-label-sm mt-1">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</nav>
+<!-- Desktop Navigation (Hidden on mobile) -->
+<div class="hidden md:flex fixed bottom-8 left-1/2 -translate-x-1/2 glass-card px-8 py-4 rounded-full shadow-lg border border-outline-variant/20 z-50 items-center gap-12">
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md" href="#">
+<span class="material-symbols-outlined">home</span> Home
+        </a>
+<a class="flex items-center gap-2 text-primary font-bold transition-colors font-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">spa</span> Services
+        </a>
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md" href="#">
+<span class="material-symbols-outlined">chat_bubble</span> Messages
+        </a>
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span> Wallet
+        </a>
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md" href="#">
+<span class="material-symbols-outlined">person</span> Profile
+        </a>
+</div>
+<script>
+        // Simple scroll interaction for the header
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md');
+                header.classList.remove('shadow-sm');
+            } else {
+                header.classList.add('shadow-sm');
+                header.classList.remove('shadow-md');
+            }
+        });
+
+        // Add active state visual logic based on the prompt's intent (Services is active)
+        document.querySelectorAll('nav a, .desktop-nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                // In a real app, this would navigate. Here we just show interaction.
+                console.log('Navigating to:', link.textContent.trim());
+            });
+        });
+    </script>
+</body></html>

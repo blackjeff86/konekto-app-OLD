@@ -13,7 +13,7 @@ import 'package:konekto/templates/shared/guest_template_content_params.dart';
 import 'package:konekto/templates/shared/guest_template_theme.dart';
 
 /// Os 5 templates White Label (`template` no `Hotel.config`, ver
-/// `apps/konekto_api/lib/feature-flags.ts` → `GuestTemplateId`) — únicos
+/// `apps/sevvn_api/lib/feature-flags.ts` → `GuestTemplateId`) — únicos
 /// templates válidos do app do hóspede. `tenant_home_page.dart` sempre
 /// renderiza a Home por aqui (fallback `aura` se `template` estiver
 /// ausente). As demais abas (Serviços/Reservas/Perfil) usam um tema
@@ -55,3 +55,4 @@ Widget buildGuestTemplateHomeContent(GuestTemplateId id, GuestTemplateContentPar
   assert(builder != null, 'Nenhuma Home registrada para $id — os 5 templates precisam de builder.');
   return builder!(params);
 }
+

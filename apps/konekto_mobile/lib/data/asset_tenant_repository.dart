@@ -31,7 +31,7 @@ class AssetTenantRepository implements TenantRepository {
       _loadJson(_hotelPath(hotelId, 'services_page.json'));
 
   // --- Serviços dinâmicos sintetizados a partir dos JSONs dos 5 catálogos
-  // antigos (mesma conversão usada em apps/konekto_api/prisma/seed.ts, mas
+  // antigos (mesma conversão usada em apps/sevvn_api/prisma/seed.ts, mas
   // do lado do app pra manter o fallback "sem API" funcionando). Não há
   // persistência real aqui — é só uma leitura, sem gerência pelo portal.
 
@@ -244,3 +244,4 @@ class AssetPromotionsRepository implements PromotionsRepository {
     return json.decode(jsonString) as Map<String, dynamic>;
   }
 }
+
